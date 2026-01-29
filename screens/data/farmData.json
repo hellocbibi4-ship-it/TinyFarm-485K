@@ -1,0 +1,17 @@
+{
+    "cash": 1500,
+    "inventory": {
+        "water": 450,
+        "food": 200,
+        "straw": 15
+    },
+    "animals": [
+        { "name": "Bella", "type": "Vache", "img": "vache.svg", "weight": 520 },
+        { "name": "Noiraude", "type": "Vache", "img": "vache.svg", "weight": 480 },
+        { "name": "Paulette", "type": "Poule", "img": "poule.svg", "weight": 1.5 },
+        { "name": "Cocotte", "type": "Poule", "img": "poule.svg", "weight": 1.2 },
+        { "name": "Glouton", "type": "Poule", "img": "poule.svg", "weight": 1.8 },
+        { "name": "Panpan", "type": "Lapin", "img": "lapin.svg", "weight": 2.1 },
+        { "name": "Carotte", "type": "Lapin", "img": "lapin.svg", "weight": 1.9 }
+    ]
+}

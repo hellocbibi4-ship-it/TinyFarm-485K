@@ -1,0 +1,72 @@
+body, html {
+    margin: 0;
+    height: 100%;
+    font-family: 'Segoe UI', Roboto, sans-serif;
+    color: white;
+    overflow-x: hidden;
+}
+
+/* Le fond d'écran avec flou */
+.bg-blur {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: url('../assets/background.png') no-repeat center center;
+    background-size: cover;
+    filter: blur(8px) brightness(0.7); /* Effet de flou + assombrissement */
+    z-index: -1;
+    transform: scale(1.1); /* Évite les bords blancs à cause du flou */
+}
+
+.main-ui {
+    padding: 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Barre de ressources style "Verre" */
+.stats-bar {
+    display: flex;
+    justify-content: space-around;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 40px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.stat-item {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+/* Grille d'animaux */
+.animal-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 20px;
+}
+
+.card {
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 15px;
+    padding: 20px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.card img {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 10px;
+}
+
+.card h3 { margin: 10px 0 5px 0; font-size: 1.1rem; }
+.card p { margin: 0; font-size: 0.9rem; opacity: 0.8; }
