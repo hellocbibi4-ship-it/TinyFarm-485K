@@ -6,6 +6,107 @@ body, html {
     overflow-x: hidden;
 }
 
+/* cacher un écran */
+.hidden {
+  display: none;
+}
+
+/* Le fond d'écran avec flou */
+.bg-login {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: url('../assets/plaine.png') no-repeat center center;
+    background-size: cover;
+    z-index: -1;
+    transform: scale(1.1); /* Évite les bords blancs à cause du flou */
+}
+
+/* Le texte TinyFarm */
+.title {
+  position: absolute;
+  top: 80px;              /* ajuste si besoin */
+  width: 100%;
+  text-align: center;
+
+  font-size: 10rem;
+  color: #e67e22;
+  font-weight: bold;
+
+  z-index: 1;             /* AU-DESSUS du fond */
+}
+
+
+/* gauche */
+.side-btn.left {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+
+    width: 90px;
+    height: 200px;
+    background: #e1b85c;
+    border-radius: 16px;   /* 👈 RECTANGLE ARRONDI */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 3rem;
+    opacity: 0.9;
+    left: 20px;
+}
+
+/* droite */
+.side-btn.right {
+    position: absolute;
+    top: 7.5%;
+    transform: translateY(-50%);
+
+    width: 200px;
+    height: 90px;
+    background: #e1b85c;
+    border-radius: 16px;   /* 👈 RECTANGLE ARRONDI */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 3rem;
+    opacity: 0.9;
+    right: 20px;
+}
+
+
+.login-btn {
+
+    position: absolute;
+    bottom: 150px;        /* 👈 hauteur depuis le bas */
+    left: 50%;           /* 👈 centre horizontal */
+    transform: translateX(-50%);
+    
+    transition: all 0.25s ease;
+
+    padding: 28px 60px;
+    font-size: 3rem;
+
+    background: #e1b85c;
+    color: white;
+
+    border: none;
+    border-radius: 16px;   /* ðŸ‘ˆ COINS ARRONDIS */
+
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    cursor: default;
+    opacity: 0.95;
+}
+.login-btn:hover {
+  background: #f1c96b;              /* un peu plus clair */
+  transform: translateX(-50%) scale(1.05);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+}
+
+
 /* Le fond d'écran avec flou */
 .bg-blur {
     position: fixed;

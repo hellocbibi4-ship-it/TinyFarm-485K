@@ -6,6 +6,26 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+    <!-- ÉCRAN LOGIN -->
+    <section id="login-screen">
+    <div class="bg-login"></div>
+    <h1 class="title">TinyFarm</h1>
+
+    <!-- Bouton principal -->
+    <button id="login-btn" class="login-btn">
+    <span class="icon">🐙</span>
+    Connectez-vous avec GitHub
+    </button>
+
+    <!-- Bouton trophée (gauche) -->
+    <div class="side-btn left">🏆</div>
+
+    <!-- Bouton réglages (droite) -->
+    <div class="side-btn right">⚙️</div>
+    </section>
+
+    <!-- ÉCRAN FERME -->
+    <section id="farm-screen" class="hidden">
     <div class="bg-blur"></div>
 
     <div class="main-ui">
@@ -18,7 +38,9 @@
 
         <div id="animal-grid" class="animal-grid"></div>
     </div>
+    </section>
 
     <script src="js/script.js"></script>
+
 </body>
 </html>
