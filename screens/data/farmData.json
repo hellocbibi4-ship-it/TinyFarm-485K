@@ -13,5 +13,22 @@
         { "name": "Glouton", "type": "Poule", "img": "poule.svg", "weight": 1.8 },
         { "name": "Panpan", "type": "Lapin", "img": "lapin.svg", "weight": 2.1 },
         { "name": "Carotte", "type": "Lapin", "img": "lapin.svg", "weight": 1.9 }
-    ]
+    ],
+  "players": [
+    { "name": "Arthur",  "production": 1820, "capacity": 9200, "money": 15400 },
+    { "name": "Léo",     "production": 1650, "capacity": 8700, "money": 13200 },
+    { "name": "Emma",    "production": 1580, "capacity": 8100, "money": 12850 },
+    { "name": "Lucas",   "production": 1490, "capacity": 7600, "money": 11900 },
+    { "name": "Mia",     "production": 1420, "capacity": 7200, "money": 11340 },
+    { "name": "Noah",    "production": 1360, "capacity": 6900, "money": 10800 },
+    { "name": "Jade",    "production": 1290, "capacity": 6400, "money": 10150 },
+    { "name": "Hugo",    "production": 1210, "capacity": 6100, "money": 9600 },
+    { "name": "Lina",    "production": 1150, "capacity": 5800, "money": 9050 },
+    { "name": "Ethan",   "production": 1080, "capacity": 5400, "money": 8600 },
+    { "name": "Zoé",     "production": 990,  "capacity": 5000, "money": 7900 },
+    { "name": "Max",     "production": 910,  "capacity": 4700, "money": 7300 },
+    { "name": "Chloé",   "production": 840,  "capacity": 4300, "money": 6800 },
+    { "name": "Tom",     "production": 770,  "capacity": 3900, "money": 6200 },
+    { "name": "Nina",    "production": 690,  "capacity": 3500, "money": 5600 }
+  ]
 }

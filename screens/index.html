@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <title>TinyFarm - Version Propres</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=ADLaM+Display&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=ADLaM+Display&family=Acme&display=swap" rel="stylesheet">
+
 </head>
 <body>
     <!-- ÉCRAN LOGIN -->
@@ -13,15 +18,35 @@
 
     <!-- Bouton principal -->
     <button id="login-btn" class="login-btn">
-    <span class="icon">🐙</span>
-    Connectez-vous avec GitHub
     </button>
 
     <!-- Bouton trophée (gauche) -->
-    <div class="side-btn left">🏆</div>
-
+    <button id = "Trophy" class="Trophy"></button>
+    
     <!-- Bouton réglages (droite) -->
-    <div class="side-btn right">⚙️</div>
+    <button id= "Settings" class="side-btn right"></button>
+
+    <section id = "Classement" class = "">
+        <img class="classement" src="assets/bgclassement.svg">
+
+        <p class = "title-classement">Classement</p> 
+        <table class="info">
+            <thead>
+                <tr>
+                <th>Rang</th>
+                <th>Nom</th>
+                <th>Production/J</th>
+                <th>Capacité</th>
+                <th>Argent</th>
+                </tr>
+            </thead>
+
+            <tbody id="classement-body"></tbody>
+        </table>
+
+       
+       </section>
+    </section>
     </section>
 
     <!-- ÉCRAN FERME -->
