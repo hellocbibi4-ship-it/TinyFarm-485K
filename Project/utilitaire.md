@@ -4,9 +4,8 @@
   - `~/src/main` : tout ce qui est du ressort du développement de l'application
     - `~/src/main/java` : tous les fichiers Java (donc pour l'API)
     - `~/src/main/resources` : les ressources du projet
-      - `~/src/main/resources/static` : tous les fichiers HTML et JS
-      - `~/src/main/resources/templates` : tous les fichiers CSS et les assets (images, polices, ...) du projet  
-        On y retrouve aussi les fichiers de la base de données
+      - `~/src/main/resources/static` : contient des fichiers inchangés (CSS, JS, images, HTML simple) servis tels quels
+      - `~/src/main/resources/templates` : contient des fichiers dynamiques (HTML avec Thymeleaf ou autre moteur) qui sont modifiés par le serveur avant d’être envoyés. On y retrouve aussi les fichiers de la base de données
   - `~/src/test` : tous les fichiers de test
 - `pom.xml` : c'est le gestionnaire des dépendances de notre projet
 
