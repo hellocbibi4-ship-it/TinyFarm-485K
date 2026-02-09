@@ -20,7 +20,7 @@ Les dépendances actuelles sont:
 - **jdbc** : Database Connectivity API that defines how a client may connect and query a database;
 - **postgresql** : A JDBC and R2DBC driver that allows Java programs to connect to a PostgreSQL database using standard, database independent Java code;
 - **h2** : Provides a fast in-memory database that supports JDBC API and R2DBC access, with a small (2mb) footprint. Supports embedded and server modes as well as a browser based console application.
-
+- **test** : Provides all the necessary tools to write and run automated tests in a Spring Boot project (JUnit, Mockito, assertions, Spring context, etc.).
 ### Ajouter une nouvelle dépendance
 Dans la suite, pour ajouter pour nouvelle dépendance, il faut y (dans le fichier pom.xml) la dépendance en suivant le modèle suivant:
 ```xml
@@ -33,3 +33,17 @@ Dans la suite, pour ajouter pour nouvelle dépendance, il faut y (dans le fichie
 ```
 Le nom des dépendances existantes et leurs utilités sont fournis dans le fichier springStarterPack.txt
 Toute ces informations sont fournis sur le net (chat gpt pour aller vite).
+
+# Démarrage du serveur de développement Spring Boot
+## Installation de toutes les dépendances
+```bash
+mvn clean install #maven parcourt le fichier `pom.xml` et installe toutes les dépendances qui s'y trouvent
+```
+## Lancement du serveur
+```bash
+mvn spring-boot:run #le serveur est démaré et écoute généralement sur le port 8080 (donc il faut être sur au préalable qu'aucun service n'écoute sur ce port avec la commande lsof -i :8080 (Linux / Mac) ou netstat -ano | findstr 8080 (Windows))
+```
+## Affichage de l'url complète
+```bash
+echo  "https://${CODESPACE_NAME}-8080.githubpreview.dev"
+```
