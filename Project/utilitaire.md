@@ -46,3 +46,9 @@ mvn spring-boot:run #le serveur est démaré et écoute généralement sur le po
 ```bash
 echo  "https://${CODESPACE_NAME}-8080.githubpreview.dev"
 ```
+
+# Des commandes utiles
+Pour tester un endpoint dans l'api, exécuter la commande suivante dans un terminal
+```bash
+curl -X [GET|PUT|POST|DELETE] "url de l'endpoint à tester dans l'api" #le serveur de développement doit être activé
+```

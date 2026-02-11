@@ -1,0 +1,72 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>TinyFarm - Version Propres</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=ADLaM+Display&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=ADLaM+Display&family=Acme&display=swap" rel="stylesheet">
+
+</head>
+<body>
+    <!-- ÉCRAN LOGIN -->
+    <section id="login-screen">
+    <div class="bg-login"></div>
+    <h1 class="title">TinyFarm</h1>
+
+    <!-- Bouton principal -->
+    <button id="login-btn" class="login-btn">
+    </button>
+
+    <!-- Bouton trophée (gauche) -->
+    <button id = "Trophy" class="Trophy"></button>
+    
+    <!-- Bouton réglages (droite) -->
+    <button id= "Settings" class="side-btn right"></button>
+
+    <section id = "Classement" class = "">
+        <img class="classement" src="assets/bgclassement.svg">
+
+        <p class = "title-classement">Classement</p> 
+        <table class="info">
+            <thead>
+                <tr>
+                <th>Rang</th>
+                <th>Nom</th>
+                <th>Production/J</th>
+                <th>Capacité</th>
+                <th>Argent</th>
+                </tr>
+            </thead>
+
+            <tbody id="classement-body"></tbody>
+        </table>
+
+       
+       </section>
+    </section>
+    </section>
+
+    <!-- ÉCRAN FERME -->
+    <section id="farm-screen" class="hidden">
+    <div class="bg-blur"></div>
+
+    <div class="main-ui">
+        <section class="stats-bar">
+            <div class="stat-item">💰 <span id="cash">0</span> écus</div>
+            <div class="stat-item">💧 <span id="water">0</span> L</div>
+            <div class="stat-item">🌾 <span id="food">0</span> kg</div>
+            <div class="stat-item">🚜 <span id="straw">0</span> bottes</div>
+        </section>
+
+        <div id="animal-grid" class="animal-grid"></div>
+    </div>
+    </section>
+
+    <script src="js/script.js"></script>
+
+</body>
+</html>
