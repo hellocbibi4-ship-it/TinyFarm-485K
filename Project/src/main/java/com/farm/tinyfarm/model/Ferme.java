@@ -11,7 +11,7 @@ public class Ferme{
     private LocalDateTime dateCreation;
     private Integer score;
 
-    //============ Getters ============
+    //====================== Getters ======================
     public Integer getIdFerme() {
         return idFerme;
     }
@@ -40,7 +40,13 @@ public class Ferme{
         return score;
     }
 
-    //============ Setters ============
+    //====================== Setters ======================
+    public void setIdFerme(Integer idFerme) {
+        this.idFerme = idFerme;
+    }
+    public void setIdUtilisateur(Integer idUtilisateur) {
+        this.idUtilisateur = idUtilisateur;
+    }
     public void setNom(String nom) {
         this.nom = nom;
     }
@@ -55,6 +61,10 @@ public class Ferme{
 
     public void setScore(Integer score) {
         this.score = score;
+    }
+
+    public void setDateCreation(LocalDateTime dateCreation) {
+        this.dateCreation = dateCreation;
     }
 
 }//class
