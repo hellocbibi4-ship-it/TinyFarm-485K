@@ -1,0 +1,9 @@
+{
+  "name": "TinyFarm Devcontainer",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "forwardPorts": [8080],
+  "postCreateCommand": "echo 'Java:' && java -version && echo 'Maven:' && mvn -v || true",
+  "remoteUser": "vscode"
+}
