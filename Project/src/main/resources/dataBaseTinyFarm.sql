@@ -59,8 +59,8 @@ CREATE TABLE transaction(
     quantite INT NOT NULL,
     prix_unitaire INT NOT NULL,
     date_transaction TIMESTAMP DEFAULT NOW(),
-    idVendeur INT REFERENCES ferme(idUtilisateur) ON DELETE SET NULL,
-    idAcheteur INT REFERENCES ferme(idUtilisateur) ON DELETE SET NULL
+    idVendeur INT REFERENCES Utilisateur(idUtilisateur) ON DELETE SET NULL,
+    idAcheteur INT REFERENCES Utilisateur(idUtilisateur) ON DELETE SET NULL
 );
 
 CREATE TABLE marche(

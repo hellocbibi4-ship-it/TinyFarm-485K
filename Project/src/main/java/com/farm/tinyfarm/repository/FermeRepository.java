@@ -83,4 +83,10 @@ public class FermeRepository {
         String sql = "DELETE FROM ferme WHERE idFerme = ?";
         return jdbcTemplate.update(sql, id);
     }
+
+    public boolean existsUtilisateurById(int id){
+        String sql = "SELECT idUtilisateur FROM utilisateurs WHERE idUtilisateur = id";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, id);
+        return count != null && count > 0;
+    }
 }
