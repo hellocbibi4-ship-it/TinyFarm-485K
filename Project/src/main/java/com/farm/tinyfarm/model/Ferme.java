@@ -1,10 +1,25 @@
 package com.farm.tinyfarm.model;
 import java.time.LocalDateTime;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "ferme")
+
 public class Ferme{
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY) // Auto-incrémentation de idFerme
     private Integer idFerme;
-    private Integer idUtilisateur;
+
+    //@OneToOne
+    //@JoinColumn(name="idUtilisateur", unique=true)
+    //private Utilisateur utilisateur;
+
     private String nom;
     private Integer soldeEcus;
     private Boolean hibernation;
@@ -15,10 +30,10 @@ public class Ferme{
     public Integer getIdFerme() {
         return idFerme;
     }
-
+    /* 
     public Integer getIdUtilisateur() {
         return idUtilisateur;
-    }
+    }*/
 
     public String getNom() {
         return nom;
@@ -44,9 +59,9 @@ public class Ferme{
     public void setIdFerme(Integer idFerme) {
         this.idFerme = idFerme;
     }
-    public void setIdUtilisateur(Integer idUtilisateur) {
+    /*public void setIdUtilisateur(Integer idUtilisateur) {
         this.idUtilisateur = idUtilisateur;
-    }
+    }*/
     public void setNom(String nom) {
         this.nom = nom;
     }
