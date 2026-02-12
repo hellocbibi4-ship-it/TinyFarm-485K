@@ -2,7 +2,7 @@ package com.farm.tinyfarm.service;
 
 import com.farm.tinyfarm.model.Ferme;
 import com.farm.tinyfarm.repository.FermeRepository;
-
+import com.farm.tinyfarm.outils.Utilitaires;
 import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
 import org.springframework.stereotype.Service;
@@ -11,22 +11,17 @@ import org.springframework.stereotype.Service;
 public class FermeService {
     
     private final FermeRepository fermeRepository;
+    private Utilitaires utilitaire; //Sert à appeler des fonctions de la classe Utilitaires
 
     public FermeService(FermeRepository fermeRepository){
         this.fermeRepository = fermeRepository;
     }
 
-    public void validationPseudo(String pseudo){
-        String alphabet = "^[a-zA-Z0-9_-]{3,16}$";
-
-        if(pseudo == null || !pseudo.matches(alphabet)){
-            throw new IllegalArgumentException("Le nom doit faire entre 3 et 16 caractères et contenir (lettres maj/min, chiffres et '-' , '_')");
-        }
-    }
+    
 
     //Fonction de création d'une ferme
     public Ferme create(Ferme ferme){
-        validationPseudo(ferme.getNom());
+        utilitaire.validationNom(ferme.getNom());
         ferme.setScore(0);
         ferme.setSoldeEcus(1500);
         ferme.setHibernation(false);

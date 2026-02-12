@@ -17,23 +17,24 @@ CREATE TABLE ferme(
 );
 
 CREATE TABLE animal(
+    idAnimal SERIAL PRIMARY KEY,
     idFerme INTEGER NOT NULL REFERENCES ferme(idFerme) ON DELETE CASCADE,
-    idAnimal SERIAL NOT NULL,
-    PRIMARY KEY (idFerme, idAnimal),
     idHabitat INTEGER REFERENCES Habitat(idHabitat) ON DELETE SET NULL,
     nom VARCHAR(15),
-    typeAnimal VARCHAR(50) NOT NULL CHECK(typeAnimal IN('poule','lapin','vache')),
+    typeAnimal VARCHAR(50) NOT NULL CHECK(typeAnimal IN('POULE','LAPIN','VACHE')),
     poids DECIMAL(5,2) NOT NULL,
     age INT NOT NULL,
     sexe VARCHAR(7) CHECK(sexe IN('male','femelle','inconnu')),
-    age VARCHAR(6) CHECK (age IN('enfant','adulte')),
+    stade VARCHAR(6) CHECK (stade IN('enfant','adulte')),
     estMalade BOOL DEFAULT 0,
     jaugeSante INT DEFAULT 100,
     jaugeHydration INT DEFAULT 100,
-    jaugeNourriture INT DEFAULT 100,
+    jaugeFaim INT DEFAULT 100,
+    jaufeProprete INT DEFAULT 100;
     CONSTRAINT jaugeHydration CHECK (jaugeHydration >= 0 AND jaugeHydration <= 100),
-    CONSTRAINT jaugeNourriture CHECK (jaugeNourriture >=0 AND jaugeNourriture <= 100),
+    CONSTRAINT jaugeFaim CHECK (jaugeFaim >=0 AND jaugeFaim <= 100),
     CONSTRAINT jaugeSante CHECK (jaugeSante >= 0 AND jaugeSante <= 100),
+    CONSTRAINT jaugeProprete CHECK (jaugeProprete >= 0 AND jaugeProprete <= 100),
     CONSTRAINT formatNom CHECK (nom ~* '^[a-zA-Z0-9_-]{3,50}$')
 );
 
