@@ -1,7 +1,5 @@
 package com.farm.tinyfarm.model;
 
-import org.springframework.web.bind.annotation.Mapping;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
