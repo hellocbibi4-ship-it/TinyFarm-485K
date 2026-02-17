@@ -15,6 +15,7 @@
         { "name": "Carotte", "type": "Lapin", "img": "lapin.svg", "weight": 1.9 }
     ],
   "players": [
+    { "name": "GOAT",  "production": 99999999999, "capacity": 99999999999, "money": 99999999999 },
     { "name": "Arthur",  "production": 1820, "capacity": 9200, "money": 15400 },
     { "name": "Léo",     "production": 1650, "capacity": 8700, "money": 13200 },
     { "name": "Emma",    "production": 1580, "capacity": 8100, "money": 12850 },
