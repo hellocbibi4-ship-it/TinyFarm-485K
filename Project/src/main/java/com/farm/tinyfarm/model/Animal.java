@@ -27,15 +27,14 @@ public class Animal{
         private String nom;
         private TypeAnimal typeAnimal;
         private float poids;
-        private int age;
+        private int age = 0;
         private TypeSexe sexe;
         private TypeStade stade;
-        private boolean estMalade;
+        private boolean estMalade = false;
         private int jaugeSante = 100;
         private int jaugeFaim = 100;
         private int jaugeProprete = 100;
         private int jaugeHydratation = 100;
-        private int nbJours = 0;
         private TypeRole role;
 
         //====================== Getters ======================
@@ -43,8 +42,8 @@ public class Animal{
                 return idAnimal;
         }
 
-        public Integer getIdFerme() {
-                return ferme.getIdFerme();
+        public Ferme getFerme() {
+                return ferme;
         }
 
         public String getNom() {
@@ -83,9 +82,6 @@ public class Animal{
         public int getJaugeHydratation() {
                 return jaugeHydratation;
         }       
-        public int getNbJours(){
-                return nbJours;
-        }
         public TypeRole geTypeRole() {
                 return role;
         }
@@ -124,9 +120,6 @@ public class Animal{
         }
         public void setJaugeHydratation(int jaugeHydratation) {
                 this.jaugeHydratation = jaugeHydratation;
-        }
-        public void setNbJours(int nbJours){
-                this.nbJours = nbJours;
         }
         public void setRole(TypeRole role) {
                 this.role = role;

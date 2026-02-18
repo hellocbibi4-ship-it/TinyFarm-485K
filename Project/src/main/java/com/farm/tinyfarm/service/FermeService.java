@@ -48,6 +48,20 @@ public class FermeService {
         ferme.setSoldeEcus(montantTotal);
     }
 
+    //Procédure de retrait d'écus à la ferme
+    @Transactional
+    public void retirerEcus(Integer idFerme, int montant){
+        Ferme ferme = fermeRepository.findById(idFerme)
+            .orElseThrow(() -> new RuntimeException("Impossible d'ajouter les écus: la ferme n'existe pas"));
+        
+        if (montant < 0){
+            throw new IllegalArgumentException("Le montant d'écus à retirer doit être positif");
+        }
+
+        int montantTotal = ferme.getSoldeEcus() + montant;
+        ferme.setSoldeEcus(montantTotal);
+    }
+
     //Procédure d'augmentation de score de la ferme
     @Transactional
     public void ajouterScore(Integer idFerme, int montant){
