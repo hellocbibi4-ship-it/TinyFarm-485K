@@ -21,7 +21,8 @@ CREATE TABLE animal(
     idFerme INTEGER NOT NULL REFERENCES ferme(idFerme) ON DELETE CASCADE,
     idHabitat INTEGER REFERENCES Habitat(idHabitat) ON DELETE SET NULL,
     nom VARCHAR(15),
-    typeAnimal VARCHAR(50) NOT NULL CHECK(typeAnimal IN('POULE','LAPIN','VACHE')),
+    typeAnimal VARCHAR(50) NOT NULL CHECK(typeAnimal IN('POULE', 'LAPIN','VACHE')),
+    role VARCHAR(16) CHECK(role IN('PONDEUSE', 'REPRODUCTEUR', 'ELEVAGE')),
     poids DECIMAL(5,2) NOT NULL,
     age INT NOT NULL,
     sexe VARCHAR(7) CHECK(sexe IN('male','femelle','inconnu')),
@@ -31,6 +32,7 @@ CREATE TABLE animal(
     jaugeHydration INT DEFAULT 100,
     jaugeFaim INT DEFAULT 100,
     jaufeProprete INT DEFAULT 100;
+    nbJours INT DEFAULT 0;
     CONSTRAINT jaugeHydration CHECK (jaugeHydration >= 0 AND jaugeHydration <= 100),
     CONSTRAINT jaugeFaim CHECK (jaugeFaim >=0 AND jaugeFaim <= 100),
     CONSTRAINT jaugeSante CHECK (jaugeSante >= 0 AND jaugeSante <= 100),

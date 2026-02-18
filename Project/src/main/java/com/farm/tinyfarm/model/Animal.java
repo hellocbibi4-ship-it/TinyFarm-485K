@@ -35,6 +35,8 @@ public class Animal{
         private int jaugeFaim = 100;
         private int jaugeProprete = 100;
         private int jaugeHydratation = 100;
+        private int nbJours = 0;
+        private TypeRole role;
 
         //====================== Getters ======================
         public Integer getIdAnimal() {
@@ -81,6 +83,12 @@ public class Animal{
         public int getJaugeHydratation() {
                 return jaugeHydratation;
         }       
+        public int getNbJours(){
+                return nbJours;
+        }
+        public TypeRole geTypeRole() {
+                return role;
+        }
 
         //====================== Setters ======================
 
@@ -117,8 +125,11 @@ public class Animal{
         public void setJaugeHydratation(int jaugeHydratation) {
                 this.jaugeHydratation = jaugeHydratation;
         }
-
-        
-        
+        public void setNbJours(int nbJours){
+                this.nbJours = nbJours;
+        }
+        public void setRole(TypeRole role) {
+                this.role = role;
+        }
 
 }//Class
