@@ -56,7 +56,7 @@ public class FermeService {
             throw new IllegalArgumentException("Le montant d'écus à retirer doit être positif");
         }
 
-        int montantTotal = ferme.getSoldeEcus() + montant;
+        int montantTotal = ferme.getSoldeEcus() - montant;
         ferme.setSoldeEcus(montantTotal);
     }
 
@@ -82,6 +82,10 @@ public class FermeService {
         ferme.setHibernation(bool);
     }
 
+    public Ferme getById(Integer id) {
+        return fermeRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Ferme introuvable"));
+    }
 
 
 }
