@@ -4,6 +4,12 @@ body, html {
     font-family: 'Segoe UI', Roboto, sans-serif;
     color: white;
     overflow-x: hidden;
+    padding: 0;
+}
+
+img {
+  max-width: 100%;  /* S'adapte à l'écran */
+  height: auto;     /* Garde les proportions */
 }
 
 /* cacher un écran */
@@ -21,7 +27,7 @@ body, html {
 }
 /* état caché au départ */
 #Classement {
-     position: relative;
+    position: fixed;
     z-index: 2;
     
     opacity: 0;
@@ -185,7 +191,6 @@ body, html {
 
 }
 
-
 /* Le fond d'écran avec flou */
 .bg-blur {
     position: fixed;
@@ -198,27 +203,166 @@ body, html {
 }
 
 .main-ui {
-    padding: 40px;
-    max-width: 1200px;
-    margin: 0 auto;
+    width: 100%;
+    height: 100vh;
+    padding: 0;
+    overflow: hidden;
 }
 
-/* Barre de ressources style "Verre" */
+/* Barre de ressources "glassmorphism" */
 .stats-bar {
+    position: absolute;
+    top: 0;
+    left: calc(315 / 1024 * 100%);
+    width: calc(390 / 1024 * 100%);
+    height: 55px;
+    
     display: flex;
     justify-content: space-around;
+    align-items: center;
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 20px;
-    padding: 20px;
-    margin-bottom: 40px;
+    padding: 0 20px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    z-index: 10;
 }
 
 .stat-item {
-    font-size: 1.2rem;
+    font-size: 1rem;
     font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Farm Canvas - Proportional layout based on 1024x582 background */
+.farm-canvas {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    background: url('../assets/background.png') no-repeat center center;
+    background-size: 100% 100%;
+    margin: 0;
+}
+
+.zone {
+    position: absolute;
+    box-sizing: border-box;
+}
+
+/* Header */
+.zone-header {
+    top: 0%;
+    left: 0%;
+    width: 100%;
+    height: calc(55 / 582 * 100%);
+}
+
+/* Left Sidebar */
+.zone-sidebar-left {
+    top: calc(55 / 582 * 100%);
+    left: 0%;
+    width: calc(245 / 1024 * 100%);
+    height: calc(527 / 582 * 100%);
+}
+
+/* Right Sidebar */
+.zone-sidebar-right {
+    top: calc(55 / 582 * 100%);
+    right: 0%;
+    width: calc(269 / 1024 * 100%);
+    height: calc(527 / 582 * 100%);
+}
+
+/* Remise */
+.zone-remise {
+    top: calc(55 / 582 * 100%);
+    left: calc(245 / 1024 * 100%);
+    width: calc(510 / 1024 * 100%);
+    height: calc(130 / 582 * 100%);
+}
+
+/* Poulailler */
+.zone-poulailler {
+    top: calc(185 / 582 * 100%);
+    left: calc(245 / 1024 * 100%);
+    width: calc(510 / 1024 * 100%);
+    height: calc(130 / 582 * 100%);
+}
+
+/* Paturage */
+.zone-paturage {
+    top: calc(315 / 582 * 100%);
+    left: calc(245 / 1024 * 100%);
+    width: calc(510 / 1024 * 100%);
+    height: calc(130 / 582 * 100%);
+}
+
+/* Clapier */
+.zone-clapier {
+    top: calc(445 / 582 * 100%);
+    left: calc(245 / 1024 * 100%);
+    width: calc(510 / 1024 * 100%);
+    height: calc(137 / 582 * 100%);
+}
+
+.zone-content {
+    width: 100%;
+    height: 100%;
+    padding: 8px;
+}
+
+.zone-label {
+    position: absolute;
+    top: 2px;
+    left: 5px;
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: bold;
+    opacity: 0.8;
+    z-index: 2;
+}
+
+/* icones flex pour les animaux */
+.animals-zone {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px;
+    width: 100%;
+    height: 100%;
+    align-content: flex-start;
+    box-sizing: border-box;
+}
+
+/* Animal btn */
+.animal-icon {
+    width: 50px;
+    height: 50px;
+    border: none;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    cursor: pointer;
+    padding: 4px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.animal-icon:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.animal-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    pointer-events: none;
 }
 
 /* Grille d'animaux */
@@ -250,3 +394,116 @@ body, html {
 
 .card h3 { margin: 10px 0 5px 0; font-size: 1.1rem; }
 .card p { margin: 0; font-size: 0.9rem; opacity: 0.8; }
+
+.animal-card {
+            cursor: pointer;
+}
+
+/*btns actions*/ 
+.modal {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+.modal.hidden {
+    display: none;
+}
+
+.modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(18, 14, 8, 0.55);
+    backdrop-filter: blur(6px);
+}
+
+.modal-card {
+    position: relative;
+    width: min(460px, 92vw);
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 24px;
+    padding: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(18px);
+    z-index: 1;
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.6rem;
+    font-family: "Acme", sans-serif;
+}
+
+.modal-info {
+    margin-bottom: 18px;
+    font-size: 1rem;
+}
+
+.info-label {
+    opacity: 0.75;
+}
+
+.modal-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.action-btn {
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.18);
+    color: white;
+    cursor: pointer;
+    font-weight: 600;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 18px rgba(0, 0, 0, 0.25);
+}
+
+.close-btn {
+    border: none;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.toast {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    padding: 12px 18px;
+    background: rgba(32, 26, 18, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 14px;
+    color: #f5f0e6;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+    z-index: 12;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
