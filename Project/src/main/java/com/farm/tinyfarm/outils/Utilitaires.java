@@ -4,7 +4,7 @@ import com.farm.tinyfarm.model.*;
 
 public class Utilitaires {
     
-    public void validationNom(String nom){
+    public static void validationNom(String nom){
         String alphabet = "^[a-zA-Z0-9_-]{3,16}$";
 
         if(nom == null || !nom.matches(alphabet)){

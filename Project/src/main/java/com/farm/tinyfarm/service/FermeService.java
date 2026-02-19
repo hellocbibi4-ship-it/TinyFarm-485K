@@ -11,17 +11,15 @@ import org.springframework.stereotype.Service;
 public class FermeService {
     
     private final FermeRepository fermeRepository;
-    private Utilitaires utilitaire; //Sert à appeler des fonctions de la classe Utilitaires
 
     public FermeService(FermeRepository fermeRepository){
         this.fermeRepository = fermeRepository;
     }
 
-    
 
     //Fonction de création d'une ferme
     public Ferme create(Ferme ferme){
-        utilitaire.validationNom(ferme.getNom());
+        Utilitaires.validationNom(ferme.getNom());
         ferme.setScore(0);
         ferme.setSoldeEcus(1500);
         ferme.setHibernation(false);
@@ -58,7 +56,7 @@ public class FermeService {
             throw new IllegalArgumentException("Le montant d'écus à retirer doit être positif");
         }
 
-        int montantTotal = ferme.getSoldeEcus() + montant;
+        int montantTotal = ferme.getSoldeEcus() - montant;
         ferme.setSoldeEcus(montantTotal);
     }
 
@@ -84,6 +82,10 @@ public class FermeService {
         ferme.setHibernation(bool);
     }
 
+    public Ferme getById(Integer id) {
+        return fermeRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Ferme introuvable"));
+    }
 
 
 }

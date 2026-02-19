@@ -52,9 +52,19 @@ public class FermeController{
     //Ajouter des écus
     //Expemple d'utilisation : PATCH http://localhost:8080/api/fermes/(id)/ajout-ecus?montant=(montant)
     @PatchMapping("/{id}/ajout-ecus")
-    public ResponseEntity<String> ajouterEcus(@PathVariable Integer id, @RequestParam Integer montant){
+    public ResponseEntity<Ferme> ajouterEcus(@PathVariable Integer id, @RequestParam Integer montant){
         fermeService.ajouterEcus(id, montant);
-        return ResponseEntity.ok("SoldeEcus mis à jour");
+        Ferme fermeMAJ = fermeService.getById(id);
+        return ResponseEntity.ok(fermeMAJ);
+    }
+
+    //Retirer des écus
+    //Expemple d'utilisation : PATCH http://localhost:8080/api/fermes/(id)/retirer-ecus?montant=(montant)
+    @PatchMapping("/{id}/retirer-ecus")
+    public ResponseEntity<Ferme> retirerEcus(@PathVariable Integer id, @RequestParam Integer montant){
+        fermeService.retirerEcus(id, montant);
+        Ferme fermeMAJ = fermeService.getById(id);
+        return ResponseEntity.ok(fermeMAJ);
     }
 
     //Modifier l'état d'hibernation
