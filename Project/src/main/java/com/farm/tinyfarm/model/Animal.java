@@ -7,9 +7,11 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
+import lombok.Data;
 
 @Entity
 @Table(name = "animal")
+@Data
 public class Animal{
 
         @Id
@@ -37,92 +39,6 @@ public class Animal{
         private int jaugeHydratation = 100;
         private TypeRole role;
 
-        //====================== Getters ======================
-        public Integer getIdAnimal() {
-                return idAnimal;
-        }
-
-        public Ferme getFerme() {
-                return ferme;
-        }
-
-        public String getNom() {
-                return nom;
-        }   
-
-        public TypeAnimal getTypeAnimal() {
-                return typeAnimal;
-        }
-
-        public float getPoids() {
-                return poids;
-        }
-
-        public int getAge() {
-                return age;
-        }
-        public TypeSexe getSexe() {
-                return sexe;
-        }
-        public TypeStade getStade() {
-                return stade;
-        }
-        public boolean EstMalade() {
-                return estMalade;
-        }
-        public int getJaugeSante() {
-                return jaugeSante;
-        }
-        public int getJaugeFaim() {
-                return jaugeFaim;
-        }
-        public int getJaugeProprete() {
-                return jaugeProprete;
-        }
-        public int getJaugeHydratation() {
-                return jaugeHydratation;
-        }       
-        public TypeRole geTypeRole() {
-                return role;
-        }
-
-        //====================== Setters ======================
-
-        public void setNom(String nom) {
-                this.nom = nom;
-        }
-        public void setTypeAnimal(TypeAnimal typeAnimal) {
-                this.typeAnimal = typeAnimal;
-        }
-        public void setPoids(float poids) {
-                this.poids = poids;
-        }
-        public void setAge(int age) {
-                this.age = age;
-        }
-        public void setSexe(TypeSexe sexe) {
-                this.sexe = sexe;
-        }
-        public void setStade(TypeStade stade) {
-                this.stade = stade;
-        }
-        public void setEstMalade(boolean estMalade) {
-                this.estMalade = estMalade;
-        }
-        public void setJaugeSante(int jaugeSante) {
-                this.jaugeSante = jaugeSante;
-        }
-        public void setJaugeFaim(int jaugeFaim) {
-                this.jaugeFaim = jaugeFaim;
-        }
-        public void setJaugeProprete(int jaugeProprete) {
-                this.jaugeProprete = jaugeProprete;
-        }
-        public void setJaugeHydratation(int jaugeHydratation) {
-                this.jaugeHydratation = jaugeHydratation;
-        }
-        public void setRole(TypeRole role) {
-                this.role = role;
-        }
+        public Animal(){} //Constructeur par défaut nécessaire pour JPA
 
 }//Class
