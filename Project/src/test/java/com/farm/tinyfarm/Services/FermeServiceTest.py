@@ -1,11 +1,14 @@
 import requests
 import pytest
 
-BASE_URL = "http://localhost:8080/api/"
+# Compilation:
+# pytest Project/src/test/java/com/farm/tinyfarm/Services/FermeServiceTest.py -q
+
+BASE_URL = "http://localhost:8080/api"
 
 def test_create_ferme():
-    url = requests.get(BASE_URL + "/fermes")
-    payload = {"nom": "Ferme Python"}
+    url = BASE_URL + "/fermes"
+    payload = {"nom": "FermePython"}
     response = requests.post(url, json=payload)
     
     assert response.status_code == 201
