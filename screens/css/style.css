@@ -5,6 +5,7 @@ body, html {
     color: white;
     overflow-x: hidden;
     padding: 0;
+    background-color: #000; /* fond global noir pour éviter les bandes blanches */
 }
 img {
   max-width: 100%;  /* S'adapte à l'écran */
@@ -190,10 +191,14 @@ img {
 }
 
 
-/* Le fond d'écran de la ferme */
+/* Le fond d'écran de la ferme (affiche l'image entière et permet le défilement) */
 .bg-ferme {
-    position: fixed;
-    inset: 0; /* équivalent top:0 left:0 right:0 bottom:0 */
-    background: url('../assets/Background.png') no-repeat center center;
-    background-size: cover;
+    position: relative;
+    width: 100%;
+    background-color: #000; /* fond noir derrière l'image */
+    /* Ratio image 1921x1093 -> 1093/1921 * 100 = ~56.9% */
+    padding-top: 56.9%; /* réserve un espace proportionnel selon l'image */
+    background: url('../assets/background1.png') no-repeat center top;
+    background-size: contain; /* montre l'image entière sans rognage */
+    background-attachment: scroll; /* permet le défilement avec la page */
 }
