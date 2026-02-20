@@ -37,16 +37,17 @@ public class FermeController{
     //Exemple d'utilisatiion : DELETE http://localhost:8080/api/fermes/(id)
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> supprimerFerme(@PathVariable Integer id){
-        fermeService.delete(id);
+        fermeService.deleteById(id);
         return ResponseEntity.noContent().build(); //Ok si 204
     }
 
     //Ajouter au score
     //Exemple d'utilisation : PATCH http://localhost:8080/api/fermes/(id)/score?montant=(montant)
     @PatchMapping("/{id}/score")
-    public ResponseEntity<String> augmenterScore(@PathVariable Integer id, @RequestParam Integer montant){
+    public ResponseEntity<Ferme> augmenterScore(@PathVariable Integer id, @RequestParam Integer montant){
         fermeService.ajouterScore(id, montant);
-        return ResponseEntity.ok("Score mis à jour");
+        Ferme fermeMAJ = fermeService.getById(id);
+        return ResponseEntity.ok(fermeMAJ);
     }
 
     //Ajouter des écus

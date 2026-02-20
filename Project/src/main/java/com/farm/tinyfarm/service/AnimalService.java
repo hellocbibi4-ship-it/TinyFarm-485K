@@ -4,7 +4,6 @@ import com.farm.tinyfarm.repository.AnimalRepository;
 
 import jakarta.transaction.Transactional;
 
-import java.lang.ProcessBuilder.Redirect.Type;
 
 import com.farm.tinyfarm.model.Animal;
 import com.farm.tinyfarm.model.TypeAnimal;
@@ -27,7 +26,7 @@ public class AnimalService {
 
     //Crée un animal de base à la naissance
     public Animal createBaseAnimal(Animal animal){
-        utilitaire.validationNom(animal.getNom()); //Appel de fonction pour entrer un nom valide
+        Utilitaires.validationNom(animal.getNom()); //Appel de fonction pour entrer un nom valide
         
         switch (animal.getTypeAnimal()){
             case POULE :
@@ -67,7 +66,7 @@ public class AnimalService {
         }
     }
     
-    //Méthode qui augmente l'age d'un animal
+    //Méthode qui augmente l'age d'une poule
     public void updateChickenAge(Animal animal){
         assert(animal.getTypeAnimal().equals(TypeAnimal.POULE));
         animal.setAge(animal.getAge() + 1);
