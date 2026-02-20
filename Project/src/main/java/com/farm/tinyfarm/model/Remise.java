@@ -10,7 +10,20 @@ import lombok.Data;
 @Table(name="remise")
 @Data
 public class Remise {
-    @OneToOne
-    @JoinColumn(name="fermeId", unique=true);
 
+    @Id
+    private Integer id;
+
+    
+
+    private int savon = 0;
+    private int seringue = 0;
+    private int paille =0;
+    //TODO  Liste des objets à collectionner
+    
+    @OneToOne
+    @MapsId
+    private Ferme ferme; //Partage le même id que la ferme
+
+    public Remise() {} //Constructeur de base requis par JPA
 }
