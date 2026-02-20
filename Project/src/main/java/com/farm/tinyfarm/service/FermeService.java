@@ -5,6 +5,8 @@ import com.farm.tinyfarm.repository.FermeRepository;
 import com.farm.tinyfarm.outils.Utilitaires;
 import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+
 import org.springframework.stereotype.Service;
 
 @Service
@@ -28,7 +30,7 @@ public class FermeService {
     }
 
     //Procédure de suppression d'une ferme
-    public void delete(Integer id){
+    public void deleteById(Integer id){
         fermeRepository.deleteById(id);
     }
 
@@ -81,6 +83,31 @@ public class FermeService {
 
         ferme.setHibernation(bool);
     }
+
+    @Transactional
+    public void mettreAJourferme(Ferme ferme){
+        Integer fermeId = ferme.getIdFerme();
+        //Calcule le nombre de jours depuis lesquels le joueur ne s'est pas connecté
+        long joursAbsence = ChronoUnit.DAYS.between(ferme.getDerniereCo(), LocalDateTime.now());
+
+        if (joursAbsence <= 0) {
+            return;
+        }
+
+        if (joursAbsence >= 3) {
+            hibernation(fermeId, true);
+        }
+
+        if(joursAbsence >= 50) {
+            deleteById(fermeId);
+        }
+        //TODO
+        //Faire la fonction qui fait passer un jour  si la ferme n'est pas en hibernation
+        //et inglige des dégâts aux animaux selon leur niveau de santé/hydratation/faim
+        ferme.setDerniereCo(LocalDateTime.now());
+        fermeRepository.save(ferme);
+    }
+
 
     public Ferme getById(Integer id) {
         return fermeRepository.findById(id)

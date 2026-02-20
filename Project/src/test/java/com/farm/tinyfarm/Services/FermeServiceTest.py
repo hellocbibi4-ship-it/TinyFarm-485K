@@ -30,7 +30,6 @@ def test_create_ferme():
 
 def test_ajouter_ecus(new_ferme):
     fermeId = new_ferme.get("idFerme")
-    soldeAvant = new_ferme.get("soldeEcus")
 
     montant = 500
     patch_url = f"{BASE_URL}/{fermeId}/ajout-ecus"
@@ -44,7 +43,6 @@ def test_ajouter_ecus(new_ferme):
 
 def test_retirer_ecus(new_ferme):
     fermeId = new_ferme.get("idFerme")
-    soldeAvant = new_ferme.get("soldeEcus")
 
     montant = 500
     patch_url = f"{BASE_URL}/{fermeId}/retirer-ecus"
@@ -56,3 +54,15 @@ def test_retirer_ecus(new_ferme):
     assert data.get("soldeEcus") == 1000
     print(data)
 
+def test_ajouter_score(new_ferme):
+    fermeId=new_ferme["idFerme"]
+
+    montant = 100;
+    patch_url=f"{BASE_URL}/{fermeId}/score"
+    params = {"montant": montant}
+    response = requests.patch(patch_url, params=params)
+
+    data = response.json()
+    assert response.status_code == 200
+    assert data.get("score") == 100
+    print(data)

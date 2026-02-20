@@ -27,7 +27,7 @@ public class AnimalService {
 
     //Crée un animal de base à la naissance
     public Animal createBaseAnimal(Animal animal){
-        utilitaire.validationNom(animal.getNom()); //Appel de fonction pour entrer un nom valide
+        Utilitaires.validationNom(animal.getNom()); //Appel de fonction pour entrer un nom valide
         
         switch (animal.getTypeAnimal()){
             case POULE :

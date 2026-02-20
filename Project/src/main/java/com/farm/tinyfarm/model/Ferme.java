@@ -17,6 +17,7 @@ public class Ferme{
     @GeneratedValue(strategy = GenerationType.IDENTITY) // Auto-incrémentation de idFerme
     private Integer idFerme;
 
+    //TODO
     //@OneToOne
     //@JoinColumn(name="idUtilisateur", unique=true)
     //private Utilisateur utilisateur;
@@ -26,6 +27,7 @@ public class Ferme{
     private Boolean hibernation;
     private LocalDateTime dateCreation;
     private Integer score;
+    private LocalDateTime derniereCo;
 
     public Ferme(){} //Constructeur par défaut pour JPA
 }//class
