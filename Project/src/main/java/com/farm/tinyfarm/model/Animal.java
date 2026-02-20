@@ -41,4 +41,8 @@ public class Animal{
 
         public Animal(){} //Constructeur par défaut nécessaire pour JPA
 
+        public boolean estMalade() {
+            return estMalade;
+        }
+
 }//Class

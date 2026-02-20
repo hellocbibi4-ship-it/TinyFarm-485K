@@ -120,6 +120,18 @@ public class AnimalService {
         fermeService.retirerEcus(id, 1);
     }
 
+    @Transactional
+    public void soignerPoule(Animal animal){
+        assert(animal.getTypeAnimal().equals(TypeAnimal.POULE));
+        if (!animal.estMalade()) {
+            throw new IllegalCallerException("ERREUR : la poule ne peut pas être soignée si elle n'est pas malade");
+        }
+        animal.setJaugeSante(100);
+        // Retrait d'écus
+        Integer id = animal.getFerme().getIdFerme();
+        fermeService.retirerEcus(id, 6);
+    }
+    
 }//Class
 
 /*
