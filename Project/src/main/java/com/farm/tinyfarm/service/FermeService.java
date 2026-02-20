@@ -1,7 +1,9 @@
 package com.farm.tinyfarm.service;
 
 import com.farm.tinyfarm.model.Ferme;
+import com.farm.tinyfarm.model.Remise;
 import com.farm.tinyfarm.repository.FermeRepository;
+import com.farm.tinyfarm.repository.RemiseRepository;
 import com.farm.tinyfarm.outils.Utilitaires;
 import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
@@ -13,10 +15,12 @@ import org.springframework.stereotype.Service;
 public class FermeService {
     
     private final FermeRepository fermeRepository;
+    private final RemiseRepository remiseRepository;
 
     //Constructeur
-    public FermeService(FermeRepository fermeRepository){
+    public FermeService(FermeRepository fermeRepository, RemiseRepository remiseRepository){
         this.fermeRepository = fermeRepository;
+        this.remiseRepository = remiseRepository;
     }
 
 
@@ -27,6 +31,12 @@ public class FermeService {
         ferme.setSoldeEcus(1500);
         ferme.setHibernation(false);
         ferme.setDateCreation(LocalDateTime.now());
+
+        //Création de la remise.
+        Remise remise = new Remise();
+        remise.setFerme(ferme);
+        remiseRepository.save(remise);
+
         return fermeRepository.save(ferme);
     }
 

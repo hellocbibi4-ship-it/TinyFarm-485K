@@ -4,7 +4,6 @@ import com.farm.tinyfarm.repository.AnimalRepository;
 
 import jakarta.transaction.Transactional;
 
-import java.lang.ProcessBuilder.Redirect.Type;
 
 import com.farm.tinyfarm.model.Animal;
 import com.farm.tinyfarm.model.TypeAnimal;
