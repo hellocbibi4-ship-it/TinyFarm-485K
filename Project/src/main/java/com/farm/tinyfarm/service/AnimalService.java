@@ -67,7 +67,7 @@ public class AnimalService {
         }
     }
     
-    //Méthode qui augmente l'age d'un animal
+    //Méthode qui augmente l'age d'une poule
     public void updateChickenAge(Animal animal){
         assert(animal.getTypeAnimal().equals(TypeAnimal.POULE));
         animal.setAge(animal.getAge() + 1);
