@@ -14,6 +14,7 @@ public class FermeService {
     
     private final FermeRepository fermeRepository;
 
+    //Constructeur
     public FermeService(FermeRepository fermeRepository){
         this.fermeRepository = fermeRepository;
     }
@@ -104,6 +105,7 @@ public class FermeService {
         //TODO
         //Faire la fonction qui fait passer un jour  si la ferme n'est pas en hibernation
         //et inglige des dégâts aux animaux selon leur niveau de santé/hydratation/faim
+        //et les faire vieillir si tout va bien
         ferme.setDerniereCo(LocalDateTime.now());
         fermeRepository.save(ferme);
     }

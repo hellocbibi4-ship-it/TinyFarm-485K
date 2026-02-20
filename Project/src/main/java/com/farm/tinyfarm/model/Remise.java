@@ -12,13 +12,11 @@ import lombok.Data;
 public class Remise {
 
     @Id
-    private Integer id;
+    private Integer remiseId;
 
-    
-
-    private int savon = 0;
-    private int seringue = 0;
-    private int paille =0;
+    private int stockSavon = 0;
+    private int stockSeringue = 0;
+    private int stockPaille =0;
     //TODO  Liste des objets à collectionner
     
     @OneToOne
