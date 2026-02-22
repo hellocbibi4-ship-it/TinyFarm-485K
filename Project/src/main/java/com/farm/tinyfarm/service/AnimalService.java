@@ -35,7 +35,9 @@ public class AnimalService {
                 break;
             case LAPIN : //TODO
                 break;
-            case VACHE ://TODO
+            case VACHE :
+                animal.setPoids((float) 1.0);
+                animal.setStade(TypeStade.ENFANT);
                 break;
         }
         return animal;
