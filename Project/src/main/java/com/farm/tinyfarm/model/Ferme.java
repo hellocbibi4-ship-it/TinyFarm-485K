@@ -2,11 +2,15 @@ package com.farm.tinyfarm.model;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Entity;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.OneToOne;
 import lombok.Data;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.FetchType;
 
 @Entity
 @Table(name = "ferme")
@@ -28,6 +32,8 @@ public class Ferme{
     private LocalDateTime dateCreation;
     private Integer score;
     private LocalDateTime derniereCo;
-
+    @OneToOne(mappedBy = "ferme", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private Remise remise;
     public Ferme(){} //Constructeur par défaut pour JPA
 }//class

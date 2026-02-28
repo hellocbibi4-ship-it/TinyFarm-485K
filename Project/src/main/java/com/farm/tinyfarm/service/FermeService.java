@@ -31,7 +31,7 @@ public class FermeService {
         ferme.setSoldeEcus(1500);
         ferme.setHibernation(false);
         ferme.setDateCreation(LocalDateTime.now());
-
+        
         //Création de la remise.
         Remise remise = new Remise();
         remise.setFerme(ferme);
