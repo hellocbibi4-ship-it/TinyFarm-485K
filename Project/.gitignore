@@ -31,3 +31,14 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Pycache ###
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+### venv ###
+.venv/
+__pycache__/
+*.pyc
