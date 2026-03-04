@@ -28,17 +28,25 @@ public class Animal{
 
         private String nom;
         private TypeAnimal typeAnimal;
-        private float poids;
-        private int age = 0;
         private TypeSexe sexe;
         private TypeStade stade;
-        private boolean estMalade = false;
+        private TypeRole role;
+
+        private float poids;
+        private int age = 0;
         private int jaugeSante = 100;
         private int jaugeFaim = 100;
         private int jaugeProprete = 100;
         private int jaugeHydratation = 100;
-        private TypeRole role;
+        
+        private boolean estMalade = false;
+        private boolean aMange = false;
+        private boolean aEteTraite = false;
 
         public Animal(){} //Constructeur par défaut nécessaire pour JPA
+
+        public boolean estMalade() {
+            return estMalade;
+        }
 
 }//Class

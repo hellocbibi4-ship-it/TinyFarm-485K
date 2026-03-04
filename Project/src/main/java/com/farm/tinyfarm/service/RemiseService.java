@@ -60,6 +60,31 @@ public class RemiseService {
                 break;
         }
     }
+    @Transactional
+    public void retirerStock(Integer idRemise, TypeStock t, int montant) {
+
+        Remise remise = remiseRepository.findById(idRemise)
+            .orElseThrow(() -> new RuntimeException("Impossible d'ajouter le score: la remise n'existe pas"));;
+        
+        if(montant <= 0) {
+            throw new IllegalArgumentException("Impossible de retirer du stock, le montant doit être de 1 minimum");
+        }
+
+        switch (t) {
+            case PAILLE :
+                int montantTotal = remise.getStockPaille() - montant;
+                remise.setStockPaille(montantTotal);
+                break;
+            case SAVON :
+                montantTotal = remise.getStockSavon() - montant;
+                remise.setStockSavon(montantTotal);
+                break;
+            case SERINGUE :
+                montantTotal = remise.getStockSeringue() - montant;
+                remise.setStockSeringue(montantTotal);
+                break;
+        }
+    }
 
     public Remise getById(Integer id) {
         return remiseRepository.findById(id)

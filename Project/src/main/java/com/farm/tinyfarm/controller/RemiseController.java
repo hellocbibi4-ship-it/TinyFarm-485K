@@ -35,5 +35,12 @@ public class RemiseController {
         return ResponseEntity.ok(remiseMAJ);
     }
 
+    @PatchMapping("/{id}/retirer-stock")
+    public ResponseEntity<Remise> retirerStock(@PathVariable Integer id, @RequestParam Integer montant, @RequestParam TypeStock stock){
+        remiseService.retirerStock(id, stock, montant);
+        Remise remiseMAJ = remiseService.getById(id);
+        return ResponseEntity.ok(remiseMAJ);
+    }
+
 }//Class
 
