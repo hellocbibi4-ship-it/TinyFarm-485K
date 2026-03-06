@@ -1,4 +1,4 @@
-package com.example.authgithub;
+package com.farm.tinyfarm.security;
 
 
 import org.springframework.security.core.GrantedAuthority;

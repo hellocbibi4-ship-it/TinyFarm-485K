@@ -1,4 +1,4 @@
-package com.example.authgithub;
+package com.farm.tinyfarm.security;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
