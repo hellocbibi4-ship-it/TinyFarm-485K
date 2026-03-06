@@ -8,7 +8,6 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
-import com.example.authgithub.CustomOAuth2User;
 import com.farm.tinyfarm.model.Utilisateur;
 import com.farm.tinyfarm.model.Ferme;
 import com.farm.tinyfarm.repository.UtilisateurRepository;
