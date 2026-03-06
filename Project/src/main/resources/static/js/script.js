@@ -5,14 +5,8 @@ const farmScreen = document.getElementById("farm-screen");
 const classementScreen = document.getElementById("Classement");
 
 loginBtn.addEventListener("click", () => {
-  // cacher le login
-  loginScreen.classList.add("hidden");
-
-  // afficher la ferme
-  farmScreen.classList.remove("hidden");
-
-  // charger les données APRÈS connexion
-  loadFarm();
+    // 🔥 On remplace la fausse transition par une VRAIE redirection vers Spring Security
+    window.location.href = '/oauth2/authorization/github';
 });
  classement();
 clsBtn.addEventListener("click", () => {
