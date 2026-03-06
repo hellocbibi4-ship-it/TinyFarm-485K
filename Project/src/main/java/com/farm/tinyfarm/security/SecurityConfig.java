@@ -39,8 +39,8 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )*/
                .authorizeHttpRequests(authorize -> authorize
-                        // 🔹 Ce qui est public (accueil, assets statiques, console de BDD)
-                        .requestMatchers("/", "/index.html", "/static/**").permitAll()
+                        // 🔹 On a ajouté "/assets/**", "/css/**", "/js/**", "/data/**" pour laisser passer le design et les scripts !
+                        .requestMatchers("/", "/index.html", "/static/**", "/assets/**", "/css/**", "/js/**", "/data/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll() 
                         // 🔥 ON AJOUTE L'API POUR QUE LES TESTS PYTHON PASSENT :
                         .requestMatchers("/api/**").permitAll() 
