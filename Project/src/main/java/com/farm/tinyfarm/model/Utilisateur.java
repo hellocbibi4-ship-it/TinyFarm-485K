@@ -19,6 +19,7 @@ public class Utilisateur {
     @OneToOne(mappedBy = "utilisateur", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore
     private Ferme ferme;
+    private String role;
 
     // Constructeur par défaut obligatoire pour JPA
     public Utilisateur() {} 
