@@ -19,8 +19,6 @@ import java.util.*;
 public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
 
     private static final Set<String> ADMIN_USERS = Set.of("momo54", "skaf54");
-
-    // 🔹 Injection du repository pour parler à la base de données
     private final UtilisateurRepository utilisateurRepository;
 
     public CustomOAuth2UserService(UtilisateurRepository utilisateurRepository) {
@@ -43,11 +41,11 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
             role = "ROLE_ADMIN";
         }
 
-        // 🔥 LA MAGIE OPÈRE ICI : On cherche le joueur dans la base
+        // On cherche le joueur dans la base
         Optional<Utilisateur> userOpt = utilisateurRepository.findByGithubUsername(userLogin);
 
         if (userOpt.isEmpty()) {
-            // 🚜 C'est un nouveau joueur ! On crée son profil et sa ferme.
+            // Si c'est un nouveau Joueur
             System.out.println("Nouveau fermier détecté : " + userLogin + ". Création de sa ferme !");
 
             Utilisateur nouvelUtilisateur = new Utilisateur();
