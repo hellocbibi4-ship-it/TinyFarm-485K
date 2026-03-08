@@ -198,7 +198,7 @@ img {
     background-color: #000; /* fond noir derrière l'image */
     /* Ratio image 1921x1093 -> 1093/1921 * 100 = ~56.9% */
     padding-top: 56.9%; /* réserve un espace proportionnel selon l'image */
-    background: url('../assets/background1.png') no-repeat center top;
+    background: url('../assets/background.png') no-repeat center top;
     background-size: contain; /* montre l'image entière sans rognage */
     background-attachment: scroll; /* permet le défilement avec la page */
 }
