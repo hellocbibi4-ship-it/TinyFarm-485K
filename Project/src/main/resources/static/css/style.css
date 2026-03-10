@@ -4,13 +4,8 @@ body, html {
     font-family: 'Segoe UI', Roboto, sans-serif;
     color: white;
     overflow-x: hidden;
-    padding: 0;
-    background-color: #000; /* fond global noir pour éviter les bandes blanches */
 }
-img {
-  max-width: 100%;  /* S'adapte à l'écran */
-  height: auto;     /* Garde les proportions */
-}
+
 /* cacher un écran */
 .hidden {
   display: none;
@@ -191,14 +186,21 @@ img {
 }
 
 
-/* Le fond d'écran de la ferme (affiche l'image entière et permet le défilement) */
-.bg-ferme {
-    position: relative;
-    width: 100%;
-    height: 100vh;
+/* Le fond d'écran avec flou */
+.bg-blur {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
     background: url('../assets/background.png') no-repeat center center;
-    background-size: 100% 100%;
-    margin: 0;
+    background-size: cover;
+    filter: blur(8px) brightness(0.7); /* Effet de flou + assombrissement */
+    z-index: -1;
+    transform: scale(1.1); /* Évite les bords blancs à cause du flou */
+}
+
+.main-ui {
+    padding: 40px;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 /* Barre de ressources style "Verre" */
