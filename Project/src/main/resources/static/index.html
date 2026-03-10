@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -51,8 +52,18 @@
 
     <!-- ÉCRAN FERME -->
     <section id="farm-screen" class="hidden">
-    <div class="bg-ferme"></div>
+    <div class="bg-blur"></div>
 
+    <div class="main-ui">
+        <section class="stats-bar">
+            <div class="stat-item">💰 <span id="cash">0</span> écus</div>
+            <div class="stat-item">💧 <span id="water">0</span> L</div>
+            <div class="stat-item">🌾 <span id="food">0</span> kg</div>
+            <div class="stat-item">🚜 <span id="straw">0</span> bottes</div>
+        </section>
+
+        <div id="animal-grid" class="animal-grid"></div>
+    </div>
     </section>
 
     <script src="js/script.js"></script>
