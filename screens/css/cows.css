@@ -1,0 +1,79 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(180deg, #1f2a1f 0%, #2f4932 100%);
+    color: #f5f5f5;
+}
+
+.page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 32px 20px;
+}
+
+.back-link {
+    display: inline-block;
+    margin-bottom: 16px;
+    padding: 10px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    border-radius: 12px;
+    color: #fff;
+    text-decoration: none;
+    font-weight: 700;
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.back-link:hover {
+    background: rgba(255, 255, 255, 0.22);
+}
+
+h1 {
+    margin: 0 0 8px;
+}
+
+p {
+    margin: 0 0 18px;
+    opacity: 0.9;
+}
+
+label {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+#cow-count-input {
+    width: 130px;
+    margin-bottom: 18px;
+    padding: 8px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.cow-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.cow-btn {
+    min-width: 150px;
+    height: 52px;
+    padding: 0 14px 0 56px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 12px;
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+    background:
+        url('../assets/vache.svg') no-repeat 12px center / 30px 30px,
+        linear-gradient(160deg, rgba(111, 76, 44, 0.9), rgba(72, 49, 28, 0.95));
+}
+
+.cow-btn:hover {
+    filter: brightness(1.08);
+}
