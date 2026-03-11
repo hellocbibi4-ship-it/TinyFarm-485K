@@ -180,6 +180,18 @@ body {
     filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.25));
 }
 
+.btn-acheter:disabled {
+    background-color: #8ca083;
+    color: #eef5df;
+    cursor: not-allowed;
+    opacity: 0.92;
+}
+
+.btn-acheter:disabled:hover {
+    transform: none;
+    filter: none;
+}
+
 .btn-acheter:active,
 .btn-fermer:active,
 .btn-ouvrir:active {

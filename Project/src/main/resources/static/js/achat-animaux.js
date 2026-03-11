@@ -1,15 +1,17 @@
 // Catalogue statique de démonstration: à remplacer plus tard par des données backend si besoin.
 const catalogueAnimaux = {
-    vache: { nom: "Vache", nomMinuscule: "vache", article: "une", prix: 50 },
+    vache: { nom: "Vache", nomMinuscule: "vache", article: "une", prix: 50, niveauMinimumAchat: 2 },
     poule: { nom: "Poule", nomMinuscule: "poule", article: "une", prix: 10 },
     lapin: { nom: "Lapin", nomMinuscule: "lapin", article: "un", prix: 10 }
 };
 
 // Etat local de la boutique: utile pour tester la popup avant intégration backend.
 const etatBoutique = {
+    niveauJoueur: 1,
     solde: 120,
     achats: {
-        vache: 0,
+        // Contrainte sujet: le joueur possède déjà une vache au niveau 1 (kit de démarrage).
+        vache: 1,
         poule: 0,
         lapin: 0
     }
@@ -51,6 +53,7 @@ window.addEventListener("keydown", (event) => {
 
 // Synchronisation initiale de l'interface (solde + compteurs).
 mettreAJourInterface();
+mettreAJourDisponibiliteBoutons();
 
 // Traite une tentative d'achat: valide le type, vérifie le solde, met à jour l'état.
 function traiterAchat(typeAnimal) {
@@ -58,6 +61,14 @@ function traiterAchat(typeAnimal) {
 
     if (!animal) {
         afficherMessage("Animal inconnu, achat annulé.", "erreur");
+        return;
+    }
+
+    if (!estAchatAutorise(typeAnimal)) {
+        afficherMessage(
+            "Niveau 1 : la vache est déjà fournie dans le kit de démarrage et ne peut pas être rachetée.",
+            "erreur"
+        );
         return;
     }
 
@@ -80,6 +91,39 @@ function mettreAJourInterface() {
     Object.entries(etatBoutique.achats).forEach(([typeAnimal, quantite]) => {
         elementsInterface.compteurs[typeAnimal].textContent = quantite;
     });
+}
+
+// Active/desactive visuellement les boutons selon les règles de progression.
+function mettreAJourDisponibiliteBoutons() {
+    boutonsAchat.forEach((bouton) => {
+        const typeAnimal = bouton.dataset.animal;
+        const achatAutorise = estAchatAutorise(typeAnimal);
+
+        bouton.disabled = !achatAutorise;
+
+        if (!achatAutorise && typeAnimal === "vache") {
+            bouton.textContent = "Déjà possédée";
+            bouton.title = "La vache est incluse au niveau 1.";
+            return;
+        }
+
+        bouton.textContent = "Acheter";
+        bouton.title = "";
+    });
+}
+
+function estAchatAutorise(typeAnimal) {
+    const animal = catalogueAnimaux[typeAnimal];
+
+    if (!animal) {
+        return false;
+    }
+
+    if (!animal.niveauMinimumAchat) {
+        return true;
+    }
+
+    return etatBoutique.niveauJoueur >= animal.niveauMinimumAchat;
 }
 
 // Affiche un message utilisateur avec la couleur correspondant au type.
