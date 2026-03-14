@@ -14,5 +14,4 @@ public class HabitatController {
     public HabitatController(HabitatService habitatService){
         this.habitatService = habitatService;
     }
-    
 }
