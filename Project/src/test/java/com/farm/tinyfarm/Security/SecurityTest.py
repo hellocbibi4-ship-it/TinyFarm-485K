@@ -3,10 +3,8 @@ import pytest
 BASE_URL = "http://localhost:8080"
 
 def test_acces_page_privee_bloque():
-    # L'endpoint /user est censé renvoyer les infos du joueur connecté
-    response = requests.get(f"{BASE_URL}/user")
-    
-    assert response.status_code == 401, f"Erreur de sécurité : L'accès devrait être bloqué (401), mais on a eu {response.status_code}"
+    response = requests.get(f"{BASE_URL}/api/me")
+    assert response.status_code == 401
 
 def test_acces_page_publique_autorise():
     # L'index ou les assets doivent être publics
@@ -14,10 +12,36 @@ def test_acces_page_publique_autorise():
 
     assert response.status_code == 200, f"Le fichier public devrait être accessible, mais on a eu {response.status_code}"
 
-def test_api_ouverte_pour_dev():
-    response = requests.post(f"{BASE_URL}/api/fermes", json={"nom": "Ferme_Test_API"})
+
+#def test_api_ouverte_pour_dev():
+#    response = requests.post(f"{BASE_URL}/api/fermes", json={"nom": "Ferme_Test_API"})
     
-    assert response.status_code == 201, "L'API devrait être ouverte (201) pour le développement, mais elle est bloqué"
+#    assert response.status_code == 201, "L'API devrait être ouverte (201) pour le développement, mais elle est bloqué"
     
-    ferme_id = response.json()["idFerme"]
-    requests.delete(f"{BASE_URL}/api/fermes/{ferme_id}")
+#    ferme_id = response.json()["idFerme"]
+#    requests.delete(f"{BASE_URL}/api/fermes/{ferme_id}")
+
+
+def test_assets_publics():
+    # CSS, JS, images doivent être accessibles sans connexion
+    for url in ["/css/style.css", "/js/script.js", "/assets/"]:
+        response = requests.get(f"{BASE_URL}{url}")
+        assert response.status_code == 200, f"{url} devrait être public"
+
+def test_admin_bloque_sans_role():
+    # Un utilisateur non admin ne doit pas accéder à /admin
+    response = requests.get(f"{BASE_URL}/admin/")
+    assert response.status_code in [401, 403], "La route /admin doit être protégée"
+
+def test_login_github_redirige():
+    # Le endpoint OAuth2 doit rediriger vers GitHub
+    response = requests.get(f"{BASE_URL}/oauth2/authorization/github", allow_redirects=False)
+    assert response.status_code == 302, "Doit rediriger vers GitHub"
+    assert "github.com" in response.headers.get("Location", ""), "La redirection doit pointer vers GitHub"
+
+def test_api_me_avec_token(github_pat):
+    # Avec un vrai token, /api/me doit renvoyer 200
+    headers = {"Authorization": f"Bearer {github_pat}"}
+    response = requests.get(f"{BASE_URL}/api/me", headers=headers)
+    assert response.status_code == 200
+    assert "login" in response.json(), "La réponse doit contenir le login GitHub"
