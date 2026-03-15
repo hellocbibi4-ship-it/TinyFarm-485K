@@ -55,12 +55,19 @@ public class SecurityConfig {
                         .defaultSuccessUrl("/", true) 
                 )
                 .exceptionHandling(exceptions -> exceptions
-                        .authenticationEntryPoint((request, response, authException) -> {
-                            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized: Please authenticate");
-                        })
-                        .accessDeniedHandler((request, response, accessDeniedException) -> {
-                            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Forbidden: You do not have access");
-                        })
+                    .authenticationEntryPoint((request, response, authException) -> {
+                        // On laisse passer les routes /api/** car elles gèrent elles-mêmes l'auth
+                        if (request.getRequestURI().startsWith("/api/")) {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType("application/json");
+                            response.getWriter().write("{\"error\":\"Not authenticated\"}");
+                        } else {
+                            response.sendRedirect("/oauth2/authorization/github");
+                        }
+                    })
+                    .accessDeniedHandler((request, response, accessDeniedException) -> {
+                        response.sendError(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
+                    })
                 )
                 .csrf(AbstractHttpConfigurer::disable)
                 .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable));
