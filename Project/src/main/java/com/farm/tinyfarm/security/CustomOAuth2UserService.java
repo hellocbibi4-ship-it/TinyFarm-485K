@@ -18,7 +18,6 @@ import java.util.*;
 @Service
 public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
 
-    private static final Set<String> ADMIN_USERS = Set.of("momo54", "skaf54");
     private final UtilisateurRepository utilisateurRepository;
 
     public CustomOAuth2UserService(UtilisateurRepository utilisateurRepository) {
@@ -36,10 +35,6 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         // Gestion des rôles
         List<GrantedAuthority> authorities = new ArrayList<>(oAuth2User.getAuthorities());
         String role = "ROLE_USER"; // Rôle par défaut
-        if (ADMIN_USERS.contains(userLogin)) {
-            authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
-            role = "ROLE_ADMIN";
-        }
 
         // On cherche le joueur dans la base
         Optional<Utilisateur> userOpt = utilisateurRepository.findByGithubUsername(userLogin);

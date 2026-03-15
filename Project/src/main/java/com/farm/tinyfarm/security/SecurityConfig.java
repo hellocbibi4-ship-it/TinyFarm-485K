@@ -44,8 +44,6 @@ public class SecurityConfig {
                         .requestMatchers("/h2-console/**").permitAll() 
                         // 🔥 ON AJOUTE L'API POUR QUE LES TESTS PYTHON PASSENT :
                         .requestMatchers("/api/**").permitAll() 
-                        // 🔹 Ce qui nécessite le rôle ADMIN
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
                         // 🔹 Tout le reste nécessite d'être connecté
                         .anyRequest().authenticated()
                 )
