@@ -85,7 +85,7 @@ const clsBtn           = document.getElementById("Trophy");
 const classementScreen = document.getElementById("Classement");
 const tbody            = document.getElementById("classement-body");
 
-// Au chargement : on vérifie si une session est déjà active
+//vérifie si une session est deja active
 window.addEventListener("DOMContentLoaded", async () => {
     try {
         const res = await fetch("/api/me");
@@ -102,12 +102,11 @@ window.addEventListener("DOMContentLoaded", async () => {
     classement();
 });
 
-// Clic login → redirige vers GitHub
+// Clic login redirige vers GitHub
 loginBtn.addEventListener("click", () => {
     window.location.href = "/oauth2/authorization/github";
 });
 
-// Bouton trophée
 clsBtn.addEventListener("click", () => {
     classementScreen.classList.toggle("show");
     clsBtn.classList.toggle("trophy2");
