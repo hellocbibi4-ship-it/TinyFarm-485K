@@ -3,16 +3,39 @@ package com.farm.tinyfarm.service;
 import com.farm.tinyfarm.repository.AnimalRepository;
 
 import jakarta.transaction.Transactional;
+import org.springframework.stereotype.Service;
 
 
 import com.farm.tinyfarm.model.Animal;
 import com.farm.tinyfarm.model.TypeAnimal;
 import com.farm.tinyfarm.outils.Utilitaires;
-import com. farm.tinyfarm.model.TypeRole;
+import com.farm.tinyfarm.model.TypeRole;
 import com.farm.tinyfarm.model.TypeSexe;
 import com.farm.tinyfarm.model.TypeStade;
 
+@Service
 public class AnimalService {
+
+    // Couts operations vache
+    private static final int COUT_NOURRIR  = 5;
+    private static final int COUT_ABREUVER = 2;
+    private static final int COUT_NETTOYER = 3;
+    private static final int COUT_SOIGNER  = 6;
+
+
+    // Gains de poids vache
+    private static final float POIDS_HERBE  = 5f;
+    private static final float POIDS_PAILLE = 3f;
+    private static final float POIDS_EAU    = 1f;  // uniquement si combinée à de la nourriture
+    private static final float POIDS_MAX    = 750f;
+
+    // Production de lait
+    private static final int LITRES_PREMIERE_TRAITE  = 4;
+    private static final int LITRES_DEUXIEME_TRAITE  = 8;
+
+    // Seuils adulte vache
+    private static final int AGE_ADULTE   = 10;//jours
+    private static final float POIDS_ADULTE = 80f;//kg
 
     private final AnimalRepository animalRepository;
     private final FermeService fermeService;
@@ -22,6 +45,12 @@ public class AnimalService {
     public AnimalService(AnimalRepository animalRepository, FermeService fermeService){
         this.animalRepository = animalRepository;
         this.fermeService = fermeService;
+    }
+
+    private void assertVache(Animal animal) {
+        if (!TypeAnimal.VACHE.equals(animal.getTypeAnimal())) {
+            throw new IllegalArgumentException("ERREUR : cet animal n'est pas une vache.");
+        }
     }
 
     //Crée un animal de base à la naissance
@@ -157,27 +186,149 @@ public class AnimalService {
     //(adulte quand 80 kg et 10 jours)
     //Meurt quand malade 4 jours de suite
     //PRE : l'animal doit être une vache
-    public void updateCowStatus() {}
+    public void updateCowStatus(Animal animal) {
+        assertVache(animal);
+
+        if (TypeStade.ENFANT.equals(animal.getStade())
+                && animal.getAge() >= AGE_ADULTE
+                && animal.getPoids() >= POIDS_ADULTE) {
+            animal.setStade(TypeStade.ADULTE);
+        }
+    }
+
+    @Transactional
+    public void nettoyer(Animal animal) {
+    assertVache(animal);
+
+    if (animal.getJaugeProprete() == 100) {
+        throw new IllegalStateException(
+            "ERREUR : La vache est déjà propre.");
+    }
+
+    animal.setJaugeProprete(100);
+
+    fermeService.retirerEcus(animal.getFerme().getIdFerme(), COUT_NETTOYER);
+    animalRepository.save(animal);
+}
 
     //TODO
     //Méthode qui ajoute du poids a une vache (poids max 750 kg)
-    public void updateCowWeight() {}
+    public void updateCowWeight(Animal animal, float addWeight) {
+        assertVache(animal);
+        if (animal.getPoids() + addWeight < POIDS_MAX) {
+            animal.setPoids(animal.getPoids() + addWeight);
+        } else {
+            animal.setPoids(POIDS_MAX);
+        }
+    }
 
-    //TODO
-    //Méthode qui nourrit une vache (+5kg si herbe, +3kg si paille)
+    //Méthodes qui nourrissent une vache (+5kg si herbe, +3kg si paille)
     //(L'eau fait prendre 1 kg mais seulement si la vache a déja mangé)
     //PRE : La vache ne doit pas avoir déja mangé dans la journée
-    public void nourrirPoule() {}
+    @Transactional
+    public void nourrirHerbe(Animal animal) {
+        assertVache(animal);
+
+        if (animal.isAMange()) {
+            throw new IllegalStateException(
+                "ERREUR : La vache ne peut manger qu'une fois par jour.");
+        }
+        
+        updateCowWeight(animal, POIDS_HERBE);
+        animal.setJaugeFaim(100);
+        animal.setAMange(true);
+
+        fermeService.retirerEcus(animal.getFerme().getIdFerme(), COUT_NOURRIR);
+        animalRepository.save(animal);
+    }
+
+    @Transactional
+    public void nourrirPaille(Animal animal) {
+        assertVache(animal);
+
+        if (animal.isAMange()) {
+            throw new IllegalStateException(
+                "ERREUR : La vache ne peut manger qu'une fois par jour.");
+        }
+
+        updateCowWeight(animal, POIDS_PAILLE);
+        animal.setJaugeFaim(100);
+        animal.setAMange(true);
+
+        fermeService.retirerEcus(animal.getFerme().getIdFerme(), COUT_NOURRIR);
+        animalRepository.save(animal);
+    }
 
     //TODO
     //Méthode qui abreuve une vache
-    public void abreuverVache() {}
+    @Transactional
+    public void abreuverVache(Animal animal) {
+        assertVache(animal);
+
+        if (animal.getJaugeHydratation() == 100) {
+            throw new IllegalStateException(
+                "ERREUR : La vache est déjà pleinement hydratée.");
+        }
+
+        animal.setJaugeHydratation(100);
+
+        // L'eau seule ne fait pas grossir, seulement combinée à de la nourriture
+        if (animal.isAMange()) {
+            updateCowWeight(animal, POIDS_EAU);
+        }
+
+        fermeService.retirerEcus(animal.getFerme().getIdFerme(), COUT_ABREUVER);
+        animalRepository.save(animal);
+    }
 
     //TODO
     //Méthode qui fait produire du lait à une vache et l'ajoute dans la remise
     //Adulte : 8L à 6H et 18H si la vache n'est pas traite, 4L sinon (Possibilité d'ajouter attributs estTraite)
     //PRE l'animal doit être une vache non sale et nourrie
-    public void produireLait() {}
+    @Transactional
+    public int produireLait(Animal animal) {
+        assertVache(animal);
+
+        if (!TypeStade.ADULTE.equals(animal.getStade())) {
+            return 0;
+        }
+        if (!animal.isAMange()) {
+            return 0;
+        }
+        if (animal.getJaugeProprete() < 100 || animal.estMalade()) {
+            return 0;
+        }
+
+        int litres;
+        if (!animal.isAEteTraite()) {
+            litres = LITRES_PREMIERE_TRAITE;
+            animal.setAEteTraite(true);
+        } else {
+            litres = LITRES_DEUXIEME_TRAITE;
+        }
+
+        animalRepository.save(animal);
+        return litres;
+    }
+
+    //Méthode pour soigner une vache 
+    //PRE : La vache doit être malade et ne pas avoir été soignée dans la journée
+    @Transactional
+    public void soigner(Animal animal) {
+    assertVache(animal);
+
+    if (!animal.estMalade()) {
+        throw new IllegalStateException(
+            "ERREUR : La vache ne peut pas être soignée si elle n'est pas malade.");
+    }
+
+    animal.setEstMalade(false);
+    animal.setJaugeSante(100);
+
+    fermeService.retirerEcus(animal.getFerme().getIdFerme(), COUT_SOIGNER);
+    animalRepository.save(animal);
+}
+
 
 }//Class
 
