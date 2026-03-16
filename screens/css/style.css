@@ -15,7 +15,6 @@ img {
 .hidden {
   display: none;
 }
-
 /* Le fond d'écran avec flou */
 .bg-login {
     position: fixed;
@@ -207,6 +206,7 @@ img {
     left: 50%;
     transform: translateX(-50%);
     font-size: 40px;
-    font-weight: bold;
-    font-family: Arial, sans-serif;
+    font-family: "Acme", sans-serif;
+    font-style: normal;
+    color : #786023;
 }
