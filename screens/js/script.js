@@ -103,3 +103,21 @@ document.querySelectorAll(".logout-btn").forEach(btn => {
     });
 
 });
+
+const loginSettingsBtn = document.querySelector(".settings-login-btn");
+const loginSettingsPanel = document.querySelector(".settings-login-panel");
+
+if (loginSettingsBtn && loginSettingsPanel) {
+    loginSettingsBtn.addEventListener("click", () => {
+        loginSettingsPanel.classList.toggle("open");
+        loginSettingsBtn.classList.toggle("open"); // 🔥 ajoute ça
+    });
+}
+
+document.querySelectorAll(".login-language-btn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const panel = btn.nextElementSibling;
+        panel.classList.toggle("open");
+    });
+});
