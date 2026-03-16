@@ -121,7 +121,7 @@
                 <!-- Center Panel 4: Clapier -->
                 <div class="zone zone-clapier">
                     <h3 class="zone-label">Clapier</h3>
-                    <div id="clapier-container" class="animals-zone">
+                    <div id="clapier-container" class="animals-zone animals-zone-group" role="button" tabindex="0" aria-label="Ouvrir les actions du clapier">
                         <button class="animal-icon" data-animal-name="Lapereau 1" data-animal-type="Lapereau" data-animal-home="Clapier" data-animal-weight="0.8" title="Lapereau 1">
                             <img src="assets/lapin.svg" alt="Lapereau 1">
                         </button>
@@ -185,35 +185,44 @@
         const toast = document.getElementById("toast");
         const animalIcons = document.querySelectorAll(".animal-icon");
         const actionButtons = document.querySelectorAll("[data-action]");
+        const clapierContainer = document.getElementById("clapier-container");
         const trophyButton = document.getElementById("Trophy");
         const settingsButton = document.getElementById("Settings");
         const classementPanel = document.getElementById("Classement");
         const closeTargets = document.querySelectorAll("[data-close-modal]");
         let selectedTarget = { name: "", isGroup: false };
 
-        const isClapierTarget = (icon) => {
-            return (icon.dataset.animalHome || "").toLowerCase() === "clapier";
+        const updateClapierTooltip = () => {
+            if (!clapierContainer) {
+                return 0;
+            }
+            const rabbitCount = clapierContainer.querySelectorAll(".animal-icon").length;
+            clapierContainer.setAttribute("data-group-tooltip", `${rabbitCount} lapins - actions de groupe`);
+            return rabbitCount;
         };
 
-        const openModal = (icon) => {
-            if (isClapierTarget(icon)) {
-                const rabbitCount = document.querySelectorAll("#clapier-container .animal-icon").length;
-                modalName.textContent = "Clapier";
-                modalType.textContent = "Lapins";
-                modalPlace.textContent = "Clapier";
-                modalWeightLabel.textContent = "Effectif:";
-                modalWeight.textContent = `${rabbitCount} lapins`;
-                selectedTarget = { name: "tout le clapier", isGroup: true };
-                console.log("Zone cliquee: Clapier (action groupe).");
-            } else {
-                modalName.textContent = icon.dataset.animalName;
-                modalType.textContent = icon.dataset.animalType;
-                modalPlace.textContent = icon.dataset.animalHome;
-                modalWeightLabel.textContent = "Poids:";
-                modalWeight.textContent = `${icon.dataset.animalWeight} kg`;
-                selectedTarget = { name: icon.dataset.animalName, isGroup: false };
-                console.log(`Animal clique: ${icon.dataset.animalName}.`);
-            }
+        const openAnimalModal = (icon) => {
+            modalName.textContent = icon.dataset.animalName;
+            modalType.textContent = icon.dataset.animalType;
+            modalPlace.textContent = icon.dataset.animalHome;
+            modalWeightLabel.textContent = "Poids:";
+            modalWeight.textContent = `${icon.dataset.animalWeight} kg`;
+            selectedTarget = { name: icon.dataset.animalName, isGroup: false };
+            console.log(`Animal clique: ${icon.dataset.animalName}.`);
+
+            modal.classList.remove("hidden");
+            modal.setAttribute("aria-hidden", "false");
+        };
+
+        const openClapierModal = () => {
+            const rabbitCount = updateClapierTooltip();
+            modalName.textContent = "Clapier";
+            modalType.textContent = "Lapins";
+            modalPlace.textContent = "Clapier";
+            modalWeightLabel.textContent = "Effectif:";
+            modalWeight.textContent = `${rabbitCount} lapins`;
+            selectedTarget = { name: "tout le clapier", isGroup: true };
+            console.log("Zone cliquee: Clapier (action groupe).");
 
             modal.classList.remove("hidden");
             modal.setAttribute("aria-hidden", "false");
@@ -236,8 +245,26 @@
         };
 
         animalIcons.forEach((icon) => {
-            icon.addEventListener("click", () => openModal(icon));
+            const isRabbit = (icon.dataset.animalHome || "").toLowerCase() === "clapier";
+            if (!isRabbit) {
+                icon.addEventListener("click", () => openAnimalModal(icon));
+            }
         });
+
+        if (clapierContainer) {
+            updateClapierTooltip();
+
+            clapierContainer.addEventListener("click", () => {
+                openClapierModal();
+            });
+
+            clapierContainer.addEventListener("keydown", (event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    openClapierModal();
+                }
+            });
+        }
 
         closeTargets.forEach((btn) => {
             btn.addEventListener("click", closeModal);
