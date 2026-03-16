@@ -362,6 +362,76 @@ img {
     box-sizing: border-box;
 }
 
+.animals-zone-group {
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.16s ease, filter 0.16s ease;
+}
+
+.animals-zone-group:hover,
+.animals-zone-group:focus-visible {
+    transform: scale(1.05);
+    filter: brightness(1.05);
+}
+
+.animals-zone-group:focus-visible {
+    outline: 2px solid rgba(255, 231, 173, 0.75);
+    outline-offset: 2px;
+    border-radius: 10px;
+}
+
+.animals-zone-group::after {
+    content: attr(data-group-tooltip);
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 14px);
+    transform: translateX(-50%) translateY(8px);
+    min-width: 190px;
+    max-width: 240px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: rgba(35, 24, 10, 0.92);
+    border: 1px solid rgba(233, 205, 132, 0.55);
+    color: #ffe7ad;
+    font-size: 0.7rem;
+    font-weight: 700;
+    line-height: 1.35;
+    text-align: center;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+    z-index: 7;
+}
+
+.animals-zone-group::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 6px);
+    transform: translateX(-50%) translateY(8px);
+    width: 0;
+    height: 0;
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-top: 9px solid rgba(35, 24, 10, 0.92);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+    z-index: 7;
+}
+
+.animals-zone-group:hover::after,
+.animals-zone-group:hover::before,
+.animals-zone-group:focus-visible::after,
+.animals-zone-group:focus-visible::before {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}
+
 
 
 
@@ -393,6 +463,16 @@ img {
 
 .animal-icon:last-child {
     margin-right: 0;
+}
+
+#clapier-container .animal-icon {
+    cursor: default;
+    pointer-events: none;
+}
+
+#clapier-container .animal-icon::after,
+#clapier-container .animal-icon::before {
+    display: none;
 }
 
 .animal-icon:nth-child(odd) {
