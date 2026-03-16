@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=ADLaM+Display&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=ADLaM+Display&family=Acme&display=swap" rel="stylesheet">
-
+    
 </head>
 <body>
     <!-- ÉCRAN LOGIN -->
@@ -24,7 +24,28 @@
     <button id = "Trophy" class="Trophy"></button>
     
     <!-- Bouton réglages (droite) -->
-    <button id= "Settings" class="side-btn right"></button>
+    <button class="side-btn right settings-btn"></button>
+    <div class="settings-panel">
+    <div class="settings-content">
+
+    <div class="language-btn">
+        Langue ▸
+    </div>
+
+    <div class="language-panel">
+        <div class="lang-option" data-lang="fr">
+            <img src="assets/fr.png" alt="FR">
+            Français
+        </div>
+
+        <div class="lang-option" data-lang="en">
+            <img src="assets/uk.png" alt="EN">
+            English
+        </div>
+    </div>
+
+    </div>
+    </div>
 
     <section id = "Classement" class = "">
         <img class="classement" src="assets/bgclassement.svg">
@@ -52,10 +73,34 @@
     <!-- ÉCRAN FERME -->
     <section id="farm-screen" class="hidden">
     <div class="bg-ferme"></div>
+    <button class="side-btn right settings-btn"></button>
+    <div class="settings-panel">
+    <div class="settings-content">
 
+    <div class="language-btn">
+        Langue ▸
+    </div>
+
+    <div class="language-panel">
+        <div class="lang-option" data-lang="fr">
+            <img src="assets/fr.png" alt="FR">
+            Français
+        </div>
+
+        <div class="lang-option" data-lang="en">
+            <img src="assets/uk.png" alt="EN">
+            English
+        </div>
+    </div>
+
+    <!-- Sur la ferme seulement -->
+    <p class="logout-btn">Déconnexion</p>
+
+    </div>
+    </div>
     </section>
-
+    
     <script src="js/script.js"></script>
-
+    
 </body>
 </html>
