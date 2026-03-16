@@ -200,3 +200,13 @@ img {
     background-size: 100% 100%;
     margin: 0;
 }
+
+#clock {
+    position: fixed;
+    top: 0px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 40px;
+    font-weight: bold;
+    font-family: Arial, sans-serif;
+}
