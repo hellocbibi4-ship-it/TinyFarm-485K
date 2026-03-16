@@ -192,7 +192,7 @@ body, html {
     top: 0; left: 0; right: 0; bottom: 0;
     background: url('../assets/background.png') no-repeat center center;
     background-size: cover;
-    filter: blur(8px) brightness(0.7); /* Effet de flou + assombrissement */
+    filter: blur(0px) brightness(0.7); /* Effet de flou + assombrissement */
     z-index: -1;
     transform: scale(1.1); /* Évite les bords blancs à cause du flou */
 }
@@ -250,3 +250,13 @@ body, html {
 
 .card h3 { margin: 10px 0 5px 0; font-size: 1.1rem; }
 .card p { margin: 0; font-size: 0.9rem; opacity: 0.8; }
+
+#clock {
+    position: fixed;
+    top: 0px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 40px;
+    font-weight: bold;
+    font-family: Arial, sans-serif;
+}
