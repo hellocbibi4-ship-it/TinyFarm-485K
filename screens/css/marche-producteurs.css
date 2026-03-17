@@ -1,0 +1,203 @@
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    min-height: 100%;
+    font-family: "Acme", sans-serif; /* La police du jeu */
+}
+
+/* fond flou */
+.fond-page {
+    position: fixed;
+    inset: 0;
+    background: url('../assets/background.png') center center / cover no-repeat;
+    background-color: #3e5a78; /* Couleur de secours si on a pas d'image */
+    filter: blur(4px);
+    z-index: -1;
+}
+
+.zone-principale {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* cadre en bois */
+.popup-marche-bois {
+    position: relative;
+    width: 340px;
+    background-color: #fceea6; /* Couleur parchemin */
+    border: 10px solid #8e5524; /* Couleur bois */
+    border-radius: 4px;
+    box-shadow:
+            inset 0 0 0 2px #4a2711, /* Ligne foncée à l'intérieur du bois */
+            0 0 0 2px #4a2711,       /* Ligne foncée à l'extérieur du bois */
+            0 20px 40px rgba(0,0,0,0.6);
+    color: #000;
+}
+
+/* coin doré */
+.coin-dore {
+    position: absolute;
+    top: -10px;
+    width: 24px;
+    height: 14px;
+    background-color: #ffcc00; /* Or massif */
+    border: 2px solid #4a2711;
+    z-index: 10;
+}
+.coin-dore.gauche { left: -10px; border-radius: 4px 0 4px 0; }
+.coin-dore.droite { right: -10px; border-radius: 0 4px 0 4px; }
+
+/* L'entete (Marché des producteurs)  */
+.entete-bois {
+    background-color: #8e5524;
+    color: white;
+    text-align: center;
+    padding: 10px 5px;
+    border-bottom: 2px solid #4a2711;
+}
+
+.entete-bois h1 {
+    margin: 0;
+    font-size: 1.4rem;
+    text-shadow: 1px 1px 0px #000; /* Ombre du texte */
+}
+
+/* barres des titres (Objets vendeurs prix) */
+.titres-colonnes {
+    background-color: #b06d2d; /* Bois un peu plus clair */
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 25px;
+    font-size: 1.2rem;
+    border-bottom: 2px solid #4a2711;
+    text-shadow: 1px 1px 0px #000;
+}
+
+/* Listes des produits */
+.liste-produits-parchemin {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    /* Effet papier déchiré en bas avec un motif CSS (Optionnel) */
+    background-image: radial-gradient(circle at 10px 100%, transparent 10px, #fceea6 11px);
+    background-size: 20px 10px;
+    background-repeat: repeat-x;
+    background-position: bottom;
+}
+
+.ligne-produit {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #fceea6;
+    border: 2px solid #b89355;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 1.2rem;
+    box-shadow: inset 0 -3px 0 rgba(184, 147, 85, 0.4); /* Petit effet 3D */
+}
+
+.icone-objet img {
+    width: 28px;
+    height: 28px;
+}
+
+.vendeur {
+    font-weight: bold;
+    flex-grow: 1;
+    text-align: center;
+}
+
+.prix {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: bold;
+}
+
+.piece-or {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    background-color: #f1c40f;
+    border: 2px solid #9c7110;
+    border-radius: 50%;
+}
+
+/* pagination (les fleches) */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    padding: 5px 0 15px 0;
+    font-size: 1.3rem;
+    font-weight: bold;
+}
+
+/* pagination (les fleches) */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    padding: 5px 0 15px 0;
+    font-size: 1.4rem; /* Un peu plus grand */
+    font-weight: bold;
+    color: #000;
+}
+
+.btn-fleche {
+    background: #6a5749; /* La couleur marron de l'intérieur de la flèche */
+    color: #44372e;      /* La couleur du triangle (on triche en coloriant le texte) */
+    border: 2px solid #2b1f15; /* Bordure foncée autour du bouton */
+    border-radius: 5px; /* Les coins un peu arrondis du bouton */
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 0px 6px;
+    line-height: 1; /* Pour bien centrer le triangle */
+    box-shadow: inset -2px -2px 0px rgba(0,0,0,0.3); /* Petit effet d'ombre à l'intérieur */
+}
+
+/* Petit effet quand on appuie sur la flèche */
+.btn-fleche:active {
+    box-shadow: inset 2px 2px 0px rgba(0,0,0,0.4);
+}
+
+/* pieds en bois et bouton fermér */
+.pied-bois {
+    background-color: #8e5524;
+    padding: 10px;
+    text-align: center;
+    border-top: 4px solid #4a2711;
+}
+
+.btn-fermer-bleu {
+    background-color: #3b50a3;
+    color: white;
+    font-family: 'Acme', sans-serif;
+    font-size: 1.2rem;
+    padding: 4px 30px;
+    border-radius: 4px;
+    cursor: pointer;
+
+    /* La double bordure du bouton */
+    border: 2px solid #8ba1f3; /* Bordure claire intérieure */
+    outline: 2px solid #1c2759; /* Bordure foncée extérieure */
+
+    box-shadow: 0 4px 0 #1c2759; /* Effet de relief du bouton */
+    text-shadow: 1px 1px 0 #000;
+}
+
+/* Effet quand on clique sur le bouton */
+.btn-fermer-bleu:active {
+    transform: translateY(4px);
+    box-shadow: 0 0 0 #1c2759;
+}

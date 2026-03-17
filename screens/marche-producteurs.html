@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TinyFarm Marche des producteurs</title>
+    <link rel="stylesheet" href="css/marche-producteurs.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Acme&family=ADLaM+Display&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="fond-page" aria-hidden="true"></div>
+
+<main class="zone-principale">
+
+    <section id="popup-marche" class="popup-marche-bois" role="dialog" aria-modal="true">
+        <div class="coin-dore gauche"></div>
+        <div class="coin-dore droite"></div>
+
+        <header class="entete-bois">
+            <h1>Marché des producteurs</h1>
+        </header>
+
+        <div class="titres-colonnes">
+            <span>Objet</span>
+            <span>Vendeur</span>
+            <span>Prix</span>
+        </div>
+
+        <div class="liste-produits-parchemin">
+            <div class="ligne-produit">
+                <div class="icone-objet"><img src="https://cdn-icons-png.flaticon.com/512/415/415682.png" alt="Pomme"></div>
+                <span class="vendeur">Imany</span>
+                <span class="prix">5 <span class="piece-or"></span></span>
+            </div>
+            <div class="ligne-produit">
+                <div class="icone-objet"><img src="https://cdn-icons-png.flaticon.com/512/415/415733.png" alt="Carotte"></div>
+                <span class="vendeur">Lizzy</span>
+                <span class="prix">8 <span class="piece-or"></span></span>
+            </div>
+            <div class="ligne-produit">
+                <div class="icone-objet"><img src="https://cdn-icons-png.flaticon.com/512/869/869552.png" alt="Lait"></div>
+                <span class="vendeur">Fred</span>
+                <span class="prix">12 <span class="piece-or"></span></span>
+            </div>
+        </div>
+
+        <div class="pagination">
+            <button class="btn-fleche btn-gauche" aria-label="Précédent">◀</button>
+            <span class="page-actuelle">1/3</span>
+            <button class="btn-fleche btn-droite" aria-label="Suivant">▶</button>
+        </div>
+
+        <footer class="pied-bois">
+            <button id="btn-fermer-marche" class="btn-fermer-bleu" type="button">fermer</button>
+        </footer>
+    </section>
+
+</main>
+</body>
+</html>
