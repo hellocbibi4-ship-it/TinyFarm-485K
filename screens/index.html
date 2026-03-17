@@ -67,6 +67,43 @@
     <!-- ÉCRAN FERME -->
     <section id="farm-screen" class="hidden">
     <div class="bg-ferme"></div>
+    <button id="stock-toggle" class="stock-toggle" type="button" aria-expanded="false">
+        Stock
+    </button>
+    <aside id="stock-panel" class="stock-panel" aria-hidden="true">
+        <div class="stock-panel-header">
+            <h2>Stock</h2>
+            <p class="stock-summary">
+                <span class="stock-summary-icon" aria-hidden="true"></span>
+                <span id="stock-total-units">0</span> unites
+            </p>
+        </div>
+
+        <div class="stock-field">
+            <label for="stock-product">Produit :</label>
+            <select id="stock-product" class="stock-select"></select>
+        </div>
+
+        <p class="stock-line">Stock dispo : <span id="stock-available">0</span></p>
+
+        <div class="stock-field stock-field-quantity">
+            <label for="stock-quantity">Quantite :</label>
+            <div class="stock-stepper">
+                <button id="stock-minus" class="stock-stepper-btn" type="button" aria-label="Retirer une unite">-</button>
+                <input id="stock-quantity" class="stock-quantity-input" type="number" min="1" value="1" inputmode="numeric">
+                <button id="stock-plus" class="stock-stepper-btn" type="button" aria-label="Ajouter une unite">+</button>
+            </div>
+        </div>
+
+        <p class="stock-line">Prix unitaire : <span id="stock-unit-price">0 ecu</span></p>
+        <p class="stock-line stock-total-line">Total : <span id="stock-total-price">0 ecu</span></p>
+        <p id="stock-feedback" class="stock-feedback" aria-live="polite"></p>
+
+        <div class="stock-actions">
+            <button id="stock-cancel" class="stock-action stock-action-cancel" type="button">Annuler</button>
+            <button id="stock-sell" class="stock-action stock-action-confirm" type="button">Vendre</button>
+        </div>
+    </aside>
     <div id="clock"></div> 
     <button class="side-btn right settings-btn"></button>
     <div class="settings-panel">
