@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>TinyFarm - Version Propres</title>
+    <title>TinyFarm - Version propre</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,51 +11,311 @@
 
 </head>
 <body>
-    <!-- ÉCRAN LOGIN -->
+    <!-- ECRAN LOGIN -->
     <section id="login-screen">
-    <div class="bg-login"></div>
-    <h1 class="title">TinyFarm</h1>
+        <div class="bg-login"></div>
+        <h1 class="title">TinyFarm</h1>
+        <button id="login-btn" class="login-btn" aria-label="Jouer a TinyFarm"></button>
 
-    <!-- Bouton principal -->
-    <button id="login-btn" class="login-btn">
-    </button>
+        <!-- Bouton trophée (gauche) -->
+        <button id="Trophy" class="Trophy" aria-label="Classement"></button>
 
-    <!-- Bouton trophée (gauche) -->
-    <button id = "Trophy" class="Trophy"></button>
-    
-    <!-- Bouton réglages (droite) -->
-    <button id= "Settings" class="side-btn right"></button>
+        <!-- Bouton réglages (droite) -->
+        <button id="Settings" class="side-btn right" aria-label="Reglages"></button>
 
-    <section id = "Classement" class = "">
-        <img class="classement" src="assets/bgclassement.svg">
+        <section id="Classement" class="">
+            <img class="classement" src="assets/bgclassement.svg" alt="Classement">
 
-        <p class = "title-classement">Classement</p> 
-        <table class="info">
-            <thead>
-                <tr>
-                <th>Rang</th>
-                <th>Nom</th>
-                <th>Production/J</th>
-                <th>Capacité</th>
-                <th>Argent</th>
-                </tr>
-            </thead>
-
-            <tbody id="classement-body"></tbody>
-        </table>
-
-       
-       </section>
+            <p class="title-classement">Classement</p>
+            <table class="info">
+                <thead>
+                    <tr>
+                        <th>Rang</th>
+                        <th>Nom</th>
+                        <th>Production/J</th>
+                        <th>Capacite</th>
+                        <th>Argent</th>
+                    </tr>
+                </thead>
+                <tbody id="classement-body">
+                    <tr>
+                        <td>1</td>
+                        <td>Ferme1</td>
+                        <td>1820</td>
+                        <td>9200</td>
+                        <td>15400</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Ferm2</td>
+                        <td>1650</td>
+                        <td>8700</td>
+                        <td>13200</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Ferme3</td>
+                        <td>1580</td>
+                        <td>8100</td>
+                        <td>12850</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
     </section>
-    </section>
 
-    <!-- ÉCRAN FERME -->
+    <!-- ECRAN FERME -->
     <section id="farm-screen" class="hidden">
-    <div class="bg-ferme"></div>
+        <div class="bg-blur"></div>
 
+        <div class="main-ui">
+            <section class="stats-bar">
+                <div class="stat-item">💰 <span>1500</span> ecus</div>
+                <div class="stat-item">💧 <span>450</span> L</div>
+                <div class="stat-item">🌾 <span>200</span> kg</div>
+                <div class="stat-item">🚜 <span>15</span> bottes</div>
+            </section>
+
+            <!-- Container -->
+            <div class="farm-canvas">
+                <!-- afficher Temps -->
+                <div class="zone zone-header">
+                    <div id="temps-zone" class="zone-content">
+                        <!--  -->
+                    </div>
+                </div>
+
+                <!-- Left Sidebar -->
+                <div class="zone zone-sidebar-left">
+                </div>
+
+                <!-- Right Sidebar -->
+                <div class="zone zone-sidebar-right">
+                </div>
+
+                <!-- Center Panel 1: Remise -->
+                <div class="zone zone-remise">
+                </div>
+
+                <!-- Center Panel 2: Poulailler -->
+                <div class="zone zone-poulailler">
+                    <h3 class="zone-label"></h3>
+                    <div id="poulailler-container" class="animals-zone">
+                        <button class="animal-icon" data-animal-name="Coq" data-animal-type="Coq" data-animal-home="Poulailler" data-animal-weight="2.8" title="Coq">
+                            <img src="assets/poule.svg" alt="Coq">
+                        </button>
+                        <button class="animal-icon" data-animal-name="Poule 1" data-animal-type="Poule" data-animal-home="Poulailler" data-animal-weight="1.6" title="Poule 1">
+                            <img src="assets/poule.svg" alt="Poule 1">
+                        </button>
+                        <button class="animal-icon" data-animal-name="Poule 2" data-animal-type="Poule" data-animal-home="Poulailler" data-animal-weight="1.5" title="Poule 2">
+                            <img src="assets/poule.svg" alt="Poule 2">
+                        </button>
+                        <button class="animal-icon" data-animal-name="Poule 3" data-animal-type="Poule" data-animal-home="Poulailler" data-animal-weight="1.7" title="Poule 3">
+                            <img src="assets/poule.svg" alt="Poule 3">
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Center Panel 3: Paturage -->
+                <div class="zone zone-paturage">
+                    <h3 class="zone-label"></h3>
+                    <div id="paturage-container" class="animals-zone">
+                        <button class="animal-icon" data-animal-name="Vache" data-animal-type="Vache" data-animal-home="Pre" data-animal-weight="520" title="Vache">
+                            <img src="assets/vache.svg" alt="Vache">
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Center Panel 4: Clapier -->
+                <div class="zone zone-clapier">
+                    <h3 class="zone-label"></h3>
+                    <div id="clapier-container" class="animals-zone animals-zone-group" role="button" tabindex="0" aria-label="Ouvrir les actions du clapier">
+                        <button class="animal-icon" data-animal-name="Lapereau 1" data-animal-type="Lapereau" data-animal-home="Clapier" data-animal-weight="0.8" title="Lapereau 1">
+                            <img src="assets/lapin.svg" alt="Lapereau 1">
+                        </button>
+                        <button class="animal-icon" data-animal-name="Lapereau 2" data-animal-type="Lapereau" data-animal-home="Clapier" data-animal-weight="0.9" title="Lapereau 2">
+                            <img src="assets/lapin.svg" alt="Lapereau 2">
+                        </button>
+                        <button class="animal-icon" data-animal-name="Lapereau 3" data-animal-type="Lapereau" data-animal-home="Clapier" data-animal-weight="0.7" title="Lapereau 3">
+                            <img src="assets/lapin.svg" alt="Lapereau 3">
+                        </button>
+                        <button class="animal-icon" data-animal-name="Lapereau 4" data-animal-type="Lapereau" data-animal-home="Clapier" data-animal-weight="0.8" title="Lapereau 4">
+                            <img src="assets/lapin.svg" alt="Lapereau 4">
+                        </button>
+                        <button class="animal-icon" data-animal-name="Lapereau 5" data-animal-type="Lapereau" data-animal-home="Clapier" data-animal-weight="0.9" title="Lapereau 5">
+                            <img src="assets/lapin.svg" alt="Lapereau 5">
+                        </button>
+                        <button class="animal-icon" data-animal-name="Lapereau 6" data-animal-type="Lapereau" data-animal-home="Clapier" data-animal-weight="0.8" title="Lapereau 6">
+                            <img src="assets/lapin.svg" alt="Lapereau 6">
+                        </button>
+                        <button class="animal-icon" data-animal-name="Lapereau 7" data-animal-type="Lapereau" data-animal-home="Clapier" data-animal-weight="0.7" title="Lapereau 7">
+                            <img src="assets/lapin.svg" alt="Lapereau 7">
+                        </button>
+                        <button class="animal-icon" data-animal-name="Lapereau 8" data-animal-type="Lapereau" data-animal-home="Clapier" data-animal-weight="0.8" title="Lapereau 8">
+                            <img src="assets/lapin.svg" alt="Lapereau 8">
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </section>
 
-    <script src="js/script.js"></script>
+    <div id="animal-modal" class="modal hidden" aria-hidden="true">
+        <div class="modal-backdrop" data-close-modal></div>
+        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="animal-name">
+            <div class="modal-header">
+                <h2 id="animal-name">Animal</h2>
+                <button type="button" class="close-btn" data-close-modal aria-label="Fermer">✕</button>
+            </div>
+            <div class="modal-info">
+                <p><span class="info-label">Type:</span> <span id="animal-type">-</span></p>
+                <p><span class="info-label">Lieu:</span> <span id="animal-place">-</span></p>
+                <p><span id="animal-weight-label" class="info-label">Poids:</span> <span id="animal-weight">-</span></p>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="action-btn" data-action="Nourrir">Nourrir</button>
+                <button type="button" class="action-btn" data-action="Abreuver">Abreuver</button>
+                <button type="button" class="action-btn" data-action="Soigner">Soigner</button>
+                <button type="button" class="action-btn" data-action="Nettoyer">Nettoyer</button>
+            </div>
+        </div>
+    </div>
 
+    <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+    <script>
+        const loginBtn = document.getElementById("login-btn");
+        const loginScreen = document.getElementById("login-screen");
+        const farmScreen = document.getElementById("farm-screen");
+        const modal = document.getElementById("animal-modal");
+        const modalName = document.getElementById("animal-name");
+        const modalType = document.getElementById("animal-type");
+        const modalPlace = document.getElementById("animal-place");
+        const modalWeightLabel = document.getElementById("animal-weight-label");
+        const modalWeight = document.getElementById("animal-weight");
+        const toast = document.getElementById("toast");
+        const animalIcons = document.querySelectorAll(".animal-icon");
+        const actionButtons = document.querySelectorAll("[data-action]");
+        const clapierContainer = document.getElementById("clapier-container");
+        const trophyButton = document.getElementById("Trophy");
+        const settingsButton = document.getElementById("Settings");
+        const classementPanel = document.getElementById("Classement");
+        const closeTargets = document.querySelectorAll("[data-close-modal]");
+        let selectedTarget = { name: "", isGroup: false };
+
+        if (loginBtn && loginScreen && farmScreen) {
+            loginBtn.addEventListener("click", () => {
+                loginScreen.classList.add("hidden");
+                farmScreen.classList.remove("hidden");
+            });
+        }
+
+        const updateClapierTooltip = () => {
+            if (!clapierContainer) {
+                return 0;
+            }
+            const rabbitCount = clapierContainer.querySelectorAll(".animal-icon").length;
+            clapierContainer.setAttribute("data-group-tooltip", `${rabbitCount} lapins - actions de groupe`);
+            return rabbitCount;
+        };
+
+        const openAnimalModal = (icon) => {
+            modalName.textContent = icon.dataset.animalName;
+            modalType.textContent = icon.dataset.animalType;
+            modalPlace.textContent = icon.dataset.animalHome;
+            modalWeightLabel.textContent = "Poids:";
+            modalWeight.textContent = `${icon.dataset.animalWeight} kg`;
+            selectedTarget = { name: icon.dataset.animalName, isGroup: false };
+            console.log(`Animal clique: ${icon.dataset.animalName}.`);
+
+            modal.classList.remove("hidden");
+            modal.setAttribute("aria-hidden", "false");
+        };
+
+        const openClapierModal = () => {
+            const rabbitCount = updateClapierTooltip();
+            modalName.textContent = "Clapier";
+            modalType.textContent = "Lapins";
+            modalPlace.textContent = "Clapier";
+            modalWeightLabel.textContent = "Effectif:";
+            modalWeight.textContent = `${rabbitCount} lapins`;
+            selectedTarget = { name: "tout le clapier", isGroup: true };
+            console.log("Zone cliquee: Clapier (action groupe).");
+
+            modal.classList.remove("hidden");
+            modal.setAttribute("aria-hidden", "false");
+        };
+
+        const closeModal = () => {
+            modal.classList.add("hidden");
+            modal.setAttribute("aria-hidden", "true");
+        };
+
+        const showToast = (message) => {
+            toast.textContent = message;
+            toast.classList.remove("hidden");
+            toast.classList.add("show");
+            window.clearTimeout(showToast.timeoutId);
+            showToast.timeoutId = window.setTimeout(() => {
+                toast.classList.remove("show");
+                toast.classList.add("hidden");
+            }, 1600);
+        };
+
+        animalIcons.forEach((icon) => {
+            const isRabbit = (icon.dataset.animalHome || "").toLowerCase() === "clapier";
+            if (!isRabbit) {
+                icon.addEventListener("click", () => openAnimalModal(icon));
+            }
+        });
+
+        if (clapierContainer) {
+            updateClapierTooltip();
+
+            clapierContainer.addEventListener("click", () => {
+                openClapierModal();
+            });
+
+            clapierContainer.addEventListener("keydown", (event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    openClapierModal();
+                }
+            });
+        }
+
+        closeTargets.forEach((btn) => {
+            btn.addEventListener("click", closeModal);
+        });
+
+        actionButtons.forEach((btn) => {
+            btn.addEventListener("click", () => {
+                const action = btn.dataset.action;
+                const target = selectedTarget.name || modalName.textContent;
+                showToast(`${action} : ${target} - OK`);
+                console.log(`Action: ${action} sur ${target}.`);
+            });
+        });
+
+        if (trophyButton && classementPanel) {
+            trophyButton.addEventListener("click", () => {
+                classementPanel.classList.toggle("show");
+                trophyButton.classList.toggle("trophy2");
+                console.log("Bouton Trophee clique.");
+            });
+        }
+
+        if (settingsButton) {
+            settingsButton.addEventListener("click", () => {
+                console.log("Bouton Reglages clique.");
+            });
+        }
+
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape" && !modal.classList.contains("hidden")) {
+                closeModal();
+            }
+        });
+    </script>
 </body>
 </html>
