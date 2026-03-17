@@ -182,17 +182,17 @@ img {
 
 .stock-toggle {
     position: absolute;
-    top: 18px;
+    top: 0;
     left: 66px;
-    min-width: 118px;
-    height: 46px;
-    padding: 0 24px;
+    min-width: 168px;
+    height: 58px;
+    padding: 0 34px;
     border: none;
-    border-radius: 0 0 12px 12px;
+    border-radius: 0 0 16px 16px;
     background: #e1c468;
     color: #17120a;
     font-family: "Acme", sans-serif;
-    font-size: 1.7rem;
+    font-size: 2.2rem;
     text-transform: uppercase;
     letter-spacing: 0.04em;
     cursor: pointer;
@@ -208,7 +208,7 @@ img {
 
 .stock-panel {
     position: absolute;
-    top: 64px;
+    top: 0;
     left: 42px;
     width: min(320px, calc(100vw - 84px));
     padding: 18px 22px 22px;
@@ -231,23 +231,16 @@ img {
 }
 
 .stock-panel-header {
+    padding-top: 52px;
     padding-bottom: 14px;
     border-bottom: 1px solid rgba(23, 18, 10, 0.18);
-}
-
-.stock-panel-header h2 {
-    margin: 0;
-    color: #17120a;
-    font-size: 2.55rem;
-    line-height: 1;
-    text-transform: uppercase;
 }
 
 .stock-summary {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin: 14px 0 0;
+    margin: 0;
     font-size: 1.95rem;
 }
 
@@ -631,22 +624,22 @@ img {
 @media (max-width: 900px) {
     .stock-toggle {
         left: 18px;
-        top: 12px;
-        min-width: 104px;
-        height: 42px;
-        padding: 0 18px;
-        font-size: 1.45rem;
+        top: 0;
+        min-width: 144px;
+        height: 50px;
+        padding: 0 24px;
+        font-size: 1.8rem;
     }
 
     .stock-panel {
-        top: 54px;
+        top: 0;
         left: 12px;
         width: min(300px, calc(100vw - 24px));
         padding: 16px 18px 18px;
     }
 
-    .stock-panel-header h2 {
-        font-size: 2.2rem;
+    .stock-panel-header {
+        padding-top: 46px;
     }
 
     .stock-summary,
