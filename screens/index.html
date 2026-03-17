@@ -11,6 +11,26 @@
     
 </head>
 <body>
+    <button id = "Trophy" class="Trophy"></button>
+    <section id = "Classement" class = "">
+        <img class="classement" src="assets/bgclassement.svg">
+
+        <p class = "title-classement">Classement</p> 
+        <table class="info">
+            <thead>
+                <tr>
+                <th>Rang</th>
+                <th>Nom</th>
+                <th>Production/J</th>
+                <th>Capacité</th>
+                <th>Argent</th>
+                </tr>
+            </thead>
+
+            <tbody id="classement-body"></tbody>
+        </table>
+       </section>
+       
     <!-- ÉCRAN LOGIN -->
     <section id="login-screen">
     <div class="bg-login"></div>
@@ -21,8 +41,8 @@
     </button>
 
     <!-- Bouton trophée (gauche) -->
-    <button id = "Trophy" class="Trophy"></button>
     
+
     <button class="settings-login-btn"></button>
 
     <div class="settings-login-panel">
@@ -41,32 +61,14 @@
     </div>
     </div>
 
-    <section id = "Classement" class = "">
-        <img class="classement" src="assets/bgclassement.svg">
-
-        <p class = "title-classement">Classement</p> 
-        <table class="info">
-            <thead>
-                <tr>
-                <th>Rang</th>
-                <th>Nom</th>
-                <th>Production/J</th>
-                <th>Capacité</th>
-                <th>Argent</th>
-                </tr>
-            </thead>
-
-            <tbody id="classement-body"></tbody>
-        </table>
-
-       
-       </section>
+    
     </section>
     </section>
 
     <!-- ÉCRAN FERME -->
     <section id="farm-screen" class="hidden">
     <div class="bg-ferme"></div>
+    
     <button id="stock-toggle" class="stock-toggle" type="button" aria-expanded="false">
         Stock
     </button>

@@ -32,7 +32,7 @@ img {
 /* état caché au départ */
 #Classement {
      position: relative;
-    z-index: 2;
+    z-index: 10;
     
     opacity: 0;
     transform: translateX(-100%); /* décalé à gauche */
@@ -196,7 +196,7 @@ img {
     text-transform: uppercase;
     letter-spacing: 0.04em;
     cursor: pointer;
-    z-index: 230;
+    z-index: 9;
     box-shadow: 0 10px 22px rgba(0, 0, 0, 0.16);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
@@ -455,7 +455,7 @@ img {
     border: none;
     appearance: none;
     background-color: transparent;
-    background-image: url("../assets/Group 46.svg");
+    background-image: url("../assets/ColectiviteGbtn.svg");
     background-position: center;
     background-repeat: no-repeat;
     background-size: 100% 100%;
@@ -468,7 +468,7 @@ img {
     aspect-ratio: 481 / 40;
     gap: clamp(8px, 0.55vw, 12px);
     padding: clamp(4px, 0.45vh, 7px) clamp(22px, 1.5vw, 28px) clamp(4px, 0.45vh, 7px) clamp(16px, 1.25vw, 20px);
-    background-image: url("../assets/Group 47.svg");
+    background-image: url("../assets/ColectivitePbtn.svg");
 }
 
 .collectivite-item-icon {
