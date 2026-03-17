@@ -408,7 +408,7 @@ img {
 
 .collectivite-panel {
     position: absolute;
-    top: 8.1%;
+    top: 13%;
     right: 0;
     bottom: 0.8%;
     width: clamp(350px, 26vw, 505px);
@@ -421,7 +421,7 @@ img {
     grid-template-rows: auto 1fr auto;
     height: 100%;
     box-sizing: border-box;
-    padding: clamp(22px, 2.2vh, 34px) clamp(20px, 1.6vw, 32px) clamp(16px, 1.8vh, 24px);
+    padding: clamp(44px, 2.2vh, 34px) clamp(20px, 1.6vw, 32px) clamp(16px, 1.8vh, 24px);
     pointer-events: auto;
 }
 
