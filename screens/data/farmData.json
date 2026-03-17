@@ -11,6 +11,16 @@
         { "id": "wool", "name": "Laine", "stock": 18, "price": 7 },
         { "id": "cheese", "name": "Fromage", "stock": 26, "price": 6 }
     ],
+    "communityItems": [
+        { "id": "feed-bag", "label": "Sac de nourriture", "icon": "🧺", "price": 19 },
+        { "id": "straw-bales", "label": "Bottes de pailles", "icon": "🌾", "price": 19 },
+        { "id": "syringe", "label": "Seringue", "icon": "💉", "price": 19 },
+        { "id": "water-bucket", "label": "Seau d'eau", "icon": "🪣", "price": 19 },
+        { "id": "soap", "label": "Savon", "icon": "🧼", "price": 19 },
+        { "id": "collectible", "label": "Objet de collection", "icon": "💍" },
+        { "id": "buy-animals", "label": "Achat animaux", "icon": "🐄", "variant": "shortcut" },
+        { "id": "farmers-market", "label": "Marché des producteurs", "icon": "🧑‍🌾", "variant": "shortcut" }
+    ],
     "animals": [
         { "name": "Bella", "type": "Vache", "img": "vache.svg", "weight": 520 },
         { "name": "Noiraude", "type": "Vache", "img": "vache.svg", "weight": 480 },

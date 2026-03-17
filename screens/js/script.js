@@ -18,6 +18,8 @@ const stockTotalUnits = document.getElementById("stock-total-units")
 const stockFeedback = document.getElementById("stock-feedback")
 const stockCancelButton = document.getElementById("stock-cancel")
 const stockSellButton = document.getElementById("stock-sell")
+const collectiviteList = document.getElementById("collectivite-list")
+const collectiviteFeedback = document.getElementById("collectivite-feedback")
 
 const fallbackStockProducts = [
   { id: "milk", name: "Lait", stock: 32, price: 4 },
@@ -26,13 +28,29 @@ const fallbackStockProducts = [
   { id: "cheese", name: "Fromage", stock: 26, price: 6 }
 ]
 
+const fallbackCommunityItems = [
+  { id: "feed-bag", label: "Sac de nourriture", icon: "🧺", price: 19 },
+  { id: "straw-bales", label: "Bottes de pailles", icon: "🌾", price: 19 },
+  { id: "syringe", label: "Seringue", icon: "💉", price: 19 },
+  { id: "water-bucket", label: "Seau d'eau", icon: "🪣", price: 19 },
+  { id: "soap", label: "Savon", icon: "🧼", price: 19 },
+  { id: "collectible", label: "Objet de collection", icon: "💍" },
+  { id: "buy-animals", label: "Achat animaux", icon: "🐄", variant: "shortcut" },
+  { id: "farmers-market", label: "Marché des producteurs", icon: "🧑‍🌾", variant: "shortcut" }
+]
+
 const stockState = {
   products: [],
   selectedProductId: null,
   quantity: 1
 }
 
+const collectiviteState = {
+  items: []
+}
+
 let farmDataPromise = null
+let collectiviteFeedbackTimeout = null
 
 function fetchFarmData() {
   if (!farmDataPromise) {
@@ -81,6 +99,28 @@ function setStockFeedback(message = "", type = "") {
   }
 }
 
+function setCollectiviteFeedback(message = "") {
+  if (!collectiviteFeedback) {
+    return
+  }
+
+  collectiviteFeedback.textContent = message
+  collectiviteFeedback.classList.toggle("has-message", Boolean(message))
+
+  if (collectiviteFeedbackTimeout) {
+    window.clearTimeout(collectiviteFeedbackTimeout)
+    collectiviteFeedbackTimeout = null
+  }
+
+  if (message) {
+    collectiviteFeedbackTimeout = window.setTimeout(() => {
+      collectiviteFeedback.textContent = ""
+      collectiviteFeedback.classList.remove("has-message")
+      collectiviteFeedbackTimeout = null
+    }, 2200)
+  }
+}
+
 function setStockPanelOpen(isOpen) {
   if (!stockPanel || !stockToggle) {
     return
@@ -106,6 +146,45 @@ function renderStockOptions() {
   if (stockState.selectedProductId) {
     stockProductSelect.value = stockState.selectedProductId
   }
+}
+
+function renderCollectivitePanel(items) {
+  if (!collectiviteList) {
+    return
+  }
+
+  collectiviteState.items = items.map((item) => ({ ...item }))
+
+  collectiviteList.innerHTML = collectiviteState.items
+    .map((item) => {
+      const hasPrice = Number.isFinite(item.price)
+      const itemClasses = ["collectivite-item"]
+
+      if (item.variant === "shortcut") {
+        itemClasses.push("collectivite-item-shortcut")
+      }
+
+      return `
+        <button
+          class="${itemClasses.join(" ")}"
+          type="button"
+          data-collectivite-id="${item.id}"
+          aria-label="${item.label}${hasPrice ? `, ${item.price} ecus` : ""}"
+        >
+          <span class="collectivite-item-icon" aria-hidden="true">${item.icon || "•"}</span>
+          <span class="collectivite-item-label">${item.label}</span>
+          ${hasPrice
+            ? `
+              <span class="collectivite-item-price">
+                <span>${item.price}</span>
+                <span class="collectivite-coin" aria-hidden="true"></span>
+              </span>
+            `
+            : ""}
+        </button>
+      `
+    })
+    .join("")
 }
 
 function updateStockPanel() {
@@ -229,6 +308,25 @@ async function initializeStockPanel() {
     renderStockOptions()
     updateStockPanel()
     setStockFeedback("Stock charge avec les donnees de secours.", "is-error")
+  }
+}
+
+async function initializeCollectivitePanel() {
+  if (!collectiviteList) {
+    return
+  }
+
+  try {
+    const data = await fetchFarmData()
+    const items = Array.isArray(data.communityItems) && data.communityItems.length > 0
+      ? data.communityItems
+      : fallbackCommunityItems
+
+    renderCollectivitePanel(items)
+  } catch (error) {
+    console.error("Erreur lors du chargement de la collectivite :", error)
+    renderCollectivitePanel(fallbackCommunityItems)
+    setCollectiviteFeedback("Collectivite chargee avec les donnees de secours.")
   }
 }
 
@@ -434,6 +532,24 @@ document.addEventListener("DOMContentLoaded", () => {
     })
   }
 
+  if (collectiviteList) {
+    collectiviteList.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-collectivite-id]")
+
+      if (!button) {
+        return
+      }
+
+      const selectedItem = collectiviteState.items.find((item) => item.id === button.dataset.collectiviteId)
+
+      if (!selectedItem) {
+        return
+      }
+
+      setCollectiviteFeedback(`${selectedItem.label} selectionne.`)
+    })
+  }
+
   document.addEventListener("click", () => {
     setStockPanelOpen(false)
   })
@@ -445,6 +561,7 @@ document.addEventListener("DOMContentLoaded", () => {
   })
 
   initializeStockPanel()
+  initializeCollectivitePanel()
   updateClock()
   setInterval(updateClock, 1000)
 })
