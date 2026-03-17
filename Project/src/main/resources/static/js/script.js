@@ -61,6 +61,19 @@ function setCollectiviteFeedback(message = "") {
   }
 }
 
+function renderCollectivitePrice(price) {
+  if (!Number.isFinite(price)) {
+    return ""
+  }
+
+  return `
+    <span class="collectivite-item-price" aria-hidden="true">
+      <span class="collectivite-item-price-value">${price}</span>
+      <span class="collectivite-item-price-coin">&#164;</span>
+    </span>
+  `
+}
+
 function renderCollectivitePanel(items) {
   if (!collectiviteList) {
     return
@@ -71,7 +84,7 @@ function renderCollectivitePanel(items) {
   collectiviteList.innerHTML = collectiviteState.items
     .map((item) => {
       const hasPrice = Number.isFinite(item.price)
-      const itemClasses = ["collectivite-item"]
+      const itemClasses = ["collectivite-item", `collectivite-item--${item.id}`]
 
       if (item.variant === "shortcut") {
         itemClasses.push("collectivite-item-shortcut")
@@ -84,16 +97,9 @@ function renderCollectivitePanel(items) {
           data-collectivite-id="${item.id}"
           aria-label="${item.label}${hasPrice ? `, ${item.price} ecus` : ""}"
         >
-          <span class="collectivite-item-icon" aria-hidden="true">${item.icon || "•"}</span>
+          <span class="collectivite-item-icon" aria-hidden="true"></span>
           <span class="collectivite-item-label">${item.label}</span>
-          ${hasPrice
-            ? `
-              <span class="collectivite-item-price">
-                <span>${item.price}</span>
-                <span class="collectivite-coin" aria-hidden="true"></span>
-              </span>
-            `
-            : ""}
+          ${renderCollectivitePrice(item.price)}
         </button>
       `
     })

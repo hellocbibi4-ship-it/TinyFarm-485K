@@ -415,148 +415,182 @@ img {
 
 .collectivite-panel {
     position: absolute;
-    top: 76px;
-    right: 12px;
-    width: min(218px, 22vw);
-    height: calc(100vh - 104px);
+    top: 8.1%;
+    right: 0;
+    bottom: 0.8%;
+    width: clamp(350px, 26vw, 505px);
     z-index: 205;
     pointer-events: none;
 }
 
 .collectivite-panel-inner {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
     height: 100%;
-    padding: 4px 10px 18px;
+    box-sizing: border-box;
+    padding: clamp(22px, 2.2vh, 34px) clamp(20px, 1.6vw, 32px) clamp(16px, 1.8vh, 24px);
     pointer-events: auto;
 }
 
 .collectivite-title {
-    margin: 0 0 14px;
+    margin: 0 0 clamp(16px, 1.8vh, 24px);
     color: #fff4df;
     font-family: "Acme", sans-serif;
-    font-size: clamp(1.45rem, 1vw + 0.9rem, 2rem);
+    font-size: clamp(2rem, 1.22vw + 1rem, 3rem);
     text-align: center;
-    text-shadow: 0 2px 0 rgba(84, 39, 13, 0.36);
+    text-shadow: 0 3px 0 rgba(84, 39, 13, 0.34);
 }
 
 .collectivite-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(8px, 0.95vh, 14px);
+    width: min(100%, 407px);
+    margin: 0 auto;
+    align-content: start;
 }
 
 .collectivite-item {
-    position: relative;
     display: grid;
-    grid-template-columns: 34px minmax(0, 1fr) auto;
+    grid-template-columns: var(--collectivite-icon-width, clamp(44px, 14%, 62px)) minmax(0, 1fr) auto;
     align-items: center;
-    gap: 10px;
-    min-height: 44px;
-    padding: 0 12px;
+    gap: clamp(10px, 0.8vw, 14px);
+    width: 100%;
+    aspect-ratio: 481 / 88;
+    padding: clamp(9px, 0.9vh, 12px) clamp(24px, 1.75vw, 30px) clamp(9px, 0.9vh, 12px) clamp(18px, 1.45vw, 22px);
+    box-sizing: border-box;
     border: none;
-    border-radius: 10px;
-    background:
-        linear-gradient(180deg, rgba(255, 224, 163, 0.28), rgba(0, 0, 0, 0) 26%),
-        linear-gradient(180deg, #b66f33 0%, #a55f28 48%, #93511f 100%);
-    box-shadow:
-        inset 0 3px 0 rgba(255, 223, 164, 0.22),
-        inset 0 -3px 0 rgba(85, 41, 12, 0.34),
-        0 6px 12px rgba(0, 0, 0, 0.18);
-    color: #fff8ea;
+    appearance: none;
+    background-color: transparent;
+    background-image: url("../assets/Group 46.svg");
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
     cursor: pointer;
-    font-family: "Acme", sans-serif;
+    transition: transform 0.16s ease, filter 0.16s ease;
     text-align: left;
-    transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
-}
-
-.collectivite-item::before,
-.collectivite-item::after {
-    content: "";
-    position: absolute;
-    left: 10px;
-    right: 10px;
-    height: 2px;
-    background: rgba(116, 60, 25, 0.32);
-}
-
-.collectivite-item::before {
-    top: 8px;
-}
-
-.collectivite-item::after {
-    bottom: 8px;
-}
-
-.collectivite-item:hover {
-    transform: translateX(-4px) scale(1.01);
-    box-shadow:
-        inset 0 3px 0 rgba(255, 223, 164, 0.24),
-        inset 0 -3px 0 rgba(85, 41, 12, 0.38),
-        0 10px 18px rgba(0, 0, 0, 0.22);
-    filter: saturate(1.06);
-}
-
-.collectivite-item:active {
-    transform: translateX(-2px) translateY(1px);
 }
 
 .collectivite-item-shortcut {
-    min-height: 40px;
+    aspect-ratio: 481 / 40;
+    gap: clamp(8px, 0.55vw, 12px);
+    padding: clamp(4px, 0.45vh, 7px) clamp(22px, 1.5vw, 28px) clamp(4px, 0.45vh, 7px) clamp(16px, 1.25vw, 20px);
+    background-image: url("../assets/Group 47.svg");
 }
 
 .collectivite-item-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    font-size: 1.2rem;
-    line-height: 1;
-    filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.28));
+    align-self: stretch;
+    width: 100%;
+    min-width: 0;
+    background-image: var(--collectivite-icon-image);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    filter: drop-shadow(0 2px 4px rgba(74, 34, 12, 0.18));
 }
 
 .collectivite-item-label {
     min-width: 0;
-    font-size: clamp(1rem, 0.72vw + 0.6rem, 1.45rem);
-    white-space: nowrap;
     overflow: hidden;
+    color: #fff8eb;
+    font-family: "Acme", sans-serif;
+    font-size: clamp(1.35rem, 0.92vw + 0.7rem, 2.1rem);
+    line-height: 1.05;
+    white-space: nowrap;
     text-overflow: ellipsis;
+    text-shadow: 0 2px 0 rgba(92, 46, 16, 0.24);
 }
 
 .collectivite-item-shortcut .collectivite-item-label {
-    font-size: clamp(0.9rem, 0.62vw + 0.5rem, 1.22rem);
+    font-size: clamp(0.92rem, 0.5vw + 0.68rem, 1.45rem);
 }
 
 .collectivite-item-price {
+    justify-self: end;
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    font-size: clamp(0.95rem, 0.54vw + 0.52rem, 1.2rem);
-    color: #ffe0a6;
+    gap: clamp(5px, 0.4vw, 8px);
+    color: #fff7e6;
+    font-family: "Acme", sans-serif;
+    font-size: clamp(1.02rem, 0.58vw + 0.62rem, 1.55rem);
+    white-space: nowrap;
+    text-shadow: 0 2px 0 rgba(92, 46, 16, 0.24);
 }
 
-.collectivite-coin {
-    position: relative;
-    width: 16px;
-    height: 16px;
+.collectivite-item-price-coin {
+    display: inline-grid;
+    place-items: center;
+    width: clamp(20px, 1.1vw, 24px);
+    aspect-ratio: 1;
     border-radius: 50%;
-    border: 2px solid currentColor;
-    box-sizing: border-box;
+    background: radial-gradient(circle at 30% 30%, #ffe9ae 0 26%, #f3c768 27% 62%, #be7f1b 63% 100%);
+    box-shadow: inset 0 -2px 0 rgba(138, 85, 10, 0.32), 0 2px 4px rgba(66, 29, 9, 0.18);
+    color: #8f5e14;
+    font-size: 0.84em;
+    line-height: 1;
 }
 
-.collectivite-coin::before {
-    content: "$";
-    position: absolute;
-    inset: 50% auto auto 50%;
-    transform: translate(-50%, -52%);
-    font-size: 0.68rem;
-    font-weight: 700;
+.collectivite-item:hover {
+    transform: scale(1.012);
+    filter: drop-shadow(0 10px 12px rgba(53, 24, 8, 0.18));
+}
+
+.collectivite-item:active {
+    transform: translateY(1px) scale(0.998);
+}
+
+.collectivite-item:focus-visible {
+    outline: 3px solid rgba(255, 232, 176, 0.72);
+    outline-offset: 4px;
+    border-radius: 14px;
+}
+
+.collectivite-item--feed-bag {
+    --collectivite-icon-image: url("../assets/sacnourriture.svg");
+}
+
+.collectivite-item--straw-bales {
+    --collectivite-icon-image: url("../assets/paille.svg");
+}
+
+.collectivite-item--syringe {
+    --collectivite-icon-image: url("../assets/seringue.svg");
+}
+
+.collectivite-item--water-bucket {
+    --collectivite-icon-image: url("../assets/seaudeau.svg");
+}
+
+.collectivite-item--soap {
+    --collectivite-icon-image: url("../assets/savon.svg");
+}
+
+.collectivite-item--collectible {
+    --collectivite-icon-image: url("../assets/logocollection.svg");
+    --collectivite-icon-width: clamp(46px, 14%, 66px);
+}
+
+.collectivite-item--collectible .collectivite-item-label {
+    font-size: clamp(1.2rem, 0.78vw + 0.68rem, 1.95rem);
+}
+
+.collectivite-item--buy-animals {
+    --collectivite-icon-image: url("../assets/animaux.png");
+    --collectivite-icon-width: clamp(74px, 20%, 102px);
+}
+
+.collectivite-item--farmers-market {
+    --collectivite-icon-image: url("../assets/emojProd.png");
+    --collectivite-icon-width: clamp(46px, 14%, 68px);
+}
+
+.collectivite-item--farmers-market .collectivite-item-label {
+    font-size: clamp(0.82rem, 0.44vw + 0.6rem, 1.3rem);
 }
 
 .collectivite-feedback {
     min-height: 24px;
-    margin: auto 4px 0;
+    margin: 12px 6px 0;
     color: #fff2d2;
     font-family: "Acme", sans-serif;
     font-size: 0.98rem;
@@ -566,7 +600,7 @@ img {
 }
 
 .collectivite-feedback.has-message {
-    padding-top: 12px;
+    opacity: 1;
 }
 
 #clock {
@@ -821,30 +855,17 @@ img {
     }
 
     .collectivite-panel {
-        top: 78px;
-        right: 8px;
-        width: min(188px, 28vw);
-        height: calc(100vh - 116px);
+        top: 8.1%;
+        width: clamp(255px, 29vw, 360px);
     }
 
     .collectivite-panel-inner {
-        padding: 0 4px 10px;
+        padding: 18px 16px 14px;
     }
 
     .collectivite-list {
+        width: 100%;
         gap: 8px;
-    }
-
-    .collectivite-item {
-        grid-template-columns: 28px minmax(0, 1fr) auto;
-        padding: 0 10px;
-        min-height: 40px;
-    }
-
-    .collectivite-item-icon {
-        width: 24px;
-        height: 24px;
-        font-size: 1rem;
     }
 }
 
@@ -861,7 +882,7 @@ img {
     .collectivite-panel-inner {
         padding: 12px;
         border-radius: 18px;
-        background: rgba(120, 69, 31, 0.78);
+        background: rgba(120, 69, 31, 0.82);
         box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
         backdrop-filter: blur(4px);
     }
@@ -871,19 +892,9 @@ img {
     }
 
     .collectivite-list {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px;
-    }
-
-    .collectivite-item,
-    .collectivite-item-shortcut {
-        min-height: 46px;
-    }
-
-    .collectivite-item-label,
-    .collectivite-item-shortcut .collectivite-item-label {
-        white-space: normal;
-        line-height: 1.05;
+        width: min(100%, 407px);
+        max-height: 42vh;
+        margin: 0 auto;
+        overflow-y: auto;
     }
 }
