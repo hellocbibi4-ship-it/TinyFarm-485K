@@ -329,6 +329,8 @@ img {
     left: calc(245 / 1024 * 100%);
     width: calc(510 / 1024 * 100%);
     height: calc(137 / 582 * 100%);
+    overflow: visible;
+    z-index: 6;
 }
 
 .zone-content {
@@ -365,7 +367,9 @@ img {
 .animals-zone-group {
     position: relative;
     cursor: pointer;
+    overflow: visible;
     transition: transform 0.16s ease, filter 0.16s ease;
+    z-index: 7;
 }
 
 .animals-zone-group:hover,
