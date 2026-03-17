@@ -15,7 +15,6 @@ img {
 .hidden {
   display: none;
 }
-
 /* Le fond d'écran avec flou */
 .bg-login {
     position: fixed;
@@ -175,6 +174,16 @@ img {
     margin: 0;
 }
 
+#clock {
+    position: fixed;
+    top: 0px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 40px;
+    font-family: "Acme", sans-serif;
+    font-style: normal;
+    color : #786023;
+}
 .settings-btn {
     position: absolute;
     top: 15px;

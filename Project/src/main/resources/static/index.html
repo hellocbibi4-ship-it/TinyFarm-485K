@@ -11,11 +11,13 @@
     <link href="https://fonts.googleapis.com/css2?family=ADLaM+Display&family=Acme&display=swap" rel="stylesheet">
 
 </head>
+
 <body>
     <!-- ÉCRAN LOGIN -->
     <section id="login-screen">
     <div class="bg-login"></div>
     <h1 class="title">TinyFarm</h1>
+    
 
     <!-- Bouton principal -->
     <button id="login-btn" class="login-btn">
@@ -53,20 +55,25 @@
     <!-- ÉCRAN FERME -->
     <section id="farm-screen" class="hidden">
     <div class="bg-blur"></div>
-
-    <div class="main-ui">
-        <section class="stats-bar">
-            <div class="stat-item">💰 <span id="cash">0</span> écus</div>
-            <div class="stat-item">💧 <span id="water">0</span> L</div>
-            <div class="stat-item">🌾 <span id="food">0</span> kg</div>
-            <div class="stat-item">🚜 <span id="straw">0</span> bottes</div>
-        </section>
-
-        <div id="animal-grid" class="animal-grid"></div>
-    </div>
+    <div id="clock"></div>    
     </section>
 
     <script src="js/script.js"></script>
 
+    <script>
+    function updateClock() {
+        const now = new Date();
+
+        const hours = String(now.getHours()).padStart(2, "0");
+        const minutes = String(now.getMinutes()).padStart(2, "0");
+        const seconds = String(now.getSeconds()).padStart(2, "0");
+
+        document.getElementById("clock").textContent =
+            `${hours}:${minutes}:${seconds}`;
+    }
+
+    updateClock();
+    setInterval(updateClock, 1000);
+    </script>
 </body>
 </html>
