@@ -293,7 +293,7 @@ img {
 
     z-index: 5;
 
-    border-radius: 0 0 20px 20px;
+    border-radius: 0 0 35px 35px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.18);
 
     transition: top 0.35s ease, transform 0.2s ease;
