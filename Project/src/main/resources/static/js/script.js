@@ -79,6 +79,71 @@ let collectiviteFeedbackTimeout = null
 let toastTimeoutId = null
 let activeActionTarget = ""
 
+const ANIMATED_ANIMAL_CONFIG = {
+  poule: {
+    spriteClass: "animal-sprite--chicken",
+    sizeClass: "animal-icon--chicken",
+    minDuration: 5.4,
+    maxDuration: 8.4,
+    allowMirror: true
+  },
+  vache: {
+    spriteClass: "animal-sprite--cow",
+    sizeClass: "animal-icon--cow",
+    minDuration: 7.2,
+    maxDuration: 10.2,
+    allowMirror: false
+  },
+  lapin: {
+    spriteClass: "animal-sprite--rabbit",
+    sizeClass: "animal-icon--rabbit",
+    minDuration: 5.6,
+    maxDuration: 8.2,
+    allowMirror: false
+  }
+}
+
+function randomBetween(min, max) {
+  return Math.random() * (max - min) + min
+}
+
+function getAnimatedAnimalConfig(typeKey) {
+  return ANIMATED_ANIMAL_CONFIG[typeKey] || null
+}
+
+function createAnimatedSprite(typeKey) {
+  const config = getAnimatedAnimalConfig(typeKey)
+
+  if (!config) {
+    return null
+  }
+
+  const spriteDuration = randomBetween(config.minDuration, config.maxDuration)
+  const sprite = document.createElement("span")
+  sprite.className = `animal-sprite ${config.spriteClass}`
+  sprite.setAttribute("aria-hidden", "true")
+  sprite.style.setProperty("--sprite-duration", `${spriteDuration.toFixed(2)}s`)
+  sprite.style.setProperty("--sprite-delay", `${(-1 * randomBetween(0, spriteDuration)).toFixed(2)}s`)
+  sprite.style.setProperty(
+    "--sprite-direction",
+    config.allowMirror && Math.random() > 0.45 ? "-1" : "1"
+  )
+  return sprite
+}
+
+function createAnimalVisual(animal) {
+  const sprite = createAnimatedSprite(animal.typeKey)
+
+  if (sprite) {
+    return sprite
+  }
+
+  const image = document.createElement("img")
+  image.src = `assets/${animal.img}`
+  image.alt = animal.name
+  return image
+}
+
 function getCurrentProduct() {
   return (
     stockState.products.find((product) => product.id === stockState.selectedProductId) ||
@@ -270,6 +335,12 @@ function createAnimalIcon(animal, { groupOnly = false } = {}) {
   element.className = `animal-icon${groupOnly ? " animal-icon--decorative" : ""}`
   element.title = animal.name
 
+  const spriteConfig = getAnimatedAnimalConfig(animal.typeKey)
+
+  if (spriteConfig?.sizeClass) {
+    element.classList.add(spriteConfig.sizeClass)
+  }
+
   if (!groupOnly) {
     element.type = "button"
     element.setAttribute("aria-label", `${animal.name}, ${animal.typeLabel}`)
@@ -278,11 +349,7 @@ function createAnimalIcon(animal, { groupOnly = false } = {}) {
     element.setAttribute("aria-hidden", "true")
   }
 
-  const image = document.createElement("img")
-  image.src = `assets/${animal.img}`
-  image.alt = animal.name
-
-  element.appendChild(image)
+  element.appendChild(createAnimalVisual(animal))
   return element
 }
 

@@ -897,6 +897,54 @@ img {
     object-fit: contain;
 }
 
+.zone-image-sprite {
+    display: block;
+    width: min(100%, 98px);
+    height: min(100%, 98px);
+    aspect-ratio: 1;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+}
+
+.zone-image-sprite--animated {
+    animation: animal-sprite-cycle var(--zone-sprite-duration, 6.8s) linear infinite;
+    animation-delay: var(--zone-sprite-delay, 0s);
+    will-change: background-position;
+}
+
+.zone-image-sprite--chicken,
+.zone-image-sprite--cow,
+.zone-image-sprite--rabbit {
+    background-size: 600% 100%;
+    image-rendering: pixelated;
+}
+
+.zone-image-sprite--chicken {
+    --zone-sprite-duration: 6.8s;
+    --zone-sprite-delay: -1.1s;
+    background-image: url("../assets/poule.png");
+    background-position: 0% 0%;
+}
+
+.zone-image-sprite--cow {
+    --zone-sprite-duration: 8.8s;
+    --zone-sprite-delay: -2.4s;
+    width: min(100%, 118px);
+    height: min(100%, 82px);
+    background-image: url("../assets/vache.png");
+    background-position: 20% 0%;
+}
+
+.zone-image-sprite--rabbit {
+    --zone-sprite-duration: 7.4s;
+    --zone-sprite-delay: -0.8s;
+    width: min(100%, 94px);
+    height: min(100%, 86px);
+    background-image: url("../assets/lapin.png");
+    background-position: 0% 0%;
+}
+
 .prix {
     margin: 0;
     display: flex;
@@ -1065,20 +1113,12 @@ img {
     height: calc(137 / 582 * 100%);
 }
 
-.zone-label {
-    margin: 0 0 8px;
-    color: #fff5d8;
-    font-family: "Acme", sans-serif;
-    font-size: 1.05rem;
-    text-shadow: 0 2px 4px rgba(35, 22, 8, 0.45);
-}
-
 .animals-zone {
     display: flex;
     align-items: flex-end;
     gap: 0;
     width: 100%;
-    height: calc(100% - 18px);
+    height: 100%;
     padding: 12px 14px 8px 50px;
     overflow-x: auto;
     overflow-y: hidden;
@@ -1157,6 +1197,90 @@ img {
     height: 100%;
     object-fit: contain;
     filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.22));
+}
+
+.animal-icon--chicken {
+    width: clamp(42px, 3.9vw, 58px);
+    min-width: clamp(42px, 3.9vw, 58px);
+    height: clamp(52px, 5.5vw, 76px);
+    padding-top: 8px;
+}
+
+.animal-icon--cow {
+    width: clamp(106px, 9.4vw, 148px);
+    min-width: clamp(106px, 9.4vw, 148px);
+    height: clamp(72px, 6.2vw, 98px);
+    padding-top: 0;
+}
+
+.animal-icon--rabbit {
+    width: clamp(36px, 3.2vw, 50px);
+    min-width: clamp(36px, 3.2vw, 50px);
+    height: clamp(36px, 3.6vw, 52px);
+    padding-top: 2px;
+}
+
+.animal-sprite {
+    width: 100%;
+    height: 100%;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.22));
+}
+
+.animal-sprite--chicken,
+.animal-sprite--cow,
+.animal-sprite--rabbit {
+    background-size: 600% 100%;
+    background-position: 0% 0%;
+    image-rendering: pixelated;
+    transform-origin: center bottom;
+    transform: translateY(var(--animal-base-y, 0px)) scaleX(var(--sprite-direction, 1));
+    will-change: background-position;
+    animation: animal-sprite-cycle var(--sprite-duration, 6.8s) linear infinite;
+    animation-delay: var(--sprite-delay, 0s);
+}
+
+.animal-sprite--chicken {
+    --animal-base-y: 9px;
+    background-image: url("../assets/poule.png");
+}
+
+.animal-sprite--cow {
+    --animal-base-y: 4px;
+    background-image: url("../assets/vache.png");
+}
+
+.animal-sprite--rabbit {
+    --animal-base-y: 4px;
+    background-image: url("../assets/lapin.png");
+}
+
+@keyframes animal-sprite-cycle {
+    0%, 16.6% {
+        background-position: 0% 0%;
+    }
+
+    16.61%, 33.3% {
+        background-position: 20% 0%;
+    }
+
+    33.31%, 50% {
+        background-position: 40% 0%;
+    }
+
+    50.01%, 66.6% {
+        background-position: 60% 0%;
+    }
+
+    66.61%, 83.3% {
+        background-position: 80% 0%;
+    }
+
+    83.31%, 100% {
+        background-position: 100% 0%;
+    }
 }
 
 .animal-icon:hover,
@@ -1361,6 +1485,24 @@ img {
         width: 56px;
         min-width: 56px;
         height: 80px;
+    }
+
+    .animal-icon--chicken {
+        width: 38px;
+        min-width: 38px;
+        height: 56px;
+    }
+
+    .animal-icon--cow {
+        width: 92px;
+        min-width: 92px;
+        height: 66px;
+    }
+
+    .animal-icon--rabbit {
+        width: 34px;
+        min-width: 34px;
+        height: 40px;
     }
 }
 
