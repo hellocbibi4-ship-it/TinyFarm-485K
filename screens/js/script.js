@@ -1,3 +1,64 @@
+// ============================================================
+// DONNÉES STATIQUES
+// ============================================================
+
+const fallbackStockProducts = [
+  { id: "milk", name: "Lait", stock: 32, price: 4 },
+  { id: "eggs", name: "Oeufs", stock: 48, price: 2 },
+  { id: "cheese", name: "Fromage", stock: 26, price: 6 }
+]
+
+const fallbackCommunityItems = [
+  { id: "feed-bag", label: "Sac de nourriture", icon: "🧺", price: 19 },
+  { id: "straw-bales", label: "Bottes de pailles", icon: "🌾", price: 19 },
+  { id: "syringe", label: "Seringue", icon: "💉", price: 19 },
+  { id: "water-bucket", label: "Seau d'eau", icon: "🪣", price: 19 },
+  { id: "soap", label: "Savon", icon: "🧼", price: 19 },
+  { id: "collectible", label: "Objet de collection", icon: "💍" },
+  { id: "buy-animals", label: "Achat animaux", icon: "🐄", variant: "shortcut" },
+  { id: "farmers-market", label: "Marché des producteurs", icon: "🧑‍🌾", variant: "shortcut" }
+]
+
+// Catalogue statique de démonstration : à remplacer plus tard par des données backend si besoin.
+const catalogueAnimaux = {
+  vache: { nom: "Vache", nomMinuscule: "vache", article: "une", prix: 50, niveauMinimumAchat: 2 },
+  poule: { nom: "Poule", nomMinuscule: "poule", article: "une", prix: 10 },
+  lapin: { nom: "Lapin", nomMinuscule: "lapin", article: "un", prix: 10 }
+}
+
+// ============================================================
+// ÉTATS
+// ============================================================
+
+const stockState = {
+  products: [],
+  selectedProductId: null,
+  quantity: 1
+}
+
+const collectiviteState = {
+  items: []
+}
+
+// État local de la boutique animaux : utile pour tester la popup avant intégration backend.
+const etatBoutique = {
+  niveauJoueur: 1,
+  solde: 120,
+  achats: {
+    // Contrainte sujet : le joueur possède déjà une vache au niveau 1 (kit de démarrage).
+    vache: 1,
+    poule: 0,
+    lapin: 0
+  }
+}
+
+let farmDataPromise = null
+let collectiviteFeedbackTimeout = null
+
+// ============================================================
+// RÉFÉRENCES DOM — ÉCRAN PRINCIPAL
+// ============================================================
+
 const loginBtn = document.getElementById("login-btn")
 const loginScreen = document.getElementById("login-screen")
 const clsBtn = document.getElementById("Trophy")
@@ -21,49 +82,26 @@ const stockSellButton = document.getElementById("stock-sell")
 const collectiviteList = document.getElementById("collectivite-list")
 const collectiviteFeedback = document.getElementById("collectivite-feedback")
 
-const fallbackStockProducts = [
-  { id: "milk", name: "Lait", stock: 32, price: 4 },
-  { id: "eggs", name: "Oeufs", stock: 48, price: 2 },
-  { id: "cheese", name: "Fromage", stock: 26, price: 6 }
-]
+// ============================================================
+// RÉFÉRENCES DOM — POPUP ACHAT ANIMAUX
+// ============================================================
 
-const fallbackCommunityItems = [
-  { id: "feed-bag", label: "Sac de nourriture", icon: "🧺", price: 19 },
-  { id: "straw-bales", label: "Bottes de pailles", icon: "🌾", price: 19 },
-  { id: "syringe", label: "Seringue", icon: "💉", price: 19 },
-  { id: "water-bucket", label: "Seau d'eau", icon: "🪣", price: 19 },
-  { id: "soap", label: "Savon", icon: "🧼", price: 19 },
-  { id: "collectible", label: "Objet de collection", icon: "💍" },
-  { id: "buy-animals", label: "Achat animaux", icon: "🐄", variant: "shortcut" },
-  { id: "farmers-market", label: "Marché des producteurs", icon: "🧑‍🌾", variant: "shortcut" }
-]
-
-const stockState = {
-  products: [],
-  selectedProductId: null,
-  quantity: 1
-}
-
-const collectiviteState = {
-  items: []
-}
-
-let farmDataPromise = null
-let collectiviteFeedbackTimeout = null
-
-function fetchFarmData() {
-  if (!farmDataPromise) {
-    farmDataPromise = fetch("./data/farmData.json").then((response) => {
-      if (!response.ok) {
-        throw new Error("Impossible de charger les donnees de la ferme.")
-      }
-
-      return response.json()
-    })
+const elementsInterface = {
+  popup: document.getElementById("popup-achat"),
+  boutonFermer: document.getElementById("bouton-fermer"),
+  boutonOuvrir: document.getElementById("bouton-ouvrir"),
+  solde: document.getElementById("solde-ecus"),
+  message: document.getElementById("message-action"),
+  compteurs: {
+    vache: document.getElementById("compteur-vache"),
+    poule: document.getElementById("compteur-poule"),
+    lapin: document.getElementById("compteur-lapin")
   }
-
-  return farmDataPromise
 }
+
+// ============================================================
+// UTILITAIRES GÉNÉRAUX
+// ============================================================
 
 function getCurrentProduct() {
   return (
@@ -84,6 +122,10 @@ function clamp(value, min, max) {
 function formatEcus(value) {
   return `${value} ${value > 1 ? "ecus" : "ecu"}`
 }
+
+// ============================================================
+// FEEDBACK — STOCK & COLLECTIVITÉ
+// ============================================================
 
 function setStockFeedback(message = "", type = "") {
   if (!stockFeedback) {
@@ -120,6 +162,10 @@ function setCollectiviteFeedback(message = "") {
   }
 }
 
+// ============================================================
+// PANEL STOCK
+// ============================================================
+
 function setStockPanelOpen(isOpen) {
   if (!stockPanel || !stockToggle) {
     return
@@ -146,6 +192,64 @@ function renderStockOptions() {
     stockProductSelect.value = stockState.selectedProductId
   }
 }
+
+function updateStockPanel() {
+  const product = getCurrentProduct()
+
+  if (!product) {
+    if (stockAvailable) stockAvailable.textContent = "0"
+    if (stockTotalUnits) stockTotalUnits.textContent = "0"
+    if (stockUnitPrice) stockUnitPrice.textContent = formatEcus(0)
+    if (stockTotalPrice) stockTotalPrice.textContent = formatEcus(0)
+
+    if (stockQuantityInput) {
+      stockQuantityInput.value = "0"
+      stockQuantityInput.disabled = true
+    }
+
+    if (stockMinusButton) stockMinusButton.disabled = true
+    if (stockPlusButton) stockPlusButton.disabled = true
+    if (stockSellButton) stockSellButton.disabled = true
+
+    return
+  }
+
+  const minimumQuantity = product.stock > 0 ? 1 : 0
+  stockState.quantity = clamp(stockState.quantity, minimumQuantity, product.stock)
+
+  if (stockProductSelect) stockProductSelect.value = product.id
+  if (stockTotalUnits) stockTotalUnits.textContent = String(getTotalUnits())
+  if (stockAvailable) stockAvailable.textContent = String(product.stock)
+  if (stockUnitPrice) stockUnitPrice.textContent = formatEcus(product.price)
+  if (stockTotalPrice) stockTotalPrice.textContent = formatEcus(stockState.quantity * product.price)
+
+  if (stockQuantityInput) {
+    stockQuantityInput.min = String(minimumQuantity)
+    stockQuantityInput.max = String(product.stock)
+    stockQuantityInput.value = String(stockState.quantity)
+    stockQuantityInput.disabled = product.stock === 0
+  }
+
+  if (stockMinusButton) stockMinusButton.disabled = product.stock === 0 || stockState.quantity <= minimumQuantity
+  if (stockPlusButton) stockPlusButton.disabled = product.stock === 0 || stockState.quantity >= product.stock
+  if (stockSellButton) stockSellButton.disabled = product.stock === 0 || stockState.quantity === 0
+}
+
+function adjustStockQuantity(delta) {
+  const product = getCurrentProduct()
+
+  if (!product || product.stock === 0) {
+    return
+  }
+
+  stockState.quantity = clamp(stockState.quantity + delta, 1, product.stock)
+  updateStockPanel()
+  setStockFeedback()
+}
+
+// ============================================================
+// PANEL COLLECTIVITÉ
+// ============================================================
 
 function renderCollectivitePrice(price) {
   if (!Number.isFinite(price)) {
@@ -192,99 +296,144 @@ function renderCollectivitePanel(items) {
     .join("")
 }
 
-function updateStockPanel() {
-  const product = getCurrentProduct()
+// ============================================================
+// POPUP ACHAT ANIMAUX
+// ============================================================
 
-  if (!product) {
-    if (stockAvailable) {
-      stockAvailable.textContent = "0"
+// Répercute l'état courant (solde + quantités achetées) dans le DOM.
+function mettreAJourInterface() {
+  if (elementsInterface.solde) {
+    elementsInterface.solde.textContent = etatBoutique.solde
+  }
+
+  Object.entries(etatBoutique.achats).forEach(([typeAnimal, quantite]) => {
+    if (elementsInterface.compteurs[typeAnimal]) {
+      elementsInterface.compteurs[typeAnimal].textContent = quantite
     }
-
-    if (stockTotalUnits) {
-      stockTotalUnits.textContent = "0"
-    }
-
-    if (stockUnitPrice) {
-      stockUnitPrice.textContent = formatEcus(0)
-    }
-
-    if (stockTotalPrice) {
-      stockTotalPrice.textContent = formatEcus(0)
-    }
-
-    if (stockQuantityInput) {
-      stockQuantityInput.value = "0"
-      stockQuantityInput.disabled = true
-    }
-
-    if (stockMinusButton) {
-      stockMinusButton.disabled = true
-    }
-
-    if (stockPlusButton) {
-      stockPlusButton.disabled = true
-    }
-
-    if (stockSellButton) {
-      stockSellButton.disabled = true
-    }
-
-    return
-  }
-
-  const minimumQuantity = product.stock > 0 ? 1 : 0
-  stockState.quantity = clamp(stockState.quantity, minimumQuantity, product.stock)
-
-  if (stockProductSelect) {
-    stockProductSelect.value = product.id
-  }
-
-  if (stockTotalUnits) {
-    stockTotalUnits.textContent = String(getTotalUnits())
-  }
-
-  if (stockAvailable) {
-    stockAvailable.textContent = String(product.stock)
-  }
-
-  if (stockUnitPrice) {
-    stockUnitPrice.textContent = formatEcus(product.price)
-  }
-
-  if (stockTotalPrice) {
-    stockTotalPrice.textContent = formatEcus(stockState.quantity * product.price)
-  }
-
-  if (stockQuantityInput) {
-    stockQuantityInput.min = String(minimumQuantity)
-    stockQuantityInput.max = String(product.stock)
-    stockQuantityInput.value = String(stockState.quantity)
-    stockQuantityInput.disabled = product.stock === 0
-  }
-
-  if (stockMinusButton) {
-    stockMinusButton.disabled = product.stock === 0 || stockState.quantity <= minimumQuantity
-  }
-
-  if (stockPlusButton) {
-    stockPlusButton.disabled = product.stock === 0 || stockState.quantity >= product.stock
-  }
-
-  if (stockSellButton) {
-    stockSellButton.disabled = product.stock === 0 || stockState.quantity === 0
-  }
+  })
 }
 
-function adjustStockQuantity(delta) {
-  const product = getCurrentProduct()
+// Active/désactive visuellement les boutons selon les règles de progression.
+function mettreAJourDisponibiliteBoutons() {
+  const boutonsAchat = document.querySelectorAll(".btn-acheter")
 
-  if (!product || product.stock === 0) {
+  boutonsAchat.forEach((bouton) => {
+    const typeAnimal = bouton.dataset.animal
+    const achatAutorise = estAchatAutorise(typeAnimal)
+
+    bouton.disabled = !achatAutorise
+
+    if (!achatAutorise && typeAnimal === "vache") {
+      bouton.textContent = "Déjà possédée"
+      bouton.title = "La vache est incluse au niveau 1."
+      return
+    }
+
+    bouton.textContent = "Acheter"
+    bouton.title = ""
+  })
+}
+
+function estAchatAutorise(typeAnimal) {
+  const animal = catalogueAnimaux[typeAnimal]
+
+  if (!animal) {
+    return false
+  }
+
+  if (!animal.niveauMinimumAchat) {
+    return true
+  }
+
+  return etatBoutique.niveauJoueur >= animal.niveauMinimumAchat
+}
+
+// Traite une tentative d'achat : valide le type, vérifie le solde, met à jour l'état.
+function traiterAchat(typeAnimal) {
+  const animal = catalogueAnimaux[typeAnimal]
+
+  if (!animal) {
+    afficherMessage("Animal inconnu, achat annulé.", "erreur")
     return
   }
 
-  stockState.quantity = clamp(stockState.quantity + delta, 1, product.stock)
-  updateStockPanel()
-  setStockFeedback()
+  if (!estAchatAutorise(typeAnimal)) {
+    afficherMessage(
+      "Niveau 1 : la vache est déjà fournie dans le kit de démarrage et ne peut pas être rachetée.",
+      "erreur"
+    )
+    return
+  }
+
+  if (etatBoutique.solde < animal.prix) {
+    afficherMessage(`Solde insuffisant pour acheter ${animal.article} ${animal.nomMinuscule}.`, "erreur")
+    return
+  }
+
+  etatBoutique.solde -= animal.prix
+  etatBoutique.achats[typeAnimal] += 1
+
+  mettreAJourInterface()
+  afficherMessage(`Achat validé : ${animal.nom}.`, "succes")
+}
+
+// Affiche un message utilisateur avec la couleur correspondant au type.
+function afficherMessage(texte, type) {
+  if (!elementsInterface.message) {
+    return
+  }
+
+  elementsInterface.message.textContent = texte
+  elementsInterface.message.classList.remove("erreur", "succes")
+  elementsInterface.message.classList.add(type)
+}
+
+// Masque la popup et révèle le bouton de réouverture.
+function fermerPopup() {
+  if (!elementsInterface.popup || elementsInterface.popup.classList.contains("cache")) {
+    return
+  }
+
+  elementsInterface.popup.classList.add("cache")
+
+  if (elementsInterface.boutonOuvrir) {
+    elementsInterface.boutonOuvrir.classList.remove("cache")
+  }
+
+  afficherMessage('Popup fermée. Clique sur "Ouvrir la boutique" pour revenir.', "succes")
+}
+
+// Réaffiche la popup et remasque le bouton d'ouverture.
+function ouvrirPopup() {
+  if (!elementsInterface.popup) {
+    return
+  }
+
+  elementsInterface.popup.classList.remove("cache")
+
+  if (elementsInterface.boutonOuvrir) {
+    elementsInterface.boutonOuvrir.classList.add("cache")
+  }
+
+  afficherMessage("Boutique ouverte.", "succes")
+}
+
+// ============================================================
+// CHARGEMENT DES DONNÉES
+// ============================================================
+
+function fetchFarmData() {
+  if (!farmDataPromise) {
+    farmDataPromise = fetch("./data/farmData.json").then((response) => {
+      if (!response.ok) {
+        throw new Error("Impossible de charger les donnees de la ferme.")
+      }
+
+      return response.json()
+    })
+  }
+
+  return farmDataPromise
 }
 
 async function initializeStockPanel() {
@@ -335,6 +484,10 @@ async function initializeCollectivitePanel() {
   }
 }
 
+// ============================================================
+// CLASSEMENT
+// ============================================================
+
 async function classement() {
   if (!tbody) {
     return
@@ -363,6 +516,10 @@ async function classement() {
   }
 }
 
+// ============================================================
+// HORLOGE
+// ============================================================
+
 function updateClock() {
   const clock = document.getElementById("clock")
 
@@ -378,14 +535,16 @@ function updateClock() {
   clock.textContent = `${hours}:${minutes}:${seconds}`
 }
 
+// ============================================================
+// ÉCOUTEURS HORS DOMContentLoaded
+// ============================================================
+
 if (loginBtn && loginScreen && farmScreen) {
   loginBtn.addEventListener("click", () => {
     loginScreen.classList.add("hidden")
     farmScreen.classList.remove("hidden")
   })
 }
-
-classement()
 
 if (clsBtn && classementScreen) {
   clsBtn.addEventListener("click", () => {
@@ -398,7 +557,16 @@ if (clsBtn && classementScreen) {
   })
 }
 
+classement()
+
+// ============================================================
+// INITIALISATION AU CHARGEMENT DU DOM
+// ============================================================
+
 document.addEventListener("DOMContentLoaded", () => {
+
+  // --- Paramètres / langue ---
+
   const settingsButtons = document.querySelectorAll(".settings-btn")
   const settingsPanels = document.querySelectorAll(".settings-panel")
 
@@ -456,6 +624,8 @@ document.addEventListener("DOMContentLoaded", () => {
       panel.classList.toggle("open")
     })
   })
+
+  // --- Panel stock ---
 
   if (stockToggle && stockPanel) {
     stockToggle.addEventListener("click", (event) => {
@@ -537,6 +707,8 @@ document.addEventListener("DOMContentLoaded", () => {
     })
   }
 
+  // --- Panel collectivité ---
+
   if (collectiviteList) {
     collectiviteList.addEventListener("click", (event) => {
       const button = event.target.closest("[data-collectivite-id]")
@@ -551,19 +723,55 @@ document.addEventListener("DOMContentLoaded", () => {
         return
       }
 
+      // Le raccourci "Achat animaux" ouvre directement la popup.
+      if (selectedItem.id === "buy-animals") {
+        ouvrirPopup()
+        return
+      }
+
       setCollectiviteFeedback(`${selectedItem.label} selectionne.`)
     })
   }
+
+  // --- Popup achat animaux ---
+
+  const boutonsAchat = document.querySelectorAll(".btn-acheter")
+
+  // Tous les boutons d'achat partagent la même logique, pilotée par data-animal.
+  boutonsAchat.forEach((bouton) => {
+    bouton.addEventListener("click", () => {
+      const typeAnimal = bouton.dataset.animal
+      traiterAchat(typeAnimal)
+    })
+  })
+
+  if (elementsInterface.boutonFermer) {
+    elementsInterface.boutonFermer.addEventListener("click", fermerPopup)
+  }
+
+  if (elementsInterface.boutonOuvrir) {
+    elementsInterface.boutonOuvrir.addEventListener("click", ouvrirPopup)
+  }
+
+  // Synchronisation initiale de l'interface (solde + compteurs).
+  mettreAJourInterface()
+  mettreAJourDisponibiliteBoutons()
+
+  // --- Fermeture globale au clic hors panels & touche Échap ---
 
   document.addEventListener("click", () => {
     setStockPanelOpen(false)
   })
 
+  // Touche de confort : Échap ferme le panel stock ET la popup animaux.
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
       setStockPanelOpen(false)
+      fermerPopup()
     }
   })
+
+  // --- Initialisation asynchrone & horloge ---
 
   initializeStockPanel()
   initializeCollectivitePanel()

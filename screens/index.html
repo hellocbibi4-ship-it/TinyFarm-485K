@@ -4,146 +4,174 @@
     <meta charset="UTF-8">
     <title>TinyFarm - Version Propres</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/achat-animaux.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=ADLaM+Display&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=ADLaM+Display&family=Acme&display=swap" rel="stylesheet">
-    
 </head>
 <body>
-    <button id = "Trophy" class="Trophy"></button>
-    <section id = "Classement" class = "">
+    <button id="Trophy" class="Trophy"></button>
+    <section id="Classement" class="">
         <img class="classement" src="assets/bgclassement.svg">
 
-        <p class = "title-classement">Classement</p> 
+        <p class="title-classement">Classement</p>
         <table class="info">
             <thead>
                 <tr>
-                <th>Rang</th>
-                <th>Nom</th>
-                <th>Production/J</th>
-                <th>Capacité</th>
-                <th>Argent</th>
+                    <th>Rang</th>
+                    <th>Nom</th>
+                    <th>Production/J</th>
+                    <th>Capacité</th>
+                    <th>Argent</th>
                 </tr>
             </thead>
-
             <tbody id="classement-body"></tbody>
         </table>
-       </section>
-       
+    </section>
+
     <!-- ÉCRAN LOGIN -->
     <section id="login-screen">
-    <div class="bg-login"></div>
-    <h1 class="title">TinyFarm</h1>
+        <div class="bg-login"></div>
+        <h1 class="title">TinyFarm</h1>
 
-    <!-- Bouton principal -->
-    <button id="login-btn" class="login-btn">
-    </button>
+        <button id="login-btn" class="login-btn"></button>
 
-    <!-- Bouton trophée (gauche) -->
-    
-
-    <button class="settings-login-btn"></button>
-
-    <div class="settings-login-panel">
-        <div class="settings-login-content">
-    <div class="login-language-btn">Langue ▸</div>
-
-    <div class="login-language-panel">
-        <div class="login-lang-option" data-lang="fr">
-            <img src="assets/fr.png" alt="FR">
+        <button class="settings-login-btn"></button>
+        <div class="settings-login-panel">
+            <div class="settings-login-content">
+                <div class="login-language-btn">Langue ▸</div>
+                <div class="login-language-panel">
+                    <div class="login-lang-option" data-lang="fr">
+                        <img src="assets/fr.png" alt="FR">
+                    </div>
+                    <div class="login-lang-option" data-lang="en">
+                        <img src="assets/uk.png" alt="EN">
+                    </div>
+                </div>
+            </div>
         </div>
-
-        <div class="login-lang-option" data-lang="en">
-            <img src="assets/uk.png" alt="EN">
-        </div>
-    </div>
-    </div>
-    </div>
-
-    
-    </section>
     </section>
 
     <!-- ÉCRAN FERME -->
     <section id="farm-screen" class="hidden">
-    <div class="bg-ferme"></div>
-    
-    <button id="stock-toggle" class="stock-toggle" type="button" aria-expanded="false">
-        Stock
-    </button>
-    <aside id="stock-panel" class="stock-panel" aria-hidden="true" aria-label="Stock">
-        <div class="stock-panel-header">
-            <p class="stock-summary">
-                <span class="stock-summary-icon" aria-hidden="true"></span>
-                <span id="stock-total-units">0</span> unites
-            </p>
-        </div>
+        <div class="bg-ferme"></div>
 
-        <div class="stock-field">
-            <label for="stock-product">Produit :</label>
-            <select id="stock-product" class="stock-select"></select>
-        </div>
+        <button id="stock-toggle" class="stock-toggle" type="button" aria-expanded="false">
+            Stock
+        </button>
+        <aside id="stock-panel" class="stock-panel" aria-hidden="true" aria-label="Stock">
+            <div class="stock-panel-header">
+                <p class="stock-summary">
+                    <span class="stock-summary-icon" aria-hidden="true"></span>
+                    <span id="stock-total-units">0</span> unites
+                </p>
+            </div>
 
-        <p class="stock-line">Stock dispo : <span id="stock-available">0</span></p>
+            <div class="stock-field">
+                <label for="stock-product">Produit :</label>
+                <select id="stock-product" class="stock-select"></select>
+            </div>
 
-        <div class="stock-field stock-field-quantity">
-            <label for="stock-quantity">Quantite :</label>
-            <div class="stock-stepper">
-                <button id="stock-minus" class="stock-stepper-btn" type="button" aria-label="Retirer une unite">-</button>
-                <input id="stock-quantity" class="stock-quantity-input" type="number" min="1" value="1" inputmode="numeric">
-                <button id="stock-plus" class="stock-stepper-btn" type="button" aria-label="Ajouter une unite">+</button>
+            <p class="stock-line">Stock dispo : <span id="stock-available">0</span></p>
+
+            <div class="stock-field stock-field-quantity">
+                <label for="stock-quantity">Quantite :</label>
+                <div class="stock-stepper">
+                    <button id="stock-minus" class="stock-stepper-btn" type="button" aria-label="Retirer une unite">-</button>
+                    <input id="stock-quantity" class="stock-quantity-input" type="number" min="1" value="1" inputmode="numeric">
+                    <button id="stock-plus" class="stock-stepper-btn" type="button" aria-label="Ajouter une unite">+</button>
+                </div>
+            </div>
+
+            <p class="stock-line">Prix unitaire : <span id="stock-unit-price">0 ecu</span></p>
+            <p class="stock-line stock-total-line">Total : <span id="stock-total-price">0 ecu</span></p>
+            <p id="stock-feedback" class="stock-feedback" aria-live="polite"></p>
+
+            <div class="stock-actions">
+                <button id="stock-cancel" class="stock-action stock-action-cancel" type="button">Annuler</button>
+                <button id="stock-sell" class="stock-action stock-action-confirm" type="button">Vendre</button>
+            </div>
+        </aside>
+
+        <aside id="collectivite-panel" class="collectivite-panel" aria-labelledby="collectivite-title">
+            <div class="collectivite-panel-inner">
+                <h2 id="collectivite-title" class="collectivite-title">Collectivité</h2>
+                <div id="collectivite-list" class="collectivite-list"></div>
+                <p id="collectivite-feedback" class="collectivite-feedback" aria-live="polite"></p>
+            </div>
+        </aside>
+
+        <!-- POPUP ACHAT ANIMAUX — ouverte via le bouton "Achat animaux" de la collectivité -->
+        <section id="popup-achat" class="popup-achat cache" role="dialog" aria-modal="true" aria-labelledby="titre-popup">
+            <header class="entete-bois">
+                <h2 id="titre-popup">Achat animaux</h2>
+            </header>
+
+            <p class="ligne-solde">Solde : <span id="solde-ecus">120</span> <span class="piece" aria-hidden="true"></span></p>
+
+            <section class="grille-animaux" aria-label="Animaux disponibles">
+                <article class="carte-animal">
+                    <h3>Vache</h3>
+                    <div class="zone-image">
+                        <img src="assets/vache.svg" alt="Illustration d'une vache">
+                    </div>
+                    <p class="prix">50 <span class="piece" aria-hidden="true"></span></p>
+                    <button class="btn-acheter" type="button" data-animal="vache">Acheter</button>
+                </article>
+
+                <article class="carte-animal">
+                    <h3>Poule</h3>
+                    <div class="zone-image">
+                        <img src="assets/poule.svg" alt="Illustration d'une poule">
+                    </div>
+                    <p class="prix">10 <span class="piece" aria-hidden="true"></span></p>
+                    <button class="btn-acheter" type="button" data-animal="poule">Acheter</button>
+                </article>
+
+                <article class="carte-animal">
+                    <h3>Lapin</h3>
+                    <div class="zone-image">
+                        <img src="assets/lapin.svg" alt="Illustration d'un lapin">
+                    </div>
+                    <p class="prix">10 <span class="piece" aria-hidden="true"></span></p>
+                    <button class="btn-acheter" type="button" data-animal="lapin">Acheter</button>
+                </article>
+            </section>
+
+            <!-- Zone de debug/test : peut être retirée après intégration -->
+            <section class="resume-achats" aria-label="Résumé des achats de test">
+                <p>Vaches : <span id="compteur-vache">0</span></p>
+                <p>Poules : <span id="compteur-poule">0</span></p>
+                <p>Lapins : <span id="compteur-lapin">0</span></p>
+            </section>
+
+            <footer class="zone-actions">
+                <button id="bouton-fermer" class="btn-fermer" type="button">Fermer</button>
+            </footer>
+        </section>
+
+        <div id="clock"></div>
+
+        <button class="side-btn right settings-btn"></button>
+        <div class="settings-panel">
+            <div class="settings-content">
+                <div class="language-btn">Langues ▸</div>
+                <div class="language-panel">
+                    <div class="lang-option" data-lang="fr">
+                        <img src="assets/fr.png" alt="FR">
+                        Français
+                    </div>
+                    <div class="lang-option" data-lang="en">
+                        <img src="assets/uk.png" alt="EN">
+                        English
+                    </div>
+                </div>
+                <p class="logout-btn">Déconnexion</p>
             </div>
         </div>
-
-        <p class="stock-line">Prix unitaire : <span id="stock-unit-price">0 ecu</span></p>
-        <p class="stock-line stock-total-line">Total : <span id="stock-total-price">0 ecu</span></p>
-        <p id="stock-feedback" class="stock-feedback" aria-live="polite"></p>
-
-        <div class="stock-actions">
-            <button id="stock-cancel" class="stock-action stock-action-cancel" type="button">Annuler</button>
-            <button id="stock-sell" class="stock-action stock-action-confirm" type="button">Vendre</button>
-        </div>
-    </aside>
-    <aside id="collectivite-panel" class="collectivite-panel" aria-labelledby="collectivite-title">
-        <div class="collectivite-panel-inner">
-            <h2 id="collectivite-title" class="collectivite-title">Collectivité</h2>
-            <div id="collectivite-list" class="collectivite-list"></div>
-            <p id="collectivite-feedback" class="collectivite-feedback" aria-live="polite"></p>
-        </div>
-    </aside>
-    <div id="clock"></div> 
-    <button class="side-btn right settings-btn"></button>
-    <div class="settings-panel">
-    <div class="settings-content">
-
-    <div class="language-btn">
-        Langues ▸
-    </div>
-
-    <div class="language-panel">
-        <div class="lang-option" data-lang="fr">
-            <img src="assets/fr.png" alt="FR">
-            Français
-        </div>
-
-        <div class="lang-option" data-lang="en">
-            <img src="assets/uk.png" alt="EN">
-            English
-        </div>
-    </div>
-
-    <!-- Sur la ferme seulement -->
-    <p class="logout-btn">Déconnexion</p>
-
-    </div>
-    </div>
     </section>
-    
-    <script src="js/script.js"></script>
-    
-    <script>
-    </script>
 
+    <script src="js/script.js"></script>
 </body>
 </html>
