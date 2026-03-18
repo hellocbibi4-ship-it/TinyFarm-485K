@@ -24,7 +24,6 @@ const collectiviteFeedback = document.getElementById("collectivite-feedback")
 const fallbackStockProducts = [
   { id: "milk", name: "Lait", stock: 32, price: 4 },
   { id: "eggs", name: "Oeufs", stock: 48, price: 2 },
-  { id: "wool", name: "Laine", stock: 18, price: 7 },
   { id: "cheese", name: "Fromage", stock: 26, price: 6 }
 ]
 
