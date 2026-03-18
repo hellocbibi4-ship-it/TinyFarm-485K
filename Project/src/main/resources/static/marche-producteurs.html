@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TinyFarm - Marche des producteurs</title>
+    <link rel="stylesheet" href="css/marche-producteurs.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Acme&family=ADLaM+Display&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="fond-page" aria-hidden="true"></div>
+
+    <main class="zone-principale">
+        <section id="popup-marche" class="popup-marche" role="dialog" aria-modal="true" aria-labelledby="titre-marche">
+            <header class="entete-popup">
+                <h1 id="titre-marche">Marche des producteurs</h1>
+            </header>
+
+            <section class="barre-infos" aria-label="Informations du marche">
+                <p>Solde : <span id="solde-joueur">260</span> <span class="piece" aria-hidden="true"></span></p>
+                <p>Panier : <span id="total-panier">0</span> <span class="piece" aria-hidden="true"></span></p>
+            </section>
+
+            <section class="filtres" aria-label="Filtres de categories">
+                <button class="btn-filtre actif" type="button" data-categorie="tous">Tous</button>
+                <button class="btn-filtre" type="button" data-categorie="laiterie">Laiterie</button>
+                <button class="btn-filtre" type="button" data-categorie="volaille">Volaille</button>
+                <button class="btn-filtre" type="button" data-categorie="atelier">Atelier</button>
+            </section>
+
+            <section id="grille-produits" class="grille-produits" aria-label="Produits disponibles"></section>
+
+            <footer class="zone-actions">
+                <button id="btn-vider-panier" class="btn-action btn-secondaire" type="button">Vider panier</button>
+                <button id="btn-valider-achat" class="btn-action btn-primaire" type="button">Valider achat</button>
+                <button id="btn-fermer-marche" class="btn-action btn-fermer" type="button">Fermer</button>
+            </footer>
+        </section>
+
+        <button id="btn-ouvrir-marche" class="btn-ouvrir cache" type="button">Ouvrir le marche</button>
+        <p id="message-marche" class="message-action" aria-live="polite"></p>
+    </main>
+
+    <script src="js/marche-producteurs.js"></script>
+</body>
+</html>

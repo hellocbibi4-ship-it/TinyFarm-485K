@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TinyFarm - Objets de collection</title>
+    <link rel="stylesheet" href="css/objets-collection.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Acme&family=ADLaM+Display&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="fond-page" aria-hidden="true"></div>
+
+    <main class="zone-principale">
+        <section id="popup-collection" class="popup-collection" role="dialog" aria-modal="true" aria-labelledby="titre-collection">
+            <header class="entete-popup">
+                <h1 id="titre-collection">Objets de collection</h1>
+            </header>
+
+            <section class="barre-infos" aria-label="Informations de collection">
+                <p>Jetons : <span id="jetons-joueur">180</span> <span class="piece" aria-hidden="true"></span></p>
+                <p>Debloques : <span id="compteur-debloques">0</span> / <span id="compteur-total">0</span></p>
+                <p>Equipe : <span id="objet-equipe">Aucun</span></p>
+            </section>
+
+            <section class="filtres" aria-label="Filtres de rarete">
+                <button class="btn-filtre actif" type="button" data-filtre="tous">Tous</button>
+                <button class="btn-filtre" type="button" data-filtre="commun">Commun</button>
+                <button class="btn-filtre" type="button" data-filtre="rare">Rare</button>
+                <button class="btn-filtre" type="button" data-filtre="epique">Epique</button>
+            </section>
+
+            <section id="grille-objets" class="grille-objets" aria-label="Objets de collection"></section>
+
+            <footer class="zone-actions">
+                <button id="btn-reinitialiser-equipement" class="btn-action btn-secondaire" type="button">Retirer equipement</button>
+                <button id="btn-fermer-collection" class="btn-action btn-fermer" type="button">Fermer</button>
+            </footer>
+        </section>
+
+        <button id="btn-ouvrir-collection" class="btn-ouvrir cache" type="button">Ouvrir la collection</button>
+        <p id="message-collection" class="message-action" aria-live="polite"></p>
+    </main>
+
+    <script src="js/objets-collection.js"></script>
+</body>
+</html>
