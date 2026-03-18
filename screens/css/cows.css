@@ -55,8 +55,9 @@ p {
     color: #fff;
     font-weight: 700;
     background:
-        url("../assets/vache.svg") no-repeat 12px center / 30px 30px,
+        url("../assets/vache.png") no-repeat 12px center / 180px 30px,
         linear-gradient(160deg, rgba(111, 76, 44, 0.9), rgba(72, 49, 28, 0.95));
+    background-position: 12px center, center;
 }
 
 .cow-btn {

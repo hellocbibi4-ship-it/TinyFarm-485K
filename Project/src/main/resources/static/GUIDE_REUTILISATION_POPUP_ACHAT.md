@@ -6,7 +6,7 @@ Objectif: integrer la popup dans la page principale sans changer le fond de cett
 
 - `css/achat-animaux.css`
 - `js/achat-animaux.js`
-- `assets/vache.svg`, `assets/poule.svg`, `assets/lapin.svg`
+- `assets/vache.png`, `assets/poule.png`, `assets/lapin.png`
 
 ## 2) Dans la page principale (HTML)
 

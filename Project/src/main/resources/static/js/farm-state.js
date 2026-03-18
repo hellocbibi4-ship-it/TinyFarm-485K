@@ -16,7 +16,7 @@
       label: "Vache",
       article: "une",
       home: "Paturage",
-      img: "vache.svg",
+      img: "vache.png",
       price: 50,
       minLevel: 2,
       defaultWeight: 500
@@ -25,7 +25,7 @@
       label: "Poule",
       article: "une",
       home: "Poulailler",
-      img: "poule.svg",
+      img: "poule.png",
       price: 10,
       minLevel: 1,
       defaultWeight: 1.5
@@ -34,7 +34,7 @@
       label: "Lapin",
       article: "un",
       home: "Clapier",
-      img: "lapin.svg",
+      img: "lapin.png",
       price: 10,
       minLevel: 1,
       defaultWeight: 2
