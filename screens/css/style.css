@@ -1061,33 +1061,6 @@ img {
     z-index: 40;
 }
 
-.farm-shortcuts {
-    position: absolute;
-    top: 74px;
-    left: 28%;
-    z-index: 45;
-}
-
-.cow-page-link {
-    display: inline-flex;
-    align-items: center;
-    min-height: 42px;
-    padding: 8px 18px;
-    border-radius: 999px;
-    background: rgba(46, 41, 31, 0.78);
-    border: 1px solid rgba(255, 236, 176, 0.35);
-    color: #fff7dd;
-    font-family: "Acme", sans-serif;
-    font-size: 1.15rem;
-    text-decoration: none;
-    box-shadow: 0 10px 18px rgba(0, 0, 0, 0.18);
-}
-
-.cow-page-link:hover {
-    transform: translateY(-1px);
-    filter: brightness(1.06);
-}
-
 .zone {
     position: absolute;
     width: calc(510 / 1024 * 100%);
@@ -1119,11 +1092,34 @@ img {
     gap: 0;
     width: 100%;
     height: 100%;
-    padding: 12px 14px 8px 50px;
+    padding: 10px 14px 18px 50px;
     overflow-x: auto;
     overflow-y: hidden;
-    scrollbar-width: thin;
+    scrollbar-width: auto;
+    scrollbar-color: rgba(245, 217, 154, 0.9) rgba(58, 34, 13, 0.28);
+    scrollbar-gutter: stable both-edges;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
     box-sizing: border-box;
+}
+
+.animals-zone::-webkit-scrollbar {
+    height: 12px;
+}
+
+.animals-zone::-webkit-scrollbar-track {
+    border-radius: 999px;
+    background: rgba(58, 34, 13, 0.28);
+}
+
+.animals-zone::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgba(245, 217, 154, 0.92);
+    border: 2px solid rgba(58, 34, 13, 0.28);
+}
+
+.animals-zone::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 235, 188, 0.98);
 }
 
 .animals-zone-group {
@@ -1476,11 +1472,6 @@ img {
         gap: 8px;
     }
 
-    .farm-shortcuts {
-        top: 88px;
-        left: 24%;
-    }
-
     .animal-icon {
         width: 56px;
         min-width: 56px;
@@ -1538,11 +1529,6 @@ img {
 }
 
 @media (max-width: 700px) {
-    .farm-shortcuts {
-        top: 74px;
-        left: 18px;
-    }
-
     .zone {
         left: 18%;
         width: 50%;
@@ -1550,6 +1536,7 @@ img {
 
     .animals-zone {
         padding-left: 18px;
+        padding-bottom: 16px;
     }
 
     .collectivite-panel {

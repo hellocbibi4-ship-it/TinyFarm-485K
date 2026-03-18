@@ -360,6 +360,47 @@ function renderEmptyZone(container, message) {
   container.appendChild(emptyState)
 }
 
+function hasHorizontalOverflow(container) {
+  return Boolean(container) && container.scrollWidth > container.clientWidth + 1
+}
+
+function handleAnimalZoneWheel(event) {
+  const container = event.currentTarget
+
+  if (!hasHorizontalOverflow(container)) {
+    return
+  }
+
+  const delta = Math.abs(event.deltaY) >= Math.abs(event.deltaX) ? event.deltaY : event.deltaX
+
+  if (delta === 0) {
+    return
+  }
+
+  const maxScrollLeft = container.scrollWidth - container.clientWidth
+  const nextScrollLeft = clamp(container.scrollLeft + delta, 0, maxScrollLeft)
+
+  if (nextScrollLeft === container.scrollLeft) {
+    return
+  }
+
+  event.preventDefault()
+  container.scrollLeft = nextScrollLeft
+}
+
+function initializeAnimalZoneScroll() {
+  ;[poulaillerContainer, paturageContainer, clapierContainer]
+    .filter(Boolean)
+    .forEach((container) => {
+      if (container.dataset.horizontalWheelBound === "true") {
+        return
+      }
+
+      container.addEventListener("wheel", handleAnimalZoneWheel, { passive: false })
+      container.dataset.horizontalWheelBound = "true"
+    })
+}
+
 function renderAnimalZones() {
   if (!currentFarmModel) {
     return
@@ -962,6 +1003,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   })
 
+  initializeAnimalZoneScroll()
   initializeFarmState()
   initializeStockPanel()
   initializeCollectivitePanel()
