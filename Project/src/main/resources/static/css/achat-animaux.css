@@ -1,0 +1,269 @@
+:root {
+    /* Palette centralisée: simplifie les retouches visuelles globales */
+    --bois-fonce: #5b2f12;
+    --bois-clair: #a65f2b;
+    --creme: #f6eaa9;
+    --vert-bouton: #2ea94e;
+    --vert-bouton-hover: #35bc57;
+    --bleu-bouton: #3f5ab8;
+    --bleu-bouton-hover: #4a68d1;
+    --texte-fonce: #2b1a0f;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    min-height: 100%;
+    font-family: "Acme", "Segoe UI", sans-serif;
+}
+
+body {
+    color: #fff;
+    overflow-x: hidden;
+}
+
+/* Fond principal volontairement flouté pour faire ressortir la popup */
+.fond-flou {
+    position: fixed;
+    inset: 0;
+    background: url('../assets/background.png') center center / cover no-repeat;
+    filter: blur(6px) brightness(0.6);
+    transform: scale(1.08);
+    z-index: -1;
+}
+
+/* Conteneur qui centre la popup verticalement et horizontalement */
+.zone-principale {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    padding: 24px;
+}
+
+/* Carte principale de la boutique */
+.popup-achat {
+    width: min(92vw, 520px);
+    border: 6px solid var(--bois-fonce);
+    border-radius: 14px;
+    background: linear-gradient(180deg, #74b8f8 0%, #6fb0f1 50%, #8ed4ff 100%);
+    box-shadow: 0 18px 38px rgba(0, 0, 0, 0.45);
+    overflow: hidden;
+}
+
+.entete-bois {
+    background: linear-gradient(180deg, var(--bois-clair) 0%, var(--bois-fonce) 100%);
+    border-bottom: 4px solid #3c1e0a;
+    padding: 12px 18px;
+    text-align: center;
+}
+
+.entete-bois h1 {
+    margin: 0;
+    font-family: "ADLaM Display", cursive;
+    font-size: clamp(1.7rem, 3.8vw, 2.2rem);
+    color: #f9f0c7;
+}
+
+.ligne-solde {
+    margin: 14px 16px 6px;
+    text-align: center;
+    font-size: 1.25rem;
+    color: var(--texte-fonce);
+}
+
+/* Affichage desktop: 3 colonnes (1 animal par colonne) */
+.grille-animaux {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    padding: 12px 16px;
+}
+
+.carte-animal {
+    background: linear-gradient(180deg, #f8f1be 0%, var(--creme) 100%);
+    border: 3px solid #b9974f;
+    border-radius: 10px;
+    padding: 8px;
+    text-align: center;
+    color: var(--texte-fonce);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.carte-animal h2 {
+    margin: 0;
+    font-size: clamp(1.1rem, 2.8vw, 1.5rem);
+}
+
+.zone-image {
+    height: 120px;
+    border: 2px solid #7ea5ca;
+    border-radius: 8px;
+    background: linear-gradient(180deg, #81bcff 0%, #9fdbff 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+}
+
+.zone-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.prix {
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    font-size: 2rem;
+    line-height: 1;
+}
+
+.piece {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: inline-block;
+    background: radial-gradient(circle at 30% 30%, #ffef8c 0%, #f8d33f 45%, #d6a928 100%);
+    border: 2px solid #9e7413;
+}
+
+/* Base commune à tous les boutons de la page */
+.btn-acheter,
+.btn-fermer,
+.btn-ouvrir {
+    border: 2px solid rgba(0, 0, 0, 0.24);
+    border-radius: 8px;
+    color: #f6ffe8;
+    font-family: "Acme", sans-serif;
+    font-size: 1.85rem;
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: transform 0.15s ease, filter 0.15s ease, background-color 0.15s ease;
+}
+
+.btn-acheter {
+    background-color: var(--vert-bouton);
+}
+
+.btn-acheter:hover {
+    background-color: var(--vert-bouton-hover);
+}
+
+.btn-fermer,
+.btn-ouvrir {
+    min-width: 180px;
+    background-color: var(--bleu-bouton);
+}
+
+.btn-fermer:hover,
+.btn-ouvrir:hover {
+    background-color: var(--bleu-bouton-hover);
+}
+
+.btn-acheter:hover,
+.btn-fermer:hover,
+.btn-ouvrir:hover {
+    /* Animation légère pour donner un feedback immédiat au clic/survol */
+    transform: translateY(-1px) scale(1.02);
+    filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.25));
+}
+
+.btn-acheter:disabled {
+    background-color: #8ca083;
+    color: #eef5df;
+    cursor: not-allowed;
+    opacity: 0.92;
+}
+
+.btn-acheter:disabled:hover {
+    transform: none;
+    filter: none;
+}
+
+.btn-acheter:active,
+.btn-fermer:active,
+.btn-ouvrir:active {
+    transform: scale(0.98);
+}
+
+.zone-actions {
+    display: flex;
+    justify-content: center;
+    padding: 6px 16px 16px;
+}
+
+.resume-achats {
+    width: min(92vw, 520px);
+    background: rgba(19, 37, 59, 0.78);
+    border: 2px solid rgba(255, 255, 255, 0.25);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 1.1rem;
+}
+
+.resume-achats h2 {
+    margin: 0 0 8px;
+    font-size: 1.3rem;
+}
+
+.resume-achats p {
+    margin: 4px 0;
+}
+
+.message-action {
+    min-height: 26px;
+    margin: 0;
+    font-size: 1.05rem;
+    text-align: center;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+}
+
+.message-action.erreur {
+    color: #ffd3d3;
+}
+
+.message-action.succes {
+    color: #e5ffd1;
+}
+
+/* Classe utilitaire réutilisable pour masquer/afficher via JS */
+.cache {
+    display: none;
+}
+
+@media (max-width: 720px) {
+    /* Sur mobile, on empile les cartes pour conserver la lisibilité */
+    .popup-achat {
+        width: min(95vw, 430px);
+    }
+
+    .grille-animaux {
+        grid-template-columns: 1fr;
+    }
+
+    .zone-image {
+        height: 110px;
+    }
+
+    .prix {
+        font-size: 1.8rem;
+    }
+
+    .btn-acheter,
+    .btn-fermer,
+    .btn-ouvrir {
+        font-size: 1.45rem;
+    }
+}
