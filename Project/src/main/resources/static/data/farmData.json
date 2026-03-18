@@ -5,6 +5,11 @@
         "food": 200,
         "straw": 15
     },
+    "stockProducts": [
+        { "id": "milk", "name": "Lait", "stock": 32, "price": 4 },
+        { "id": "eggs", "name": "Oeufs", "stock": 48, "price": 2 },
+        { "id": "cheese", "name": "Fromage", "stock": 26, "price": 6 }
+    ],
     "communityItems": [
         { "id": "feed-bag", "label": "Sac de nourriture", "icon": "🧺", "price": 19 },
         { "id": "straw-bales", "label": "Bottes de pailles", "icon": "🌾", "price": 19 },

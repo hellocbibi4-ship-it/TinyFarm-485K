@@ -1,7 +1,3 @@
-// ============================================================
-// DONNÉES STATIQUES
-// ============================================================
-
 const fallbackStockProducts = [
   { id: "milk", name: "Lait", stock: 32, price: 4 },
   { id: "eggs", name: "Oeufs", stock: 48, price: 2 },
@@ -9,26 +5,15 @@ const fallbackStockProducts = [
 ]
 
 const fallbackCommunityItems = [
-  { id: "feed-bag", label: "Sac de nourriture", icon: "🧺", price: 19 },
-  { id: "straw-bales", label: "Bottes de pailles", icon: "🌾", price: 19 },
-  { id: "syringe", label: "Seringue", icon: "💉", price: 19 },
-  { id: "water-bucket", label: "Seau d'eau", icon: "🪣", price: 19 },
-  { id: "soap", label: "Savon", icon: "🧼", price: 19 },
-  { id: "collectible", label: "Objet de collection", icon: "💍" },
-  { id: "buy-animals", label: "Achat animaux", icon: "🐄", variant: "shortcut" },
-  { id: "farmers-market", label: "Marché des producteurs", icon: "🧑‍🌾", variant: "shortcut" }
+  { id: "feed-bag", label: "Sac de nourriture", price: 19 },
+  { id: "straw-bales", label: "Bottes de pailles", price: 19 },
+  { id: "syringe", label: "Seringue", price: 19 },
+  { id: "water-bucket", label: "Seau d'eau", price: 19 },
+  { id: "soap", label: "Savon", price: 19 },
+  { id: "collectible", label: "Objet de collection" },
+  { id: "buy-animals", label: "Achat animaux", variant: "shortcut" },
+  { id: "farmers-market", label: "Marche des producteurs", variant: "shortcut" }
 ]
-
-// Catalogue statique de démonstration : à remplacer plus tard par des données backend si besoin.
-const catalogueAnimaux = {
-  vache: { nom: "Vache", nomMinuscule: "vache", article: "une", prix: 50, niveauMinimumAchat: 2 },
-  poule: { nom: "Poule", nomMinuscule: "poule", article: "une", prix: 10 },
-  lapin: { nom: "Lapin", nomMinuscule: "lapin", article: "un", prix: 10 }
-}
-
-// ============================================================
-// ÉTATS
-// ============================================================
 
 const stockState = {
   products: [],
@@ -39,25 +24,6 @@ const stockState = {
 const collectiviteState = {
   items: []
 }
-
-// État local de la boutique animaux : utile pour tester la popup avant intégration backend.
-const etatBoutique = {
-  niveauJoueur: 1,
-  solde: 120,
-  achats: {
-    // Contrainte sujet : le joueur possède déjà une vache au niveau 1 (kit de démarrage).
-    vache: 1,
-    poule: 0,
-    lapin: 0
-  }
-}
-
-let farmDataPromise = null
-let collectiviteFeedbackTimeout = null
-
-// ============================================================
-// RÉFÉRENCES DOM — ÉCRAN PRINCIPAL
-// ============================================================
 
 const loginBtn = document.getElementById("login-btn")
 const loginScreen = document.getElementById("login-screen")
@@ -82,14 +48,23 @@ const stockSellButton = document.getElementById("stock-sell")
 const collectiviteList = document.getElementById("collectivite-list")
 const collectiviteFeedback = document.getElementById("collectivite-feedback")
 
-// ============================================================
-// RÉFÉRENCES DOM — POPUP ACHAT ANIMAUX
-// ============================================================
+const poulaillerContainer = document.getElementById("poulailler-container")
+const paturageContainer = document.getElementById("paturage-container")
+const clapierContainer = document.getElementById("clapier-container")
+
+const modal = document.getElementById("animal-modal")
+const modalName = document.getElementById("animal-name")
+const modalType = document.getElementById("animal-type")
+const modalPlace = document.getElementById("animal-place")
+const modalWeightLabel = document.getElementById("animal-weight-label")
+const modalWeight = document.getElementById("animal-weight")
+const closeTargets = document.querySelectorAll("[data-close-modal]")
+const actionButtons = document.querySelectorAll("[data-action]")
+const toast = document.getElementById("toast")
 
 const elementsInterface = {
   popup: document.getElementById("popup-achat"),
   boutonFermer: document.getElementById("bouton-fermer"),
-  boutonOuvrir: document.getElementById("bouton-ouvrir"),
   solde: document.getElementById("solde-ecus"),
   message: document.getElementById("message-action"),
   compteurs: {
@@ -99,9 +74,10 @@ const elementsInterface = {
   }
 }
 
-// ============================================================
-// UTILITAIRES GÉNÉRAUX
-// ============================================================
+let currentFarmModel = null
+let collectiviteFeedbackTimeout = null
+let toastTimeoutId = null
+let activeActionTarget = ""
 
 function getCurrentProduct() {
   return (
@@ -109,10 +85,6 @@ function getCurrentProduct() {
     stockState.products[0] ||
     null
   )
-}
-
-function getTotalUnits() {
-  return stockState.products.reduce((total, product) => total + product.stock, 0)
 }
 
 function clamp(value, min, max) {
@@ -123,9 +95,13 @@ function formatEcus(value) {
   return `${value} ${value > 1 ? "ecus" : "ecu"}`
 }
 
-// ============================================================
-// FEEDBACK — STOCK & COLLECTIVITÉ
-// ============================================================
+function formatWeight(weight) {
+  if (!Number.isFinite(weight)) {
+    return "-"
+  }
+
+  return `${Number.parseFloat(weight.toFixed(1))} kg`
+}
 
 function setStockFeedback(message = "", type = "") {
   if (!stockFeedback) {
@@ -162,10 +138,6 @@ function setCollectiviteFeedback(message = "") {
   }
 }
 
-// ============================================================
-// PANEL STOCK
-// ============================================================
-
 function setStockPanelOpen(isOpen) {
   if (!stockPanel || !stockToggle) {
     return
@@ -182,10 +154,7 @@ function renderStockOptions() {
   }
 
   stockProductSelect.innerHTML = stockState.products
-    .map(
-      (product) =>
-        `<option value="${product.id}">${product.name}</option>`
-    )
+    .map((product) => `<option value="${product.id}">${product.name}</option>`)
     .join("")
 
   if (stockState.selectedProductId) {
@@ -218,7 +187,11 @@ function updateStockPanel() {
   stockState.quantity = clamp(stockState.quantity, minimumQuantity, product.stock)
 
   if (stockProductSelect) stockProductSelect.value = product.id
-  if (stockTotalUnits) stockTotalUnits.textContent = String(getTotalUnits())
+  if (stockTotalUnits) {
+    stockTotalUnits.textContent = String(
+      stockState.products.reduce((total, item) => total + item.stock, 0)
+    )
+  }
   if (stockAvailable) stockAvailable.textContent = String(product.stock)
   if (stockUnitPrice) stockUnitPrice.textContent = formatEcus(product.price)
   if (stockTotalPrice) stockTotalPrice.textContent = formatEcus(stockState.quantity * product.price)
@@ -246,10 +219,6 @@ function adjustStockQuantity(delta) {
   updateStockPanel()
   setStockFeedback()
 }
-
-// ============================================================
-// PANEL COLLECTIVITÉ
-// ============================================================
 
 function renderCollectivitePrice(price) {
   if (!Number.isFinite(price)) {
@@ -296,36 +265,140 @@ function renderCollectivitePanel(items) {
     .join("")
 }
 
-// ============================================================
-// POPUP ACHAT ANIMAUX
-// ============================================================
+function createAnimalIcon(animal, { groupOnly = false } = {}) {
+  const element = document.createElement(groupOnly ? "span" : "button")
+  element.className = `animal-icon${groupOnly ? " animal-icon--decorative" : ""}`
+  element.title = animal.name
 
-// Répercute l'état courant (solde + quantités achetées) dans le DOM.
-function mettreAJourInterface() {
-  if (elementsInterface.solde) {
-    elementsInterface.solde.textContent = etatBoutique.solde
+  if (!groupOnly) {
+    element.type = "button"
+    element.setAttribute("aria-label", `${animal.name}, ${animal.typeLabel}`)
+    element.addEventListener("click", () => openAnimalModal(animal))
+  } else {
+    element.setAttribute("aria-hidden", "true")
   }
 
-  Object.entries(etatBoutique.achats).forEach(([typeAnimal, quantite]) => {
-    if (elementsInterface.compteurs[typeAnimal]) {
-      elementsInterface.compteurs[typeAnimal].textContent = quantite
+  const image = document.createElement("img")
+  image.src = `assets/${animal.img}`
+  image.alt = animal.name
+
+  element.appendChild(image)
+  return element
+}
+
+function renderEmptyZone(container, message) {
+  const emptyState = document.createElement("p")
+  emptyState.className = "animals-empty"
+  emptyState.textContent = message
+  container.appendChild(emptyState)
+}
+
+function renderAnimalZones() {
+  if (!currentFarmModel) {
+    return
+  }
+
+  const cows = TinyFarmState.getAnimalsByType(currentFarmModel, "vache")
+  const chickens = TinyFarmState.getAnimalsByType(currentFarmModel, "poule")
+  const rabbits = TinyFarmState.getAnimalsByType(currentFarmModel, "lapin")
+
+  if (paturageContainer) {
+    paturageContainer.innerHTML = ""
+
+    if (cows.length === 0) {
+      renderEmptyZone(paturageContainer, "Aucune vache")
+    } else {
+      cows.forEach((animal) => {
+        paturageContainer.appendChild(createAnimalIcon(animal))
+      })
+    }
+  }
+
+  if (poulaillerContainer) {
+    poulaillerContainer.innerHTML = ""
+
+    if (chickens.length === 0) {
+      renderEmptyZone(poulaillerContainer, "Aucune poule")
+    } else {
+      chickens.forEach((animal) => {
+        poulaillerContainer.appendChild(createAnimalIcon(animal))
+      })
+    }
+  }
+
+  if (clapierContainer) {
+    clapierContainer.innerHTML = ""
+    clapierContainer.dataset.groupTooltip = `${rabbits.length} lapin${rabbits.length > 1 ? "s" : ""} - actions de groupe`
+    clapierContainer.classList.toggle("is-empty", rabbits.length === 0)
+
+    if (rabbits.length === 0) {
+      renderEmptyZone(clapierContainer, "Aucun lapin")
+    } else {
+      rabbits.forEach((animal) => {
+        clapierContainer.appendChild(createAnimalIcon(animal, { groupOnly: true }))
+      })
+    }
+  }
+}
+
+function mettreAJourInterface() {
+  if (!currentFarmModel) {
+    return
+  }
+
+  if (elementsInterface.solde) {
+    elementsInterface.solde.textContent = String(currentFarmModel.balance)
+  }
+
+  Object.entries(currentFarmModel.counts).forEach(([typeKey, count]) => {
+    if (elementsInterface.compteurs[typeKey]) {
+      elementsInterface.compteurs[typeKey].textContent = String(count)
     }
   })
 }
 
-// Active/désactive visuellement les boutons selon les règles de progression.
+function afficherMessage(text, type = "") {
+  if (!elementsInterface.message) {
+    return
+  }
+
+  elementsInterface.message.textContent = text
+  elementsInterface.message.classList.remove("erreur", "succes")
+
+  if (type) {
+    elementsInterface.message.classList.add(type)
+  }
+}
+
+function estAchatAutorise(typeAnimal) {
+  if (!currentFarmModel) {
+    return false
+  }
+
+  const catalogEntry = TinyFarmState.ANIMAL_CATALOG[typeAnimal]
+
+  if (!catalogEntry) {
+    return false
+  }
+
+  return currentFarmModel.uiState.level >= catalogEntry.minLevel
+}
+
 function mettreAJourDisponibiliteBoutons() {
   const boutonsAchat = document.querySelectorAll(".btn-acheter")
 
   boutonsAchat.forEach((bouton) => {
     const typeAnimal = bouton.dataset.animal
-    const achatAutorise = estAchatAutorise(typeAnimal)
+    const autorise = estAchatAutorise(typeAnimal)
+    const alreadyOwnsCow = currentFarmModel && currentFarmModel.counts.vache > 0
 
-    bouton.disabled = !achatAutorise
+    bouton.disabled = !autorise
 
-    if (!achatAutorise && typeAnimal === "vache") {
-      bouton.textContent = "Déjà possédée"
-      bouton.title = "La vache est incluse au niveau 1."
+    if (!autorise && typeAnimal === "vache") {
+      bouton.textContent = alreadyOwnsCow ? "Deja possedee" : "Niveau 2 requis"
+      bouton.title = alreadyOwnsCow
+        ? "La vache est deja presente dans la ferme au niveau 1."
+        : "La vache devient achetable a partir du niveau 2."
       return
     }
 
@@ -334,122 +407,177 @@ function mettreAJourDisponibiliteBoutons() {
   })
 }
 
-function estAchatAutorise(typeAnimal) {
-  const animal = catalogueAnimaux[typeAnimal]
-
-  if (!animal) {
-    return false
-  }
-
-  if (!animal.niveauMinimumAchat) {
-    return true
-  }
-
-  return etatBoutique.niveauJoueur >= animal.niveauMinimumAchat
+function updateFarmOverlayState(uiState) {
+  const normalizedState = TinyFarmState.writeUiState(uiState)
+  currentFarmModel = TinyFarmState.buildFarmModel(currentFarmModel.rawData, normalizedState)
+  renderAnimalZones()
+  mettreAJourInterface()
+  mettreAJourDisponibiliteBoutons()
 }
 
-// Traite une tentative d'achat : valide le type, vérifie le solde, met à jour l'état.
 function traiterAchat(typeAnimal) {
-  const animal = catalogueAnimaux[typeAnimal]
+  if (!currentFarmModel) {
+    afficherMessage("Donnees animaux indisponibles.", "erreur")
+    return
+  }
 
-  if (!animal) {
-    afficherMessage("Animal inconnu, achat annulé.", "erreur")
+  const catalogEntry = TinyFarmState.ANIMAL_CATALOG[typeAnimal]
+
+  if (!catalogEntry) {
+    afficherMessage("Animal inconnu, achat annule.", "erreur")
     return
   }
 
   if (!estAchatAutorise(typeAnimal)) {
+    const message = typeAnimal === "vache"
+      ? "Niveau 1 : la vache est deja fournie et ne peut pas etre rachetee."
+      : `Niveau insuffisant pour acheter ${catalogEntry.article} ${catalogEntry.label.toLowerCase()}.`
+
+    afficherMessage(message, "erreur")
+    return
+  }
+
+  if (currentFarmModel.balance < catalogEntry.price) {
     afficherMessage(
-      "Niveau 1 : la vache est déjà fournie dans le kit de démarrage et ne peut pas être rachetée.",
+      `Solde insuffisant pour acheter ${catalogEntry.article} ${catalogEntry.label.toLowerCase()}.`,
       "erreur"
     )
     return
   }
 
-  if (etatBoutique.solde < animal.prix) {
-    afficherMessage(`Solde insuffisant pour acheter ${animal.article} ${animal.nomMinuscule}.`, "erreur")
+  const nextUiState = TinyFarmState.readUiState()
+  nextUiState.level = currentFarmModel.uiState.level
+  nextUiState.balance = currentFarmModel.balance - catalogEntry.price
+  nextUiState.purchases[typeAnimal] += 1
+
+  updateFarmOverlayState(nextUiState)
+  afficherMessage(`Achat valide : ${catalogEntry.label}.`, "succes")
+}
+
+function setAnimalShopOpen(isOpen, { announce = true } = {}) {
+  if (!elementsInterface.popup || !farmScreen) {
     return
   }
 
-  etatBoutique.solde -= animal.prix
-  etatBoutique.achats[typeAnimal] += 1
+  elementsInterface.popup.classList.toggle("hidden", !isOpen)
+  farmScreen.classList.toggle("popup-ouverte", isOpen)
 
+  if (announce) {
+    afficherMessage(isOpen ? "Boutique ouverte." : "Popup fermee.", "succes")
+  }
+}
+
+function ouvrirPopup() {
   mettreAJourInterface()
-  afficherMessage(`Achat validé : ${animal.nom}.`, "succes")
+  mettreAJourDisponibiliteBoutons()
+  setAnimalShopOpen(true)
 }
 
-// Affiche un message utilisateur avec la couleur correspondant au type.
-function afficherMessage(texte, type) {
-  if (!elementsInterface.message) {
-    return
-  }
-
-  elementsInterface.message.textContent = texte
-  elementsInterface.message.classList.remove("erreur", "succes")
-  elementsInterface.message.classList.add(type)
-}
-
-// Masque la popup et révèle le bouton de réouverture.
-function fermerPopup() {
+function fermerPopup({ announce = true } = {}) {
   if (!elementsInterface.popup || elementsInterface.popup.classList.contains("hidden")) {
     return
   }
 
-  elementsInterface.popup.classList.add("hidden")
-
-  if (elementsInterface.boutonOuvrir) {
-    elementsInterface.boutonOuvrir.classList.remove("hidden")
-  }
-
-  afficherMessage('Popup fermée. Clique sur "Ouvrir la boutique" pour revenir.', "succes")
+  setAnimalShopOpen(false, { announce })
 }
 
-// Réaffiche la popup et remasque le bouton d'ouverture.
-function ouvrirPopup() {
-  if (!elementsInterface.popup) {
+function openActionModal({ name, typeLabel, homeLabel, weightLabel, weightValue, targetLabel }) {
+  if (!modal) {
     return
   }
 
-  elementsInterface.popup.classList.remove("hidden")
-
-  if (elementsInterface.boutonOuvrir) {
-    elementsInterface.boutonOuvrir.classList.add("hidden")
-  }
-
-  afficherMessage("Boutique ouverte.", "succes")
+  modalName.textContent = name
+  modalType.textContent = typeLabel
+  modalPlace.textContent = homeLabel
+  modalWeightLabel.textContent = weightLabel
+  modalWeight.textContent = weightValue
+  activeActionTarget = targetLabel
+  modal.classList.remove("hidden")
+  modal.setAttribute("aria-hidden", "false")
 }
 
-// ============================================================
-// CHARGEMENT DES DONNÉES
-// ============================================================
+function openAnimalModal(animal) {
+  openActionModal({
+    name: animal.name,
+    typeLabel: animal.typeLabel,
+    homeLabel: animal.homeLabel,
+    weightLabel: "Poids :",
+    weightValue: formatWeight(animal.weight),
+    targetLabel: animal.name
+  })
+}
 
-function fetchFarmData() {
-  if (!farmDataPromise) {
-    farmDataPromise = fetch("./data/farmData.json").then((response) => {
-      if (!response.ok) {
-        throw new Error("Impossible de charger les donnees de la ferme.")
-      }
-
-      return response.json()
-    })
+function openClapierModal() {
+  if (!currentFarmModel) {
+    return
   }
 
-  return farmDataPromise
+  const rabbits = TinyFarmState.getAnimalsByType(currentFarmModel, "lapin")
+
+  if (rabbits.length === 0) {
+    return
+  }
+
+  openActionModal({
+    name: "Clapier",
+    typeLabel: "Lapins",
+    homeLabel: "Clapier",
+    weightLabel: "Effectif :",
+    weightValue: `${rabbits.length} lapin${rabbits.length > 1 ? "s" : ""}`,
+    targetLabel: "tout le clapier"
+  })
+}
+
+function closeActionModal() {
+  if (!modal || modal.classList.contains("hidden")) {
+    return
+  }
+
+  modal.classList.add("hidden")
+  modal.setAttribute("aria-hidden", "true")
+}
+
+function showToast(message) {
+  if (!toast) {
+    return
+  }
+
+  toast.textContent = message
+  toast.classList.remove("hidden")
+  toast.classList.add("show")
+
+  if (toastTimeoutId) {
+    window.clearTimeout(toastTimeoutId)
+  }
+
+  toastTimeoutId = window.setTimeout(() => {
+    toast.classList.remove("show")
+    toast.classList.add("hidden")
+    toastTimeoutId = null
+  }, 1600)
+}
+
+async function initializeFarmState() {
+  try {
+    const data = await TinyFarmState.fetchFarmData()
+    currentFarmModel = TinyFarmState.buildFarmModel(data)
+    renderAnimalZones()
+    mettreAJourInterface()
+    mettreAJourDisponibiliteBoutons()
+  } catch (error) {
+    console.error("Erreur lors du chargement des animaux :", error)
+    afficherMessage("Impossible de charger les animaux.", "erreur")
+  }
 }
 
 async function initializeStockPanel() {
-  if (!stockToggle || !stockPanel) {
-    return
-  }
-
   try {
-    const data = await fetchFarmData()
-    const products = Array.isArray(data.stockProducts) && data.stockProducts.length > 0
-      ? data.stockProducts
-      : fallbackStockProducts
+    const data = await TinyFarmState.fetchFarmData()
+    const products = data.stockProducts.length > 0 ? data.stockProducts : fallbackStockProducts
 
     stockState.products = products.map((product) => ({ ...product }))
-    stockState.selectedProductId = stockState.products[0]?.id || null
-    stockState.quantity = stockState.products[0]?.stock > 0 ? 1 : 0
+    stockState.selectedProductId = stockState.products[0] ? stockState.products[0].id : null
+    stockState.quantity = stockState.products[0] && stockState.products[0].stock > 0 ? 1 : 0
 
     renderStockOptions()
     updateStockPanel()
@@ -458,7 +586,6 @@ async function initializeStockPanel() {
     stockState.products = fallbackStockProducts.map((product) => ({ ...product }))
     stockState.selectedProductId = stockState.products[0].id
     stockState.quantity = 1
-
     renderStockOptions()
     updateStockPanel()
     setStockFeedback("Stock charge avec les donnees de secours.", "is-error")
@@ -471,11 +598,8 @@ async function initializeCollectivitePanel() {
   }
 
   try {
-    const data = await fetchFarmData()
-    const items = Array.isArray(data.communityItems) && data.communityItems.length > 0
-      ? data.communityItems
-      : fallbackCommunityItems
-
+    const data = await TinyFarmState.fetchFarmData()
+    const items = data.communityItems.length > 0 ? data.communityItems : fallbackCommunityItems
     renderCollectivitePanel(items)
   } catch (error) {
     console.error("Erreur lors du chargement de la collectivite :", error)
@@ -484,41 +608,30 @@ async function initializeCollectivitePanel() {
   }
 }
 
-// ============================================================
-// CLASSEMENT
-// ============================================================
-
 async function classement() {
   if (!tbody) {
     return
   }
 
   try {
-    const data = await fetchFarmData()
-
+    const data = await TinyFarmState.fetchFarmData()
     tbody.innerHTML = ""
 
-    if (data.players) {
-      data.players.forEach((player, index) => {
-        tbody.innerHTML += `
-          <tr>
-            <td>${index + 1}</td>
-            <td>${player.name}</td>
-            <td>${player.production}</td>
-            <td>${player.capacity}</td>
-            <td>${player.money}</td>
-          </tr>
-        `
-      })
-    }
+    data.players.forEach((player, index) => {
+      tbody.innerHTML += `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${player.name}</td>
+          <td>${player.production}</td>
+          <td>${player.capacity}</td>
+          <td>${player.money}</td>
+        </tr>
+      `
+    })
   } catch (error) {
     console.error("Erreur lors du chargement du classement :", error)
   }
 }
-
-// ============================================================
-// HORLOGE
-// ============================================================
 
 function updateClock() {
   const clock = document.getElementById("clock")
@@ -535,15 +648,27 @@ function updateClock() {
   clock.textContent = `${hours}:${minutes}:${seconds}`
 }
 
-// ============================================================
-// ÉCOUTEURS HORS DOMContentLoaded
-// ============================================================
+function showFarmScreen() {
+  if (!loginScreen || !farmScreen) {
+    return
+  }
 
-if (loginBtn && loginScreen && farmScreen) {
-  loginBtn.addEventListener("click", () => {
-    loginScreen.classList.add("hidden")
-    farmScreen.classList.remove("hidden")
-  })
+  loginScreen.classList.add("hidden")
+  farmScreen.classList.remove("hidden")
+  initializeFarmState()
+}
+
+function showLoginScreen() {
+  if (!loginScreen || !farmScreen) {
+    return
+  }
+
+  loginScreen.classList.remove("hidden")
+  farmScreen.classList.add("hidden")
+}
+
+if (loginBtn) {
+  loginBtn.addEventListener("click", showFarmScreen)
 }
 
 if (clsBtn && classementScreen) {
@@ -557,16 +682,31 @@ if (clsBtn && classementScreen) {
   })
 }
 
+closeTargets.forEach((button) => {
+  button.addEventListener("click", closeActionModal)
+})
+
+actionButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    const action = button.dataset.action
+    const target = activeActionTarget || "la ferme"
+    showToast(`${action} : ${target} - OK`)
+  })
+})
+
+window.addEventListener("focus", () => {
+  initializeFarmState()
+})
+
+window.addEventListener("storage", (event) => {
+  if (event.key === TinyFarmState.STORAGE_KEY) {
+    initializeFarmState()
+  }
+})
+
 classement()
 
-// ============================================================
-// INITIALISATION AU CHARGEMENT DU DOM
-// ============================================================
-
 document.addEventListener("DOMContentLoaded", () => {
-
-  // --- Paramètres / langue ---
-
   const settingsButtons = document.querySelectorAll(".settings-btn")
   const settingsPanels = document.querySelectorAll(".settings-panel")
 
@@ -596,14 +736,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.querySelectorAll(".logout-btn").forEach((button) => {
     button.addEventListener("click", () => {
-      if (farmScreen && loginScreen) {
-        farmScreen.classList.add("hidden")
-        loginScreen.classList.remove("hidden")
-      }
+      closeActionModal()
+      fermerPopup({ announce: false })
+      setStockPanelOpen(false)
+      showLoginScreen()
 
       document.querySelectorAll(".settings-btn").forEach((currentButton) => currentButton.classList.remove("open"))
       document.querySelectorAll(".settings-panel").forEach((panel) => panel.classList.remove("open"))
-      setStockPanelOpen(false)
     })
   })
 
@@ -625,8 +764,6 @@ document.addEventListener("DOMContentLoaded", () => {
     })
   })
 
-  // --- Panel stock ---
-
   if (stockToggle && stockPanel) {
     stockToggle.addEventListener("click", (event) => {
       event.stopPropagation()
@@ -641,22 +778,18 @@ document.addEventListener("DOMContentLoaded", () => {
   if (stockProductSelect) {
     stockProductSelect.addEventListener("change", () => {
       stockState.selectedProductId = stockProductSelect.value
-      stockState.quantity = getCurrentProduct()?.stock > 0 ? 1 : 0
+      stockState.quantity = getCurrentProduct() && getCurrentProduct().stock > 0 ? 1 : 0
       updateStockPanel()
       setStockFeedback()
     })
   }
 
   if (stockMinusButton) {
-    stockMinusButton.addEventListener("click", () => {
-      adjustStockQuantity(-1)
-    })
+    stockMinusButton.addEventListener("click", () => adjustStockQuantity(-1))
   }
 
   if (stockPlusButton) {
-    stockPlusButton.addEventListener("click", () => {
-      adjustStockQuantity(1)
-    })
+    stockPlusButton.addEventListener("click", () => adjustStockQuantity(1))
   }
 
   if (stockQuantityInput) {
@@ -678,7 +811,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (stockCancelButton) {
     stockCancelButton.addEventListener("click", () => {
-      stockState.quantity = getCurrentProduct()?.stock > 0 ? 1 : 0
+      stockState.quantity = getCurrentProduct() && getCurrentProduct().stock > 0 ? 1 : 0
       updateStockPanel()
       setStockFeedback()
       setStockPanelOpen(false)
@@ -707,8 +840,6 @@ document.addEventListener("DOMContentLoaded", () => {
     })
   }
 
-  // --- Panel collectivité ---
-
   if (collectiviteList) {
     collectiviteList.addEventListener("click", (event) => {
       const button = event.target.closest("[data-collectivite-id]")
@@ -723,7 +854,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return
       }
 
-      // Le raccourci "Achat animaux" ouvre directement la popup.
       if (selectedItem.id === "buy-animals") {
         ouvrirPopup()
         return
@@ -733,48 +863,41 @@ document.addEventListener("DOMContentLoaded", () => {
     })
   }
 
-  // --- Popup achat animaux ---
+  if (elementsInterface.boutonFermer) {
+    elementsInterface.boutonFermer.addEventListener("click", () => fermerPopup())
+  }
 
-  const boutonsAchat = document.querySelectorAll(".btn-acheter")
-
-  // Tous les boutons d'achat partagent la même logique, pilotée par data-animal.
-  boutonsAchat.forEach((bouton) => {
-    bouton.addEventListener("click", () => {
-      const typeAnimal = bouton.dataset.animal
-      traiterAchat(typeAnimal)
+  document.querySelectorAll(".btn-acheter").forEach((button) => {
+    button.addEventListener("click", () => {
+      traiterAchat(button.dataset.animal)
     })
   })
 
-  if (elementsInterface.boutonFermer) {
-    elementsInterface.boutonFermer.addEventListener("click", fermerPopup)
+  if (clapierContainer) {
+    clapierContainer.addEventListener("click", openClapierModal)
+    clapierContainer.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault()
+        openClapierModal()
+      }
+    })
   }
-
-  if (elementsInterface.boutonOuvrir) {
-    elementsInterface.boutonOuvrir.addEventListener("click", ouvrirPopup)
-  }
-
-  // Synchronisation initiale de l'interface (solde + compteurs).
-  mettreAJourInterface()
-  mettreAJourDisponibiliteBoutons()
-
-  // --- Fermeture globale au clic hors panels & touche Échap ---
 
   document.addEventListener("click", () => {
     setStockPanelOpen(false)
   })
 
-  // Touche de confort : Échap ferme le panel stock ET la popup animaux.
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
       setStockPanelOpen(false)
-      fermerPopup()
+      fermerPopup({ announce: false })
+      closeActionModal()
     }
   })
 
-  // --- Initialisation asynchrone & horloge ---
-
+  initializeFarmState()
   initializeStockPanel()
   initializeCollectivitePanel()
   updateClock()
-  setInterval(updateClock, 1000)
+  window.setInterval(updateClock, 1000)
 })

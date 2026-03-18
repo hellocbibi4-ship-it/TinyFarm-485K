@@ -1,0 +1,71 @@
+html,
+body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(180deg, #1f2a1f 0%, #2f4932 100%);
+    color: #f5f5f5;
+}
+
+.page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 32px 20px;
+}
+
+.back-link {
+    display: inline-block;
+    margin-bottom: 16px;
+    padding: 10px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    border-radius: 12px;
+    color: #fff;
+    text-decoration: none;
+    font-weight: 700;
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.back-link:hover {
+    background: rgba(255, 255, 255, 0.22);
+}
+
+h1 {
+    margin: 0 0 8px;
+}
+
+p {
+    margin: 0 0 18px;
+    opacity: 0.9;
+}
+
+.cow-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.cow-btn,
+.cow-empty {
+    min-width: 150px;
+    min-height: 52px;
+    padding: 12px 14px 12px 56px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 12px;
+    color: #fff;
+    font-weight: 700;
+    background:
+        url("../assets/vache.svg") no-repeat 12px center / 30px 30px,
+        linear-gradient(160deg, rgba(111, 76, 44, 0.9), rgba(72, 49, 28, 0.95));
+}
+
+.cow-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.cow-empty {
+    padding-left: 18px;
+    background: rgba(255, 255, 255, 0.1);
+}
