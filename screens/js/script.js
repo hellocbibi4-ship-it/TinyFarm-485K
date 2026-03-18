@@ -390,14 +390,14 @@ function afficherMessage(texte, type) {
 
 // Masque la popup et révèle le bouton de réouverture.
 function fermerPopup() {
-  if (!elementsInterface.popup || elementsInterface.popup.classList.contains("cache")) {
+  if (!elementsInterface.popup || elementsInterface.popup.classList.contains("hidden")) {
     return
   }
 
-  elementsInterface.popup.classList.add("cache")
+  elementsInterface.popup.classList.add("hidden")
 
   if (elementsInterface.boutonOuvrir) {
-    elementsInterface.boutonOuvrir.classList.remove("cache")
+    elementsInterface.boutonOuvrir.classList.remove("hidden")
   }
 
   afficherMessage('Popup fermée. Clique sur "Ouvrir la boutique" pour revenir.', "succes")
@@ -409,10 +409,10 @@ function ouvrirPopup() {
     return
   }
 
-  elementsInterface.popup.classList.remove("cache")
+  elementsInterface.popup.classList.remove("hidden")
 
   if (elementsInterface.boutonOuvrir) {
-    elementsInterface.boutonOuvrir.classList.add("cache")
+    elementsInterface.boutonOuvrir.classList.add("hidden")
   }
 
   afficherMessage("Boutique ouverte.", "succes")
