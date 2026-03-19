@@ -58,21 +58,90 @@
 
         <div class="farm-canvas" aria-label="Zones de la ferme">
             <section class="zone zone-poulailler" aria-label="Poulailler">
-                <div id="poulailler-container" class="animals-zone" aria-live="polite"></div>
+                <div class="animals-zone-shell" data-zone-controls="poulailler-container">
+                    <button
+                        class="animals-zone-nav animals-zone-nav--previous"
+                        type="button"
+                        data-zone-nav="previous"
+                        aria-label="Afficher les poules precedentes"
+                    >
+                        <img
+                            src="assets/chevron.png"
+                            alt=""
+                            aria-hidden="true"
+                            class="animals-zone-nav-icon animals-zone-nav-icon--previous"
+                        >
+                    </button>
+                    <div id="poulailler-container" class="animals-zone" aria-live="polite"></div>
+                    <button
+                        class="animals-zone-nav animals-zone-nav--next"
+                        type="button"
+                        data-zone-nav="next"
+                        aria-label="Afficher les poules suivantes"
+                    >
+                        <img src="assets/chevron.png" alt="" aria-hidden="true" class="animals-zone-nav-icon">
+                    </button>
+                </div>
             </section>
 
             <section class="zone zone-paturage" aria-label="Paturage">
-                <div id="paturage-container" class="animals-zone" aria-live="polite"></div>
+                <div class="animals-zone-shell" data-zone-controls="paturage-container">
+                    <button
+                        class="animals-zone-nav animals-zone-nav--previous"
+                        type="button"
+                        data-zone-nav="previous"
+                        aria-label="Afficher les vaches precedentes"
+                    >
+                        <img
+                            src="assets/chevron.png"
+                            alt=""
+                            aria-hidden="true"
+                            class="animals-zone-nav-icon animals-zone-nav-icon--previous"
+                        >
+                    </button>
+                    <div id="paturage-container" class="animals-zone" aria-live="polite"></div>
+                    <button
+                        class="animals-zone-nav animals-zone-nav--next"
+                        type="button"
+                        data-zone-nav="next"
+                        aria-label="Afficher les vaches suivantes"
+                    >
+                        <img src="assets/chevron.png" alt="" aria-hidden="true" class="animals-zone-nav-icon">
+                    </button>
+                </div>
             </section>
 
             <section class="zone zone-clapier" aria-label="Clapier">
-                <div
-                    id="clapier-container"
-                    class="animals-zone animals-zone-group"
-                    role="button"
-                    tabindex="0"
-                    aria-label="Ouvrir les actions du clapier"
-                ></div>
+                <div class="animals-zone-shell" data-zone-controls="clapier-container">
+                    <button
+                        class="animals-zone-nav animals-zone-nav--previous"
+                        type="button"
+                        data-zone-nav="previous"
+                        aria-label="Afficher les lapins precedents"
+                    >
+                        <img
+                            src="assets/chevron.png"
+                            alt=""
+                            aria-hidden="true"
+                            class="animals-zone-nav-icon animals-zone-nav-icon--previous"
+                        >
+                    </button>
+                    <div
+                        id="clapier-container"
+                        class="animals-zone animals-zone-group"
+                        role="button"
+                        tabindex="0"
+                        aria-label="Ouvrir les actions du clapier"
+                    ></div>
+                    <button
+                        class="animals-zone-nav animals-zone-nav--next"
+                        type="button"
+                        data-zone-nav="next"
+                        aria-label="Afficher les lapins suivants"
+                    >
+                        <img src="assets/chevron.png" alt="" aria-hidden="true" class="animals-zone-nav-icon">
+                    </button>
+                </div>
             </section>
         </div>
 
