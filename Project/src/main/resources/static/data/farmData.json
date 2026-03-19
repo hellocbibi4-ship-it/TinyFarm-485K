@@ -22,7 +22,6 @@
     ],
     "animals": [
         { "name": "Bella", "type": "Vache", "img": "vache.png", "weight": 520 },
-        { "name": "Noiraude", "type": "Vache", "img": "vache.png", "weight": 480 },
         { "name": "Paulette", "type": "Poule", "img": "poule.png", "weight": 1.5 },
         { "name": "Cocotte", "type": "Poule", "img": "poule.png", "weight": 1.2 },
         { "name": "Glouton", "type": "Poule", "img": "poule.png", "weight": 1.8 },

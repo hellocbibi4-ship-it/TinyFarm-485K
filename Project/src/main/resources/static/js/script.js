@@ -51,6 +51,17 @@ const collectiviteFeedback = document.getElementById("collectivite-feedback")
 const poulaillerContainer = document.getElementById("poulailler-container")
 const paturageContainer = document.getElementById("paturage-container")
 const clapierContainer = document.getElementById("clapier-container")
+const animalZoneControllers = Array.from(document.querySelectorAll("[data-zone-controls]"))
+  .map((shell) => ({
+    shell,
+    container: document.getElementById(shell.dataset.zoneControls),
+    previousButton: shell.querySelector('[data-zone-nav="previous"]'),
+    nextButton: shell.querySelector('[data-zone-nav="next"]')
+  }))
+  .filter(
+    ({ container, previousButton, nextButton }) =>
+      Boolean(container) && Boolean(previousButton) && Boolean(nextButton)
+  )
 
 const modal = document.getElementById("animal-modal")
 const modalName = document.getElementById("animal-name")
@@ -78,6 +89,8 @@ let currentFarmModel = null
 let collectiviteFeedbackTimeout = null
 let toastTimeoutId = null
 let activeActionTarget = ""
+let animalZoneResizeBound = false
+let animalZoneRefreshFrame = null
 
 const ANIMATED_ANIMAL_CONFIG = {
   poule: {
@@ -364,41 +377,93 @@ function hasHorizontalOverflow(container) {
   return Boolean(container) && container.scrollWidth > container.clientWidth + 1
 }
 
-function handleAnimalZoneWheel(event) {
-  const container = event.currentTarget
-
-  if (!hasHorizontalOverflow(container)) {
-    return
-  }
-
-  const delta = Math.abs(event.deltaY) >= Math.abs(event.deltaX) ? event.deltaY : event.deltaX
-
-  if (delta === 0) {
-    return
-  }
-
-  const maxScrollLeft = container.scrollWidth - container.clientWidth
-  const nextScrollLeft = clamp(container.scrollLeft + delta, 0, maxScrollLeft)
-
-  if (nextScrollLeft === container.scrollLeft) {
-    return
-  }
-
-  event.preventDefault()
-  container.scrollLeft = nextScrollLeft
+function getAnimalZoneMaxScroll(container) {
+  return Math.max(container.scrollWidth - container.clientWidth, 0)
 }
 
-function initializeAnimalZoneScroll() {
-  ;[poulaillerContainer, paturageContainer, clapierContainer]
-    .filter(Boolean)
-    .forEach((container) => {
-      if (container.dataset.horizontalWheelBound === "true") {
-        return
-      }
+function getAnimalZoneStep(container) {
+  return Math.max(container.clientWidth * 0.5, 1)
+}
 
-      container.addEventListener("wheel", handleAnimalZoneWheel, { passive: false })
-      container.dataset.horizontalWheelBound = "true"
+function updateAnimalZoneNavigation(zoneController) {
+  const { shell, container, previousButton, nextButton } = zoneController
+  const maxScrollLeft = getAnimalZoneMaxScroll(container)
+  const hasOverflow = hasHorizontalOverflow(container)
+
+  if (!hasOverflow && container.scrollLeft !== 0) {
+    container.scrollLeft = 0
+  } else if (hasOverflow && container.scrollLeft > maxScrollLeft) {
+    container.scrollLeft = maxScrollLeft
+  }
+
+  shell.classList.toggle("has-overflow", hasOverflow)
+  previousButton.disabled = !hasOverflow || container.scrollLeft <= 1
+  nextButton.disabled = !hasOverflow || container.scrollLeft >= maxScrollLeft - 1
+}
+
+function scheduleAnimalZoneNavigationRefresh() {
+  if (animalZoneRefreshFrame !== null) {
+    return
+  }
+
+  animalZoneRefreshFrame = window.requestAnimationFrame(() => {
+    animalZoneRefreshFrame = null
+    animalZoneControllers.forEach(updateAnimalZoneNavigation)
+  })
+}
+
+function scrollAnimalZone(zoneController, direction, event) {
+  if (event) {
+    event.preventDefault()
+    event.stopPropagation()
+  }
+
+  const { container } = zoneController
+  const maxScrollLeft = getAnimalZoneMaxScroll(container)
+
+  if (maxScrollLeft <= 1) {
+    return
+  }
+
+  const nextScrollLeft = clamp(
+    container.scrollLeft + getAnimalZoneStep(container) * direction,
+    0,
+    maxScrollLeft
+  )
+
+  container.scrollTo({
+    left: nextScrollLeft,
+    behavior: "smooth"
+  })
+}
+
+function initializeAnimalZoneNavigation() {
+  animalZoneControllers.forEach((zoneController) => {
+    if (zoneController.shell.dataset.zoneNavigationBound === "true") {
+      return
+    }
+
+    zoneController.previousButton.addEventListener("click", (event) => {
+      scrollAnimalZone(zoneController, -1, event)
     })
+
+    zoneController.nextButton.addEventListener("click", (event) => {
+      scrollAnimalZone(zoneController, 1, event)
+    })
+
+    zoneController.container.addEventListener("scroll", () => {
+      updateAnimalZoneNavigation(zoneController)
+    })
+
+    zoneController.shell.dataset.zoneNavigationBound = "true"
+  })
+
+  if (!animalZoneResizeBound) {
+    window.addEventListener("resize", scheduleAnimalZoneNavigationRefresh)
+    animalZoneResizeBound = true
+  }
+
+  scheduleAnimalZoneNavigationRefresh()
 }
 
 function renderAnimalZones() {
@@ -447,6 +512,8 @@ function renderAnimalZones() {
       })
     }
   }
+
+  scheduleAnimalZoneNavigationRefresh()
 }
 
 function mettreAJourInterface() {
@@ -1003,7 +1070,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   })
 
-  initializeAnimalZoneScroll()
+  initializeAnimalZoneNavigation()
   initializeFarmState()
   initializeStockPanel()
   initializeCollectivitePanel()
