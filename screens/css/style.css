@@ -1058,14 +1058,12 @@ img {
 .farm-canvas {
     position: absolute;
     inset: 0;
-    z-index: 40;
 }
 
 .zone {
     position: absolute;
     width: calc(510 / 1024 * 100%);
     box-sizing: border-box;
-    z-index: 45;
 }
 
 .zone-poulailler {
