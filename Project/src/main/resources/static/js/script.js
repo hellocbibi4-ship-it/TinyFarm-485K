@@ -1,4 +1,3 @@
-/*
 const loginBtn = document.getElementById("login-btn");
 const loginScreen = document.getElementById("login-screen");
 const clsBtn = document.getElementById("Trophy");
@@ -76,8 +75,9 @@ async function loadFarm() {
   } catch (error) {
     console.error("Erreur lors du chargement des données :", error);
   }
-}*/
-
+}
+//Pour implementer le login github, decommenter, et faites tout le chemin du README.md du tp5
+/*
 const loginScreen      = document.getElementById("login-screen");
 const farmScreen       = document.getElementById("farm-screen");
 const loginBtn         = document.getElementById("login-btn");
@@ -178,3 +178,4 @@ async function classement() {
         console.error("Erreur classement :", e);
     }
 }
+    */
