@@ -63,6 +63,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
             utilisateurRepository.save(nouvelUtilisateur);
         } else {
             // Le joueur existe déjà, on met juste à jour sa date de dernière connexion
+            System.out.println("Fermier existant détecté : " + userLogin + ". Mise à jour de sa ferme !");
             Utilisateur userExistant = userOpt.get();
             if (userExistant.getFerme() != null) {
                 userExistant.getFerme().setDerniereCo(LocalDateTime.now());
