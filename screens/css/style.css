@@ -1071,7 +1071,7 @@ img {
 .zone-poulailler {
     top: calc(185 / 582 * 100%);
     left: calc(245 / 1024 * 100%);
-    height: calc(130 / 582 * 100%);
+    height: calc(150 / 582 * 100%);
 }
 
 .zone-paturage {
@@ -1196,16 +1196,16 @@ img {
 }
 
 .animal-icon--chicken {
-    width: clamp(42px, 3.9vw, 58px);
-    min-width: clamp(42px, 3.9vw, 58px);
-    height: clamp(52px, 5.5vw, 76px);
+    width: clamp(42px, 3.9vw, 48px);
+    min-width: clamp(42px, 3.9vw, 48px);
+    height: clamp(52px, 5.5vw, 66px);
     padding-top: 8px;
 }
 
 .animal-icon--cow {
-    width: clamp(106px, 9.4vw, 148px);
-    min-width: clamp(106px, 9.4vw, 148px);
-    height: clamp(72px, 6.2vw, 98px);
+    width: clamp(106px, 9.4vw, 138px);
+    min-width: clamp(106px, 9.4vw, 138px);
+    height: clamp(72px, 6.2vw, 88px);
     padding-top: 0;
 }
 
