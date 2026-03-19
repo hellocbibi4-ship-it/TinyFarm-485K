@@ -19,7 +19,6 @@ public class SecurityConfig {
 
     private final CustomOAuth2UserService customOAuth2UserService;
 
-    // L'injection se fait automatiquement ici
     public SecurityConfig(CustomOAuth2UserService customOAuth2UserService) {
         this.customOAuth2UserService = customOAuth2UserService;
     }
@@ -39,22 +38,19 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )*/
                .authorizeHttpRequests(authorize -> authorize
-                        // 🔹 On a ajouté "/assets/**", "/css/**", "/js/**", "/data/**" pour laisser passer le design et les scripts !
+                        //ajouté "/assets/**", "/css/**", "/js/**", "/data/**" pour laisser passer le design et les scripts
                         .requestMatchers("/", "/index.html", "/static/**", "/assets/**", "/css/**", "/js/**", "/data/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll() 
-                        // 🔥 ON AJOUTE L'API POUR QUE LES TESTS PYTHON PASSENT :
                         .requestMatchers("/api/**").permitAll() 
                         // 🔹 Tout le reste nécessite d'être connecté
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
-                        // 🔹 C'est ici qu'on branche ton service qui crée la ferme !
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
                         .defaultSuccessUrl("/", true) 
                 )
                 .exceptionHandling(exceptions -> exceptions
                     .authenticationEntryPoint((request, response, authException) -> {
-                        // On laisse passer les routes /api/** car elles gèrent elles-mêmes l'auth
                         if (request.getRequestURI().startsWith("/api/")) {
                             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                             response.setContentType("application/json");

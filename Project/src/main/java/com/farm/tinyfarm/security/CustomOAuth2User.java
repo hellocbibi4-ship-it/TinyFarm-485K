@@ -7,10 +7,6 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.util.Collection;
 
-// Pourquoi cette classe est utile ?
-// ✅ Stocke ROLE_ADMIN dans l'utilisateur OAuth2.
-// ✅ Permet de vérifier les rôles avec @PreAuthorize("hasRole('ADMIN')").
-
 
 public class CustomOAuth2User extends DefaultOAuth2User {
 

@@ -62,8 +62,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
             // On sauvegarde. Grâce au CascadeType.ALL dans Utilisateur, la Ferme sera sauvegardée en même temps !
             utilisateurRepository.save(nouvelUtilisateur);
         } else {
-            // 🧑‍🌾 Le joueur existe déjà, on met juste à jour sa date de dernière connexion
-            System.out.println("Bon retour à la ferme, " + userLogin + " !");
+            // Le joueur existe déjà, on met juste à jour sa date de dernière connexion
             Utilisateur userExistant = userOpt.get();
             if (userExistant.getFerme() != null) {
                 userExistant.getFerme().setDerniereCo(LocalDateTime.now());
