@@ -49,7 +49,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
             Ferme nouvelleFerme = new Ferme();
             nouvelleFerme.setNom("La ferme de " + userLogin);
-            nouvelleFerme.setSoldeEcus(100); // Le pécule de départ (à toi de choisir le montant !)
+            nouvelleFerme.setSoldeEcus(1500);
             nouvelleFerme.setDateCreation(LocalDateTime.now());
             nouvelleFerme.setDerniereCo(LocalDateTime.now());
             nouvelleFerme.setHibernation(false);
@@ -59,7 +59,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
             nouvelleFerme.setUtilisateur(nouvelUtilisateur);
             nouvelUtilisateur.setFerme(nouvelleFerme);
 
-            // On sauvegarde. Grâce au CascadeType.ALL dans Utilisateur, la Ferme sera sauvegardée en même temps !
+            // On sauvegarde. Grâce au CascadeType.ALL dans Utilisateur, la ferme sera sauvegardée en même temps
             utilisateurRepository.save(nouvelUtilisateur);
         } else {
             // Le joueur existe déjà, on met juste à jour sa date de dernière connexion
