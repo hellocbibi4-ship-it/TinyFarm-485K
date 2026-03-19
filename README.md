@@ -10,7 +10,7 @@ TinyFarm is a web-based farming simulation game. Players start with a loan of **
 - **SOUDANT Raphaël** — Lead Project
 - **ARMANET André** — Coordinator
 
-### 🎨 UX Design
+### 🎨 UX Design et FRontend
 - DOUANAMOU Alexandre
 - TAGODOE Koami
 - SOW Bineta
