@@ -7,7 +7,6 @@ import com.farm.tinyfarm.repository.FermeRepository;
 import com.farm.tinyfarm.repository.RemiseRepository;
 import com.farm.tinyfarm.repository.MarcheRepository;
 import com.farm.tinyfarm.model.TypeStock;
-import com.farm.tinyfarm.outils.Utilitaires;
 import jakarta.transaction.Transactional;
 
 import org.springframework.stereotype.Service;

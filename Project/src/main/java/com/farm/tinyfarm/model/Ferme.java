@@ -8,6 +8,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.JoinColumn;
 import lombok.Data;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.FetchType;
@@ -21,10 +22,9 @@ public class Ferme{
     @GeneratedValue(strategy = GenerationType.IDENTITY) // Auto-incrémentation de idFerme
     private Integer idFerme;
 
-    //TODO
-    //@OneToOne
-    //@JoinColumn(name="idUtilisateur", unique=true)
-    //private Utilisateur utilisateur;
+    @OneToOne
+    @JoinColumn(name="idUtilisateur", unique=true)
+    private Utilisateur utilisateur;
 
     private String nom;
     private Integer soldeEcus;
