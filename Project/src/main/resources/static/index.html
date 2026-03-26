@@ -1,72 +1,289 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>TinyFarm - Version Propres</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TinyFarm - Front Merge</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/achat-animaux.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=ADLaM+Display&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=ADLaM+Display&family=Acme&display=swap" rel="stylesheet">
-
 </head>
 <body>
-    <!-- ÉCRAN LOGIN -->
-    <section id="login-screen">
-    <div class="bg-login"></div>
-    <h1 class="title">TinyFarm</h1>
+    <button id="Trophy" class="Trophy" type="button" aria-label="Afficher le classement"></button>
 
-    <!-- Bouton principal -->
-    <button id="login-btn" class="login-btn">
-    </button>
-
-    <!-- Bouton trophée (gauche) -->
-    <button id = "Trophy" class="Trophy"></button>
-    
-    <!-- Bouton réglages (droite) -->
-    <button id= "Settings" class="side-btn right"></button>
-
-    <section id = "Classement" class = "">
-        <img class="classement" src="assets/bgclassement.svg">
-
-        <p class = "title-classement">Classement</p> 
+    <section id="Classement" class="">
+        <img class="classement" src="assets/bgclassement.svg" alt="Fond du classement">
+        <p class="title-classement">Classement</p>
         <table class="info">
             <thead>
                 <tr>
-                <th>Rang</th>
-                <th>Nom</th>
-                <th>Production/J</th>
-                <th>Capacité</th>
-                <th>Argent</th>
+                    <th>Rang</th>
+                    <th>Nom</th>
+                    <th>Production/J</th>
+                    <th>Capacite</th>
+                    <th>Argent</th>
                 </tr>
             </thead>
-
             <tbody id="classement-body"></tbody>
         </table>
-
-       
-       </section>
-    </section>
     </section>
 
-    <!-- ÉCRAN FERME -->
+    <section id="login-screen">
+        <div class="bg-login"></div>
+        <h1 class="title">TinyFarm</h1>
+
+        <button id="login-btn" class="login-btn" type="button" aria-label="Entrer dans la ferme"></button>
+
+        <button class="settings-login-btn" type="button" aria-label="Ouvrir les reglages"></button>
+        <div class="settings-login-panel">
+            <div class="settings-login-content">
+                <div class="login-language-btn">Langue &#9656;</div>
+                <div class="login-language-panel">
+                    <div class="login-lang-option" data-lang="fr">
+                        <img src="assets/fr.png" alt="FR">
+                    </div>
+                    <div class="login-lang-option" data-lang="en">
+                        <img src="assets/uk.png" alt="EN">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <section id="farm-screen" class="hidden">
-    <div class="bg-blur"></div>
+        <div class="bg-ferme"></div>
 
-    <div class="main-ui">
-        <section class="stats-bar">
-            <div class="stat-item">💰 <span id="cash">0</span> écus</div>
-            <div class="stat-item">💧 <span id="water">0</span> L</div>
-            <div class="stat-item">🌾 <span id="food">0</span> kg</div>
-            <div class="stat-item">🚜 <span id="straw">0</span> bottes</div>
+        <div class="farm-canvas" aria-label="Zones de la ferme">
+            <section class="zone zone-poulailler" aria-label="Poulailler">
+                <div class="animals-zone-shell" data-zone-controls="poulailler-container">
+                    <button
+                        class="animals-zone-nav animals-zone-nav--previous"
+                        type="button"
+                        data-zone-nav="previous"
+                        aria-label="Afficher les poules precedentes"
+                    >
+                        <img
+                            src="assets/chevron.png"
+                            alt=""
+                            aria-hidden="true"
+                            class="animals-zone-nav-icon animals-zone-nav-icon--previous"
+                        >
+                    </button>
+                    <div id="poulailler-container" class="animals-zone" aria-live="polite"></div>
+                    <button
+                        class="animals-zone-nav animals-zone-nav--next"
+                        type="button"
+                        data-zone-nav="next"
+                        aria-label="Afficher les poules suivantes"
+                    >
+                        <img src="assets/chevron.png" alt="" aria-hidden="true" class="animals-zone-nav-icon">
+                    </button>
+                </div>
+            </section>
+
+            <section class="zone zone-paturage" aria-label="Paturage">
+                <div class="animals-zone-shell" data-zone-controls="paturage-container">
+                    <button
+                        class="animals-zone-nav animals-zone-nav--previous"
+                        type="button"
+                        data-zone-nav="previous"
+                        aria-label="Afficher les vaches precedentes"
+                    >
+                        <img
+                            src="assets/chevron.png"
+                            alt=""
+                            aria-hidden="true"
+                            class="animals-zone-nav-icon animals-zone-nav-icon--previous"
+                        >
+                    </button>
+                    <div id="paturage-container" class="animals-zone" aria-live="polite"></div>
+                    <button
+                        class="animals-zone-nav animals-zone-nav--next"
+                        type="button"
+                        data-zone-nav="next"
+                        aria-label="Afficher les vaches suivantes"
+                    >
+                        <img src="assets/chevron.png" alt="" aria-hidden="true" class="animals-zone-nav-icon">
+                    </button>
+                </div>
+            </section>
+
+            <section class="zone zone-clapier" aria-label="Clapier">
+                <div class="animals-zone-shell" data-zone-controls="clapier-container">
+                    <button
+                        class="animals-zone-nav animals-zone-nav--previous"
+                        type="button"
+                        data-zone-nav="previous"
+                        aria-label="Afficher les lapins precedents"
+                    >
+                        <img
+                            src="assets/chevron.png"
+                            alt=""
+                            aria-hidden="true"
+                            class="animals-zone-nav-icon animals-zone-nav-icon--previous"
+                        >
+                    </button>
+                    <div
+                        id="clapier-container"
+                        class="animals-zone animals-zone-group"
+                        role="button"
+                        tabindex="0"
+                        aria-label="Ouvrir les actions du clapier"
+                    ></div>
+                    <button
+                        class="animals-zone-nav animals-zone-nav--next"
+                        type="button"
+                        data-zone-nav="next"
+                        aria-label="Afficher les lapins suivants"
+                    >
+                        <img src="assets/chevron.png" alt="" aria-hidden="true" class="animals-zone-nav-icon">
+                    </button>
+                </div>
+            </section>
+        </div>
+
+        <button id="stock-toggle" class="stock-toggle" type="button" aria-expanded="false">
+            Stock
+        </button>
+        <aside id="stock-panel" class="stock-panel" aria-hidden="true" aria-label="Stock">
+            <div class="stock-panel-header">
+                <p class="stock-summary">
+                    <span class="stock-summary-icon" aria-hidden="true"></span>
+                    <span id="stock-total-units">0</span> unites
+                </p>
+            </div>
+
+            <div class="stock-field">
+                <label for="stock-product">Produit :</label>
+                <select id="stock-product" class="stock-select"></select>
+            </div>
+
+            <p class="stock-line">Stock dispo : <span id="stock-available">0</span></p>
+
+            <div class="stock-field stock-field-quantity">
+                <label for="stock-quantity">Quantite :</label>
+                <div class="stock-stepper">
+                    <button id="stock-minus" class="stock-stepper-btn" type="button" aria-label="Retirer une unite">-</button>
+                    <input id="stock-quantity" class="stock-quantity-input" type="number" min="1" value="1" inputmode="numeric">
+                    <button id="stock-plus" class="stock-stepper-btn" type="button" aria-label="Ajouter une unite">+</button>
+                </div>
+            </div>
+
+            <p class="stock-line">Prix unitaire : <span id="stock-unit-price">0 ecu</span></p>
+            <p class="stock-line stock-total-line">Total : <span id="stock-total-price">0 ecu</span></p>
+            <p id="stock-feedback" class="stock-feedback" aria-live="polite"></p>
+
+            <div class="stock-actions">
+                <button id="stock-cancel" class="stock-action stock-action-cancel" type="button">Annuler</button>
+                <button id="stock-sell" class="stock-action stock-action-confirm" type="button">Vendre</button>
+            </div>
+        </aside>
+
+        <aside id="collectivite-panel" class="collectivite-panel" aria-labelledby="collectivite-title">
+            <div class="collectivite-panel-inner">
+                <h2 id="collectivite-title" class="collectivite-title">Collectivite</h2>
+                <div id="collectivite-list" class="collectivite-list"></div>
+                <p id="collectivite-feedback" class="collectivite-feedback" aria-live="polite"></p>
+            </div>
+        </aside>
+
+        <section id="popup-achat" class="popup-achat hidden" role="dialog" aria-modal="true" aria-labelledby="titre-popup">
+            <header class="entete-bois">
+                <h2 id="titre-popup">Achat animaux</h2>
+            </header>
+
+            <p class="ligne-solde">Solde : <span id="solde-ecus">120</span> <span class="piece" aria-hidden="true"></span></p>
+
+            <section class="grille-animaux" aria-label="Animaux disponibles">
+                <article class="carte-animal">
+                    <h3>Vache</h3>
+                    <div class="zone-image">
+                        <span class="zone-image-sprite zone-image-sprite--animated zone-image-sprite--cow" role="img" aria-label="Illustration d'une vache"></span>
+                    </div>
+                    <p class="prix">50 <span class="piece" aria-hidden="true"></span></p>
+                    <button class="btn-acheter" type="button" data-animal="vache">Acheter</button>
+                </article>
+
+                <article class="carte-animal">
+                    <h3>Poule</h3>
+                    <div class="zone-image">
+                        <span class="zone-image-sprite zone-image-sprite--animated zone-image-sprite--chicken" role="img" aria-label="Illustration d'une poule"></span>
+                    </div>
+                    <p class="prix">10 <span class="piece" aria-hidden="true"></span></p>
+                    <button class="btn-acheter" type="button" data-animal="poule">Acheter</button>
+                </article>
+
+                <article class="carte-animal">
+                    <h3>Lapin</h3>
+                    <div class="zone-image">
+                        <span class="zone-image-sprite zone-image-sprite--animated zone-image-sprite--rabbit" role="img" aria-label="Illustration d'un lapin"></span>
+                    </div>
+                    <p class="prix">10 <span class="piece" aria-hidden="true"></span></p>
+                    <button class="btn-acheter" type="button" data-animal="lapin">Acheter</button>
+                </article>
+            </section>
+
+            <section class="resume-achats" aria-label="Totaux des animaux">
+                <p>Vaches : <span id="compteur-vache">0</span></p>
+                <p>Poules : <span id="compteur-poule">0</span></p>
+                <p>Lapins : <span id="compteur-lapin">0</span></p>
+            </section>
+
+            <p id="message-action" class="message-action" aria-live="polite"></p>
+
+            <footer class="zone-actions">
+                <button id="bouton-fermer" class="btn-fermer" type="button">Fermer</button>
+            </footer>
         </section>
 
-        <div id="animal-grid" class="animal-grid"></div>
-    </div>
+        <div id="animal-modal" class="modal hidden" aria-hidden="true">
+            <div class="modal-backdrop" data-close-modal></div>
+            <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="animal-name">
+                <div class="modal-header">
+                    <h2 id="animal-name">Animal</h2>
+                    <button type="button" class="close-btn" data-close-modal aria-label="Fermer">X</button>
+                </div>
+                <div class="modal-info">
+                    <p><span class="info-label">Type :</span> <span id="animal-type">-</span></p>
+                    <p><span class="info-label">Lieu :</span> <span id="animal-place">-</span></p>
+                    <p><span id="animal-weight-label" class="info-label">Poids :</span> <span id="animal-weight">-</span></p>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="action-btn" data-action="Nourrir">Nourrir</button>
+                    <button type="button" class="action-btn" data-action="Abreuver">Abreuver</button>
+                    <button type="button" class="action-btn" data-action="Soigner">Soigner</button>
+                    <button type="button" class="action-btn" data-action="Nettoyer">Nettoyer</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+        <div id="clock"></div>
+
+        <button class="side-btn right settings-btn" type="button" aria-label="Ouvrir les reglages"></button>
+        <div class="settings-panel">
+            <div class="settings-content">
+                <div class="language-btn">Langues &#9656;</div>
+                <div class="language-panel">
+                    <div class="lang-option" data-lang="fr">
+                        <img src="assets/fr.png" alt="FR">
+                        Francais
+                    </div>
+                    <div class="lang-option" data-lang="en">
+                        <img src="assets/uk.png" alt="EN">
+                        English
+                    </div>
+                </div>
+                <p class="logout-btn">Deconnexion</p>
+            </div>
+        </div>
     </section>
 
+    <script src="js/farm-state.js"></script>
     <script src="js/script.js"></script>
-
 </body>
 </html>

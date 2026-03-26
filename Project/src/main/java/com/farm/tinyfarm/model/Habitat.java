@@ -7,7 +7,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.Data;
 
 @Entity
@@ -15,38 +18,37 @@ import lombok.Data;
 @Data
 public class Habitat {
 
-    //Attributs
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // Auto-incrémentation de idAnimal
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer idHabitat;
 
-    private TypeHabitat typeHabitat;
-    private ArrayList<Animal> listeAnimaux;
+    @OneToOne
+    @JoinColumn(name = "idFerme")
+    private Ferme ferme;
 
+    private TypeHabitat typeHabitat;
     private int capaMax;
 
-    //Pour le clapier
-    private boolean estSale;
-    private boolean estMalade;
-    private Date dateEstSale; //Date à laquelle le clapier est devenu sale
+    private boolean estSale = false;
+    private boolean estMalade = false;
+    private Date dateEstSale;
 
-    //Constructeur
-    public Habitat() {}
+    @Transient
+    private ArrayList<Animal> listeAnimaux = new ArrayList<>();
 
-    public boolean estSale() {
-        return estSale;
+    public Habitat() {
+        this.listeAnimaux = new ArrayList<>();
     }
 
-    public boolean estMalade() {
-        return estMalade;
+    public Habitat(int capaMax, TypeHabitat typeHabitat) {
+        this.listeAnimaux = new ArrayList<>();
+        this.estSale = false;
+        this.estMalade = false;
+        this.dateEstSale = null;
+        this.capaMax = capaMax;
+        this.typeHabitat = typeHabitat;
     }
 
-    public Date getDateEstSale() {
-        return dateEstSale;
-    }
-
-    public int getCapaMax() {
-        return capaMax;
-    }
-
-}//CLass
+    public boolean estSale() { return estSale; }
+    public boolean estMalade() { return estMalade; }
+}
