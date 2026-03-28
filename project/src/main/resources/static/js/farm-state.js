@@ -42,6 +42,7 @@
   }
 
   let farmDataPromise = null
+  let currentFermeId = null
 
   function cloneUiState(uiState = BASE_UI_STATE) {
     return {
@@ -123,7 +124,7 @@
     const parsedWeight = Number.parseFloat(rawAnimal?.weight)
 
     return {
-      id: `base-${typeKey}-${index + 1}`,
+      id: rawAnimal?.id || `base-${typeKey}-${index + 1}`,
       name: rawAnimal?.name || `${catalogEntry.label} ${index + 1}`,
       typeKey,
       typeLabel: catalogEntry.label,
@@ -172,13 +173,15 @@
       ? data.animals.map(createBaseAnimal).filter(Boolean)
       : []
     const baseCounts = buildCounts(baseAnimals)
-    const purchasedAnimals = buildPurchasedAnimals(uiState, baseCounts)
-    const animals = [...baseAnimals, ...purchasedAnimals]
+    const animals = [...baseAnimals]
+
+    // Use backend balance (data.cash) as source of truth
+    const balance = Number.isFinite(data?.cash) ? data.cash : (Number.isFinite(uiState.balance) ? uiState.balance : 0)
 
     return {
       rawData: data,
       uiState,
-      balance: Number.isFinite(uiState.balance) ? uiState.balance : 0,
+      balance,
       animals,
       counts: buildCounts(animals),
       players: Array.isArray(data?.players) ? data.players : [],
@@ -189,16 +192,48 @@
 
   function fetchFarmData() {
     if (!farmDataPromise) {
-      farmDataPromise = fetch("./data/farmData.json").then((response) => {
+      farmDataPromise = fetch("/api/me").then((response) => {
         if (!response.ok) {
           throw new Error("Impossible de charger les donnees de la ferme.")
         }
-
         return response.json()
+      }).then((user) => {
+        currentFermeId = user.fermeId || null
+        return {
+          cash: user.solde || 0,
+          fermeId: user.fermeId,
+          inventory: {
+            water: 0,
+            food: 0,
+            straw: (user.remise && user.remise.paille) || 0
+          },
+          stockProducts: [],
+          communityItems: [],
+          animals: (user.animals || []).map((a) => ({
+            id: a.idAnimal,
+            name: a.nom,
+            type: a.typeAnimal,
+            weight: a.poids,
+            jaugeSante: a.jaugeSante,
+            jaugeFaim: a.jaugeFaim,
+            jaugeProprete: a.jaugeProprete,
+            jaugeHydratation: a.jaugeHydratation,
+            estMalade: a.estMalade
+          })),
+          players: []
+        }
       })
     }
 
     return farmDataPromise
+  }
+
+  function invalidateCache() {
+    farmDataPromise = null
+  }
+
+  function getFermeId() {
+    return currentFermeId
   }
 
   function getAnimalsByType(model, typeKey) {
@@ -209,6 +244,8 @@
     STORAGE_KEY,
     ANIMAL_CATALOG,
     fetchFarmData,
+    invalidateCache,
+    getFermeId,
     readUiState,
     writeUiState,
     ensureUiState,

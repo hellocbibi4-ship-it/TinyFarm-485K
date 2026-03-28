@@ -1,6 +1,10 @@
 package com.farm.tinyfarm.controller;
 
+import com.farm.tinyfarm.model.Animal;
+import com.farm.tinyfarm.model.Remise;
 import com.farm.tinyfarm.model.Utilisateur;
+import com.farm.tinyfarm.repository.AnimalRepository;
+import com.farm.tinyfarm.repository.RemiseRepository;
 import com.farm.tinyfarm.repository.UtilisateurRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -10,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -18,9 +23,15 @@ import java.util.Optional;
 public class UserController {
 
     private final UtilisateurRepository utilisateurRepository;
+    private final AnimalRepository animalRepository;
+    private final RemiseRepository remiseRepository;
 
-    public UserController(UtilisateurRepository utilisateurRepository) {
+    public UserController(UtilisateurRepository utilisateurRepository,
+                          AnimalRepository animalRepository,
+                          RemiseRepository remiseRepository) {
         this.utilisateurRepository = utilisateurRepository;
+        this.animalRepository = animalRepository;
+        this.remiseRepository = remiseRepository;
     }
 
     /**
@@ -49,9 +60,22 @@ public class UserController {
         userOpt.ifPresent(u -> {
             response.put("role", u.getRole());
             if (u.getFerme() != null) {
+                Integer fermeId = u.getFerme().getIdFerme();
+                response.put("fermeId",  fermeId);
                 response.put("farmName", u.getFerme().getNom());
                 response.put("solde",    u.getFerme().getSoldeEcus());
                 response.put("score",    u.getFerme().getScore());
+
+                List<Animal> animals = animalRepository.findByFerme_IdFerme(fermeId);
+                response.put("animals", animals);
+
+                remiseRepository.findById(fermeId).ifPresent(remise -> {
+                    Map<String, Object> remiseMap = new HashMap<>();
+                    remiseMap.put("savon", remise.getStockSavon());
+                    remiseMap.put("seringue", remise.getStockSeringue());
+                    remiseMap.put("paille", remise.getStockPaille());
+                    response.put("remise", remiseMap);
+                });
             }
         });
 

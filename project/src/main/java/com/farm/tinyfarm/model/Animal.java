@@ -1,9 +1,10 @@
 package com.farm.tinyfarm.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -18,8 +19,9 @@ public class Animal{
         @GeneratedValue(strategy = GenerationType.IDENTITY) // Auto-incrémentation de idAnimal
         private Integer idAnimal;
 
-        @OneToOne
-        @JoinColumn(name = "idFerme", unique = true)
+        @ManyToOne
+        @JoinColumn(name = "idFerme")
+        @JsonIgnore
         private Ferme ferme;
 
         /*@OneToOne

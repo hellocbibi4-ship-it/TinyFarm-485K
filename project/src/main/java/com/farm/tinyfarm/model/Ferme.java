@@ -1,5 +1,7 @@
 package com.farm.tinyfarm.model;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import jakarta.persistence.Entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -8,6 +10,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.JoinColumn;
 import lombok.Data;
 import jakarta.persistence.CascadeType;
@@ -35,5 +38,10 @@ public class Ferme{
     @OneToOne(mappedBy = "ferme", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore
     private Remise remise;
+
+    @OneToMany(mappedBy = "ferme", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<Animal> animals = new ArrayList<>();
+
     public Ferme(){} //Constructeur par défaut pour JPA
 }//class

@@ -89,6 +89,7 @@ let currentFarmModel = null
 let collectiviteFeedbackTimeout = null
 let toastTimeoutId = null
 let activeActionTarget = ""
+let activeAnimalId = null
 let animalZoneResizeBound = false
 let animalZoneRefreshFrame = null
 
@@ -590,7 +591,7 @@ function updateFarmOverlayState(uiState) {
   mettreAJourDisponibiliteBoutons()
 }
 
-function traiterAchat(typeAnimal) {
+async function traiterAchat(typeAnimal) {
   if (!currentFarmModel) {
     afficherMessage("Donnees animaux indisponibles.", "erreur")
     return
@@ -603,15 +604,6 @@ function traiterAchat(typeAnimal) {
     return
   }
 
-  if (!estAchatAutorise(typeAnimal)) {
-    const message = typeAnimal === "vache"
-      ? "Niveau 1 : la vache est deja fournie et ne peut pas etre rachetee."
-      : `Niveau insuffisant pour acheter ${catalogEntry.article} ${catalogEntry.label.toLowerCase()}.`
-
-    afficherMessage(message, "erreur")
-    return
-  }
-
   if (currentFarmModel.balance < catalogEntry.price) {
     afficherMessage(
       `Solde insuffisant pour acheter ${catalogEntry.article} ${catalogEntry.label.toLowerCase()}.`,
@@ -620,13 +612,35 @@ function traiterAchat(typeAnimal) {
     return
   }
 
-  const nextUiState = TinyFarmState.readUiState()
-  nextUiState.level = currentFarmModel.uiState.level
-  nextUiState.balance = currentFarmModel.balance - catalogEntry.price
-  nextUiState.purchases[typeAnimal] += 1
+  const fermeId = TinyFarmState.getFermeId()
+  if (!fermeId) {
+    afficherMessage("Ferme non trouvee.", "erreur")
+    return
+  }
 
-  updateFarmOverlayState(nextUiState)
-  afficherMessage(`Achat valide : ${catalogEntry.label}.`, "succes")
+  try {
+    const displayIndex = (currentFarmModel.counts[typeAnimal] || 0) + 1
+    const response = await fetch(`/api/fermes/${fermeId}/animaux`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        nom: `${catalogEntry.label}-${displayIndex}`,
+        typeAnimal: typeAnimal.toUpperCase()
+      })
+    })
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({ error: "Erreur serveur" }))
+      afficherMessage(err.error || "Achat echoue.", "erreur")
+      return
+    }
+
+    TinyFarmState.invalidateCache()
+    await initializeFarmState()
+    afficherMessage(`Achat valide : ${catalogEntry.label}.`, "succes")
+  } catch (e) {
+    afficherMessage("Erreur reseau lors de l'achat.", "erreur")
+  }
 }
 
 function setAnimalShopOpen(isOpen, { announce = true } = {}) {
@@ -672,6 +686,7 @@ function openActionModal({ name, typeLabel, homeLabel, weightLabel, weightValue,
 }
 
 function openAnimalModal(animal) {
+  activeAnimalId = animal.id || null
   openActionModal({
     name: animal.name,
     typeLabel: animal.typeLabel,
@@ -789,19 +804,23 @@ async function classement() {
   }
 
   try {
-    const data = await TinyFarmState.fetchFarmData()
+    const response = await fetch("/api/fermes/classement")
+    if (!response.ok) {
+      throw new Error("Classement indisponible")
+    }
+    const players = await response.json()
     tbody.innerHTML = ""
 
-    data.players.forEach((player, index) => {
-      tbody.innerHTML += `
-        <tr>
-          <td>${index + 1}</td>
-          <td>${player.name}</td>
-          <td>${player.production}</td>
-          <td>${player.capacity}</td>
-          <td>${player.money}</td>
-        </tr>
+    players.forEach((player, index) => {
+      const row = document.createElement("tr")
+      row.innerHTML = `
+        <td>${index + 1}</td>
+        <td>${player.name}</td>
+        <td>${player.score || 0}</td>
+        <td>${player.capacity || 0}</td>
+        <td>${player.money || 0}</td>
       `
+      tbody.appendChild(row)
     })
   } catch (error) {
     console.error("Erreur lors du chargement du classement :", error)
@@ -946,7 +965,9 @@ async function classement() {
     */
 
 if (loginBtn) {
-  loginBtn.addEventListener("click", showFarmScreen)
+  loginBtn.addEventListener("click", () => {
+    window.location.href = "/oauth2/authorization/github"
+  })
 }
 
 if (clsBtn && classementScreen) {
@@ -965,10 +986,45 @@ closeTargets.forEach((button) => {
 })
 
 actionButtons.forEach((button) => {
-  button.addEventListener("click", () => {
+  button.addEventListener("click", async () => {
     const action = button.dataset.action
     const target = activeActionTarget || "la ferme"
-    showToast(`${action} : ${target} - OK`)
+
+    if (!activeAnimalId) {
+      showToast(`${action} : ${target} - pas d'animal`)
+      return
+    }
+
+    const actionMap = {
+      "Nourrir": "nourrir",
+      "Abreuver": "abreuver",
+      "Soigner": "soigner",
+      "Nettoyer": "nettoyer"
+    }
+
+    const endpoint = actionMap[action]
+    if (!endpoint) {
+      showToast(`${action} : action inconnue`)
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/animaux/${activeAnimalId}/${endpoint}`, {
+        method: "PATCH"
+      })
+
+      if (!response.ok) {
+        const errText = await response.text()
+        showToast(`Echec : ${errText}`)
+        return
+      }
+
+      showToast(`${action} : ${target} - OK`)
+      TinyFarmState.invalidateCache()
+      await initializeFarmState()
+    } catch (e) {
+      showToast(`Erreur reseau pour ${action}`)
+    }
   })
 })
 
@@ -984,7 +1040,17 @@ window.addEventListener("storage", (event) => {
 
 classement()
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  // Verification de session OAuth au chargement
+  try {
+    const res = await fetch("/api/me")
+    if (res.ok) {
+      showFarmScreen()
+    }
+  } catch (e) {
+    console.error("Impossible de joindre le serveur :", e)
+  }
+
   const settingsButtons = document.querySelectorAll(".settings-btn")
   const settingsPanels = document.querySelectorAll(".settings-panel")
 

@@ -1,27 +1,32 @@
 package com.farm.tinyfarm.security;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
-import com.farm.tinyfarm.model.Utilisateur;
 import com.farm.tinyfarm.model.Ferme;
+import com.farm.tinyfarm.model.Remise;
+import com.farm.tinyfarm.model.Utilisateur;
+import com.farm.tinyfarm.repository.RemiseRepository;
 import com.farm.tinyfarm.repository.UtilisateurRepository;
-
-import java.time.LocalDateTime;
-import java.util.*;
 
 @Service
 public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
 
     private final UtilisateurRepository utilisateurRepository;
+    private final RemiseRepository remiseRepository;
 
-    public CustomOAuth2UserService(UtilisateurRepository utilisateurRepository) {
+    public CustomOAuth2UserService(UtilisateurRepository utilisateurRepository, RemiseRepository remiseRepository) {
         this.utilisateurRepository = utilisateurRepository;
+        this.remiseRepository = remiseRepository;
     }
 
     @Override
@@ -61,6 +66,12 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
             // On sauvegarde. Grâce au CascadeType.ALL dans Utilisateur, la ferme sera sauvegardée en même temps
             utilisateurRepository.save(nouvelUtilisateur);
+
+            // Création de la remise (stockage) liée à la ferme
+            Ferme savedFerme = nouvelUtilisateur.getFerme();
+            Remise remise = new Remise();
+            remise.setFerme(savedFerme);
+            remiseRepository.save(remise);
         } else {
             // Le joueur existe déjà, on met juste à jour sa date de dernière connexion
             System.out.println("Fermier existant détecté : " + userLogin + ". Mise à jour de sa ferme !");
