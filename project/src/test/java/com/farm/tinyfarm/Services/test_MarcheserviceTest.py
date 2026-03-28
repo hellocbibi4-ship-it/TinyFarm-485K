@@ -3,7 +3,7 @@ import requests
 import pytest
 
 # Compilation:
-# pytest Project/src/test/java/com/farm/tinyfarm/Services/RemiseServiceTests.py -qsv
+# pytest project/src/test/java/com/farm/tinyfarm/Services/RemiseServiceTests.py -qsv
 
 BASE_URL = "http://localhost:8080/api/marche"
 URL_FERME = "http://localhost:8080/api/fermes"

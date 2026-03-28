@@ -2,7 +2,7 @@ import requests
 import pytest
 
 # Compilation:
-# pytest Project/src/test/java/com/farm/tinyfarm/Services/FermeServiceTest.py -qsv
+# pytest project/src/test/java/com/farm/tinyfarm/Services/FermeServiceTest.py -qsv
 
 BASE_URL = "http://localhost:8080/api/fermes"
 

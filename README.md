@@ -30,15 +30,6 @@ TinyFarm is a web-based farming simulation game. Players start with a loan of **
 - ABUBAKER MOHAMED Mohamed
 - PARRACHO Henri
 
-## 📂 Project Structure
-- `/screens`: Static HTML/CSS/JSON mock-up of the game interface (Deadline: Jan 30).
-- `/docs`: Technical documentation and database schemas.
-- `/src`: (Coming soon) Source code for the web application.
-
-## 🚀 Quick Start (Mock-up)
-To view the current progress of the farm interface:
-1. Navigate to the `screens/` directory.
-2. Read the dedicated `README.md` inside that folder for specific instructions.
 
 ## 🛠️ Tech Stack
 - **Frontend:** HTML5, CSS3, JavaScript.

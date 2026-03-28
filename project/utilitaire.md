@@ -1,4 +1,4 @@
-# Architecture du répertoire Project
+# Architecture du répertoire project
 ## Structure des répertoires
 - `~/src` : c'est le répertoire de développement principal
   - `~/src/main` : tout ce qui est du ressort du développement de l'application
