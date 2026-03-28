@@ -86,8 +86,8 @@ depot via `requirements-test.txt`, avec `pytest.ini` egalement a la racine.
 ### Dossiers et fichiers secondaires
 
 - `target/` : fichiers generes par Maven, a ne pas modifier a la main
-- `springStarterPack.txt` : document de reference ou de notes sur les
-  dependances Spring, pas un fichier necessaire au build
+- `docs/spring-starters-reference.md` : document de reference sur les
+  starters Spring, utile comme aide projet mais non necessaire au build
 
 ## Commandes de base
 

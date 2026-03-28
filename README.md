@@ -115,6 +115,8 @@ python -m venv .venv
 - `README.md` : vue d'ensemble du depot
 - `project/ARCHITECTURE.md` : architecture et organisation du dossier principal
 - `screens/README.md` : notes sur l'ancienne maquette front
+- `docs/spring-starters-reference.md` : reference Spring Initializr conservee
+  comme aide projet
 
 ## ✨ Notes importantes
 
