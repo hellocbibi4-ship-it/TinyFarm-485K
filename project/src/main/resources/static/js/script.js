@@ -837,6 +837,9 @@ function showLoginScreen() {
   if (!loginScreen || !farmScreen) {
     return
   }
+
+  loginScreen.classList.remove("hidden")
+  farmScreen.classList.add("hidden")
 }
 //Pour implementer le login github, decommenter, et faites tout le chemin du README.md du tp5
 /*
@@ -941,10 +944,6 @@ async function classement() {
     }
 }
     */
-
-  loginScreen.classList.remove("hidden")
-  farmScreen.classList.add("hidden")
-}
 
 if (loginBtn) {
   loginBtn.addEventListener("click", showFarmScreen)
