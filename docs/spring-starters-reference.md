@@ -1,3 +1,9 @@
+# Spring Starters Reference
+
+Ce document est une reference exportee depuis Spring Initializr.
+Il sert d'aide pour retrouver les starters et options de generation Spring Boot,
+mais il n'est pas utilise par le build, l'application, ni les tests.
+
   .   ____          _            __ _ _
  /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
 ( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
