@@ -86,8 +86,6 @@ depot via `requirements-test.txt`, avec `pytest.ini` egalement a la racine.
 ### Dossiers et fichiers secondaires
 
 - `target/` : fichiers generes par Maven, a ne pas modifier a la main
-- `data_Farm.json` : fichier de donnees ancien ou auxiliaire, a verifier avant
-  suppression car il ne semble pas etre la source principale actuelle
 - `springStarterPack.txt` : document de reference ou de notes sur les
   dependances Spring, pas un fichier necessaire au build
 
