@@ -40,17 +40,31 @@ public class AnimalService {
     private final AnimalRepository animalRepository;
     private final FermeService fermeService;
 
-    private Utilitaires utilitaire; //Sert à appeler des fonctions de la classe Utilitaires
+    private final Utilitaires utilitaire = new Utilitaires(); //Sert à appeler des fonctions de la classe Utilitaires
 
     public AnimalService(AnimalRepository animalRepository, FermeService fermeService){
         this.animalRepository = animalRepository;
         this.fermeService = fermeService;
     }
 
+    private Animal findAnimal(Integer animalId) {
+        return animalRepository.findById(animalId)
+            .orElseThrow(() -> new RuntimeException("Animal introuvable"));
+    }
+
     private void assertVache(Animal animal) {
         if (!TypeAnimal.VACHE.equals(animal.getTypeAnimal())) {
             throw new IllegalArgumentException("ERREUR : cet animal n'est pas une vache.");
         }
+    }
+
+    public Animal create(Animal animal) {
+        Animal nouvelAnimal = createBaseAnimal(animal);
+        return animalRepository.save(nouvelAnimal);
+    }
+
+    public Animal getById(Integer id) {
+        return findAnimal(id);
     }
 
     //Crée un animal de base à la naissance
@@ -329,6 +343,71 @@ public class AnimalService {
     animalRepository.save(animal);
 }
 
+    // -------------------------------------------------------------------------
+    // Versions avec id
+    // -------------------------------------------------------------------------
+
+    @Transactional
+    public Animal nourrirPoule(Integer animalId) {
+        Animal animal = findAnimal(animalId);
+        nourrirPoule(animal);
+        return animal;
+    }
+
+    @Transactional
+    public Animal hydraterPoule(Integer animalId) {
+        Animal animal = findAnimal(animalId);
+        hydraterPoule(animal);
+        return animal;
+    }
+
+    @Transactional
+    public Animal soignerPoule(Integer animalId) {
+        Animal animal = findAnimal(animalId);
+        soignerPoule(animal);
+        return animal;
+    }
+
+    @Transactional
+    public Animal nettoyer(Integer animalId) {
+        Animal animal = findAnimal(animalId);
+        nettoyer(animal);
+        return animal;
+    }
+
+    @Transactional
+    public Animal nourrirHerbe(Integer animalId) {
+        Animal animal = findAnimal(animalId);
+        nourrirHerbe(animal);
+        return animal;
+    }
+
+    @Transactional
+    public Animal nourrirPaille(Integer animalId) {
+        Animal animal = findAnimal(animalId);
+        nourrirPaille(animal);
+        return animal;
+    }
+
+    @Transactional
+    public Animal abreuverVache(Integer animalId) {
+        Animal animal = findAnimal(animalId);
+        abreuverVache(animal);
+        return animal;
+    }
+
+    @Transactional
+    public int produireLait(Integer animalId) {
+        Animal animal = findAnimal(animalId);
+        return produireLait(animal);
+    }
+
+    @Transactional
+    public Animal soigner(Integer animalId) {
+        Animal animal = findAnimal(animalId);
+        soigner(animal);
+        return animal;
+    }
+
 
 }//Class
-
