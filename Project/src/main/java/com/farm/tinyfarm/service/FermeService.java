@@ -1,8 +1,11 @@
 package com.farm.tinyfarm.service;
 
 import com.farm.tinyfarm.model.Ferme;
+import com.farm.tinyfarm.model.Habitat;
 import com.farm.tinyfarm.model.Remise;
+import com.farm.tinyfarm.model.TypeHabitat;
 import com.farm.tinyfarm.repository.FermeRepository;
+import com.farm.tinyfarm.repository.HabitatRepository;
 import com.farm.tinyfarm.repository.RemiseRepository;
 import com.farm.tinyfarm.outils.Utilitaires;
 import jakarta.transaction.Transactional;
@@ -16,11 +19,15 @@ public class FermeService {
     
     private final FermeRepository fermeRepository;
     private final RemiseRepository remiseRepository;
+    private final HabitatRepository habitatRepository;
 
     //Constructeur
-    public FermeService(FermeRepository fermeRepository, RemiseRepository remiseRepository){
+    public FermeService(FermeRepository fermeRepository,
+                        RemiseRepository remiseRepository,
+                        HabitatRepository habitatRepository) {
         this.fermeRepository = fermeRepository;
         this.remiseRepository = remiseRepository;
+        this.habitatRepository = habitatRepository;
     }
 
 
@@ -32,12 +39,32 @@ public class FermeService {
         ferme.setHibernation(false);
         ferme.setDateCreation(LocalDateTime.now());
         
+        // Sauvegarde de la ferme d'abord pour avoir un id
+        Ferme fermeSauvee = fermeRepository.save(ferme);
+
         //Création de la remise.
         Remise remise = new Remise();
-        remise.setFerme(ferme);
+        remise.setFerme(fermeSauvee);
         remiseRepository.save(remise);
 
-        return fermeRepository.save(ferme);
+        // Création des habitats par défaut (PRE, POULLAILLER, CLAPIER)
+        initialiserHabitats(fermeSauvee);
+
+        return fermeSauvee;
+    }
+
+    private void initialiserHabitats(Ferme ferme) {
+        Habitat pre = new Habitat(1, TypeHabitat.PRE);
+        pre.setFerme(ferme);
+        habitatRepository.save(pre);
+
+        Habitat poulailler = new Habitat(20, TypeHabitat.POULLAILLER);
+        poulailler.setFerme(ferme);
+        habitatRepository.save(poulailler);
+
+        Habitat clapier = new Habitat(15, TypeHabitat.CLAPIER);
+        clapier.setFerme(ferme);
+        habitatRepository.save(clapier);
     }
 
     //Procédure de suppression d'une ferme
