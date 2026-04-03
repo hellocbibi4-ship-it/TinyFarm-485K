@@ -1,0 +1,47 @@
+package com.farm.tinyfarm.model;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import jakarta.persistence.Entity;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.JoinColumn;
+import lombok.Data;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.FetchType;
+
+@Entity
+@Table(name = "ferme")
+@Data
+public class Ferme{
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY) // Auto-incrémentation de idFerme
+    private Integer idFerme;
+
+    @OneToOne
+    @JoinColumn(name="idUtilisateur", unique=true)
+    private Utilisateur utilisateur;
+
+    private String nom;
+    private Integer soldeEcus;
+    private Boolean hibernation;
+    private LocalDateTime dateCreation;
+    private Integer score;
+    private LocalDateTime derniereCo;
+    @OneToOne(mappedBy = "ferme", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private Remise remise;
+
+    @OneToMany(mappedBy = "ferme", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<Animal> animals = new ArrayList<>();
+
+    public Ferme(){} //Constructeur par défaut pour JPA
+}//class
