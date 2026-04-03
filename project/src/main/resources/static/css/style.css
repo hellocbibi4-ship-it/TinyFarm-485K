@@ -26,7 +26,7 @@ html {
     height: 100%;
     font-family: "Acme", "Segoe UI", Roboto, sans-serif;
     color: white;
-    overflow-x: hidden;
+    overflow: hidden;
     background-color: #000;
 }
 
@@ -118,7 +118,7 @@ img {
 
 #Trophy {
     position: absolute;
-    top: 35%;
+    top: calc(35% + 150px);
     width: 70px;
     height: 150px;
     left: -6px;
@@ -182,6 +182,130 @@ img {
     background: url('../assets/Login.svg') center / contain no-repeat;
     transform: translateX(-50%) scale(1.05);
     filter: drop-shadow(0 10px 25px rgba(0, 0, 0, 0.25));
+}
+
+.auth-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 220;
+}
+
+.auth-modal.hidden {
+    display: none;
+}
+
+.auth-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(20, 10, 4, 0.6);
+    backdrop-filter: blur(6px);
+}
+
+.auth-modal-card {
+    position: relative;
+    width: min(460px, calc(100vw - 32px));
+    margin: 12vh auto 0;
+    padding: 28px 24px 24px;
+    border-radius: 22px;
+    border: 3px solid rgba(105, 57, 16, 0.45);
+    background: linear-gradient(180deg, #fff5df 0%, #f3dfb7 100%);
+    box-shadow: 0 24px 45px rgba(35, 18, 7, 0.32);
+    color: var(--texte-fonce);
+}
+
+.auth-modal-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 38px;
+    height: 38px;
+    border: none;
+    border-radius: 999px;
+    background: rgba(91, 47, 18, 0.12);
+    color: var(--texte-fonce);
+    font-family: "Acme", sans-serif;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.auth-modal-close:hover {
+    background: rgba(91, 47, 18, 0.22);
+}
+
+.auth-modal-card h2 {
+    margin: 0 0 8px;
+    font-family: "ADLaM Display", cursive;
+    font-size: clamp(1.9rem, 1.2rem + 1vw, 2.5rem);
+}
+
+.auth-modal-text {
+    margin: 0 0 18px;
+    color: rgba(43, 26, 15, 0.78);
+    font-size: 1rem;
+    line-height: 1.45;
+}
+
+.auth-form {
+    display: grid;
+    gap: 10px;
+}
+
+.auth-label {
+    font-family: "Acme", sans-serif;
+    font-size: 1rem;
+    color: #6c411a;
+}
+
+.auth-input {
+    width: 100%;
+    border: 2px solid rgba(127, 78, 32, 0.3);
+    border-radius: 14px;
+    background: rgba(255, 251, 241, 0.95);
+    padding: 14px 16px;
+    font-family: "Acme", sans-serif;
+    font-size: 1rem;
+    color: var(--texte-fonce);
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.auth-input:focus {
+    border-color: #b56b2d;
+    box-shadow: 0 0 0 4px rgba(181, 107, 45, 0.16);
+}
+
+.auth-feedback {
+    min-height: 22px;
+    margin: 2px 0 0;
+    font-family: "Acme", sans-serif;
+    font-size: 0.95rem;
+}
+
+.auth-feedback.is-error {
+    color: #aa2d2d;
+}
+
+.auth-feedback.is-success {
+    color: #1f7f37;
+}
+
+.auth-submit {
+    margin-top: 6px;
+    border: none;
+    border-radius: 16px;
+    padding: 14px 18px;
+    background: linear-gradient(180deg, #3db860 0%, #278e45 100%);
+    box-shadow: 0 14px 24px rgba(39, 142, 69, 0.28);
+    color: #fff8ec;
+    font-family: "ADLaM Display", cursive;
+    font-size: 1.15rem;
+    cursor: pointer;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.auth-submit:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 18px 28px rgba(39, 142, 69, 0.34);
 }
 
 .settings-login-btn {
@@ -414,86 +538,39 @@ img {
     height: 3px;
 }
 
-.stock-field,
-.stock-line {
-    margin: 18px 0 0;
+.stock-table-shell {
+    margin-top: 16px;
+    max-height: 320px;
+    overflow: auto;
+    border-radius: 12px;
+    background: rgba(255, 248, 231, 0.56);
+    border: 1px solid rgba(23, 18, 10, 0.12);
 }
 
-.stock-field {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 14px;
+.stock-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 1.02rem;
 }
 
-.stock-field label,
-.stock-line {
-    font-size: 1.95rem;
-    line-height: 1.2;
-}
-
-.stock-select {
-    min-width: 118px;
-    padding: 6px 10px;
-    border: 2px solid rgba(23, 18, 10, 0.18);
-    border-radius: 8px;
-    background: rgba(255, 248, 231, 0.78);
+.stock-table thead th {
+    position: sticky;
+    top: 0;
+    background: rgba(196, 149, 73, 0.96);
     color: #17120a;
-    font-family: inherit;
-    font-size: 1.45rem;
+    text-align: left;
+    padding: 10px 12px;
+    font-size: 1rem;
+    letter-spacing: 0.02em;
 }
 
-.stock-field-quantity {
-    align-items: center;
+.stock-table tbody td {
+    padding: 9px 12px;
+    border-top: 1px solid rgba(23, 18, 10, 0.12);
 }
 
-.stock-stepper {
-    display: inline-flex;
-    align-items: center;
-    border: 2px solid rgba(23, 18, 10, 0.18);
-    border-radius: 8px;
-    overflow: hidden;
-    background: rgba(255, 248, 231, 0.78);
-}
-
-.stock-stepper-btn,
-.stock-quantity-input {
-    height: 42px;
-    border: none;
-    background: transparent;
-    color: #17120a;
-    font-family: inherit;
-    font-size: 1.7rem;
-}
-
-.stock-stepper-btn {
-    width: 40px;
-    cursor: pointer;
-    transition: background 0.15s ease, opacity 0.15s ease;
-}
-
-.stock-stepper-btn:hover:not(:disabled) {
-    background: rgba(23, 18, 10, 0.08);
-}
-
-.stock-quantity-input {
-    width: 58px;
-    padding: 0;
-    text-align: center;
-    border-left: 1px solid rgba(23, 18, 10, 0.12);
-    border-right: 1px solid rgba(23, 18, 10, 0.12);
-    appearance: textfield;
-    -moz-appearance: textfield;
-}
-
-.stock-quantity-input::-webkit-outer-spin-button,
-.stock-quantity-input::-webkit-inner-spin-button {
-    margin: 0;
-    -webkit-appearance: none;
-}
-
-.stock-total-line {
-    font-size: 2.2rem;
+.stock-table tbody tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.22);
 }
 
 .stock-feedback {
@@ -511,29 +588,6 @@ img {
     color: #8b1f17;
 }
 
-.stock-actions {
-    display: flex;
-    gap: 16px;
-    margin-top: 18px;
-}
-
-.stock-action {
-    flex: 1;
-    height: 50px;
-    border: none;
-    border-radius: 10px;
-    color: #fff8e7;
-    font-family: inherit;
-    font-size: 1.8rem;
-    cursor: pointer;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.18);
-    transition: transform 0.16s ease, box-shadow 0.16s ease, opacity 0.16s ease;
-}
-
-.stock-action:hover:not(:disabled) {
-    transform: translateY(-1px);
-    box-shadow: 0 14px 24px rgba(0, 0, 0, 0.24);
-}
 
 .stock-action-cancel {
     background: #d93a2b;
@@ -556,9 +610,9 @@ img {
 
 .collectivite-panel {
     position: absolute;
-    top: 13%;
-    right: 0;
-    bottom: 0.8%;
+    top: 8.6%;
+    right: -18px;
+    bottom: 1.8%;
     width: clamp(350px, 26vw, 505px);
     z-index: 205;
     pointer-events: none;
@@ -569,8 +623,54 @@ img {
     grid-template-rows: auto 1fr auto;
     height: 100%;
     box-sizing: border-box;
-    padding: clamp(44px, 2.2vh, 34px) clamp(20px, 1.6vw, 32px) clamp(16px, 1.8vh, 24px);
+    padding: clamp(22px, 1.4vh, 28px) clamp(24px, 1.8vw, 36px) clamp(18px, 1.9vh, 26px);
     pointer-events: auto;
+}
+
+.farm-owner-panel {
+    position: absolute;
+    top: clamp(128px, 17vh, 188px);
+    left: clamp(22px, 2.6vw, 44px);
+    z-index: 208;
+    width: min(254px, 24vw);
+    min-height: 170px;
+    padding: 18px 16px 22px;
+    border-radius: 20px;
+    background: linear-gradient(180deg, rgba(255, 246, 221, 0.9) 0%, rgba(230, 197, 130, 0.9) 100%);
+    border: 2px solid rgba(108, 65, 26, 0.24);
+    box-shadow: 0 18px 28px rgba(54, 27, 9, 0.16);
+    color: #4f2d12;
+    text-align: center;
+}
+
+.farm-owner-label,
+.farm-owner-value {
+    margin: 0;
+}
+
+.farm-owner-label {
+    font-family: "ADLaM Display", cursive;
+    font-size: clamp(1rem, 0.5vw + 0.72rem, 1.3rem);
+    line-height: 1.15;
+    text-align: center;
+}
+
+.farm-owner-label--money {
+    margin-top: 18px;
+}
+
+.farm-owner-value {
+    margin-top: 6px;
+    font-family: "Acme", sans-serif;
+    font-size: clamp(1.05rem, 0.72vw + 0.7rem, 1.45rem);
+    line-height: 1.18;
+    color: #744217;
+    word-break: break-word;
+    text-align: center;
+}
+
+#Classement {
+    z-index: 400;
 }
 
 .collectivite-title {
@@ -585,7 +685,7 @@ img {
 .collectivite-list {
     display: grid;
     grid-template-columns: 1fr;
-    gap: clamp(8px, 0.95vh, 14px);
+    gap: clamp(10px, 1.1vh, 16px);
     width: min(100%, 407px);
     margin: 0 auto;
     align-content: start;
@@ -613,10 +713,10 @@ img {
 }
 
 .collectivite-item-shortcut {
-    aspect-ratio: 481 / 40;
-    gap: clamp(8px, 0.55vw, 12px);
-    padding: clamp(4px, 0.45vh, 7px) clamp(22px, 1.5vw, 28px) clamp(4px, 0.45vh, 7px) clamp(16px, 1.25vw, 20px);
-    background-image: url("../assets/ColectivitePbtn.svg");
+    aspect-ratio: 481 / 88;
+    gap: clamp(10px, 0.8vw, 14px);
+    padding: clamp(9px, 0.9vh, 12px) clamp(24px, 1.75vw, 30px) clamp(9px, 0.9vh, 12px) clamp(18px, 1.45vw, 22px);
+    background-image: url("../assets/ColectiviteGbtn.svg");
 }
 
 .collectivite-item-icon {
@@ -643,7 +743,9 @@ img {
 }
 
 .collectivite-item-shortcut .collectivite-item-label {
-    font-size: clamp(0.92rem, 0.5vw + 0.68rem, 1.45rem);
+    font-size: clamp(1.35rem, 0.92vw + 0.7rem, 2.1rem);
+    white-space: nowrap;
+    line-height: 1.05;
 }
 
 .collectivite-item-price {
@@ -692,27 +794,24 @@ img {
 .collectivite-item--water-bucket  { --collectivite-icon-image: url("../assets/seaudeau.svg"); }
 .collectivite-item--soap          { --collectivite-icon-image: url("../assets/savon.svg"); }
 
-.collectivite-item--collectible {
-    --collectivite-icon-image: url("../assets/logocollection.svg");
-    --collectivite-icon-width: clamp(46px, 14%, 66px);
-}
-
-.collectivite-item--collectible .collectivite-item-label {
-    font-size: clamp(1.2rem, 0.78vw + 0.68rem, 1.95rem);
-}
-
 .collectivite-item--buy-animals {
     --collectivite-icon-image: url("../assets/animaux.png");
-    --collectivite-icon-width: clamp(74px, 20%, 102px);
+    --collectivite-icon-width: clamp(88px, 24%, 124px);
 }
 
 .collectivite-item--farmers-market {
     --collectivite-icon-image: url("../assets/emojProd.png");
-    --collectivite-icon-width: clamp(46px, 14%, 68px);
+    --collectivite-icon-width: clamp(62px, 18%, 88px);
 }
 
 .collectivite-item--farmers-market .collectivite-item-label {
-    font-size: clamp(0.82rem, 0.44vw + 0.6rem, 1.3rem);
+    font-size: clamp(1rem, 0.58vw + 0.68rem, 1.55rem);
+}
+
+.collectivite-item--buy-animals .collectivite-item-label,
+.collectivite-item--farmers-market .collectivite-item-label {
+    white-space: normal;
+    line-height: 1.04;
 }
 
 .collectivite-feedback {
@@ -736,7 +835,7 @@ img {
 
 .settings-btn {
     position: absolute;
-    top: 15px;
+    top: 6px;
     right: 20px;
     width: 60px;
     height: 60px;
@@ -833,6 +932,257 @@ img {
     border-radius: 14px;
     background: linear-gradient(180deg, #74b8f8 0%, #6fb0f1 50%, #8ed4ff 100%);
     box-shadow: 0 18px 38px rgba(0, 0, 0, 0.55);
+}
+
+.popup-marche {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 310;
+    width: min(80vw, 760px);
+    min-height: min(58vh, 480px);
+    max-height: 86vh;
+    display: flex;
+    flex-direction: column;
+    border: 6px solid var(--bois-fonce);
+    border-radius: 18px;
+    background: linear-gradient(180deg, #74b8f8 0%, #6fb0f1 50%, #8ed4ff 100%);
+    box-shadow: 0 20px 42px rgba(0, 0, 0, 0.55);
+    overflow: hidden;
+}
+
+.popup-marche.hidden {
+    display: none;
+}
+
+.popup-marche-backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+}
+
+.popup-marche-entete {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 18px;
+    background: linear-gradient(180deg, var(--bois-clair) 0%, var(--bois-fonce) 100%);
+    border-bottom: 4px solid #3c1e0a;
+}
+
+.popup-marche-entete h2 {
+    margin: 0;
+    font-family: "ADLaM Display", cursive;
+    font-size: clamp(1.6rem, 1vw + 1rem, 2.2rem);
+    color: #f9f0c7;
+}
+
+.popup-marche-fermer {
+    width: 42px;
+    height: 42px;
+    border: none;
+    border-radius: 999px;
+    background: rgba(255, 247, 225, 0.18);
+    color: #f9f0c7;
+    font-family: "Acme", sans-serif;
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+
+.popup-marche-onglets {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    gap: 12px;
+    padding: 16px 20px 0;
+}
+
+.popup-marche-onglet {
+    min-width: 148px;
+    height: 48px;
+    border: none;
+    border-radius: 14px 14px 0 0;
+    background: rgba(99, 62, 22, 0.2);
+    color: #5b3210;
+    font-family: "Acme", sans-serif;
+    font-size: 1.12rem;
+    cursor: pointer;
+}
+
+.popup-marche-onglet.is-active {
+    background: rgba(255, 248, 231, 0.92);
+}
+
+.popup-marche-contenu {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    margin: 0 20px 20px;
+    padding: 22px;
+    border-radius: 0 16px 16px 16px;
+    background: rgba(255, 248, 231, 0.9);
+    color: var(--texte-fonce);
+    overflow-y: auto;
+}
+
+.popup-marche-panneau {
+    display: none;
+    min-height: 260px;
+    padding-right: 6px;
+}
+
+.popup-marche-panneau.is-active {
+    display: block;
+}
+
+.popup-marche-texte {
+    margin: 0;
+    font-family: "Acme", sans-serif;
+    font-size: 1.15rem;
+    line-height: 1.45;
+}
+
+.popup-marche-feedback {
+    min-height: 24px;
+    margin: 10px 0 14px;
+    font-family: "Acme", sans-serif;
+    font-size: 1rem;
+    color: #6b471f;
+}
+
+.popup-marche-feedback.is-error {
+    color: #8b1f17;
+}
+
+.popup-marche-feedback.is-success {
+    color: #28611d;
+}
+
+.popup-marche-table-shell {
+    max-height: 48vh;
+    overflow: auto;
+    border: 1px solid rgba(52, 28, 10, 0.14);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.38);
+}
+
+.popup-marche-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: "Acme", sans-serif;
+    font-size: 0.98rem;
+}
+
+.popup-marche-table th,
+.popup-marche-table td {
+    padding: 10px 12px;
+    text-align: left;
+    border-top: 1px solid rgba(52, 28, 10, 0.1);
+    vertical-align: middle;
+}
+
+.popup-marche-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    border-top: none;
+    background: rgba(190, 145, 79, 0.96);
+    color: #2d1a0d;
+}
+
+.popup-marche-table tbody tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.24);
+}
+
+.popup-marche-empty {
+    text-align: center;
+    color: #7b5a2f;
+}
+
+.popup-marche-number {
+    width: 84px;
+    min-height: 38px;
+    padding: 6px 8px;
+    border: 2px solid rgba(102, 60, 22, 0.18);
+    border-radius: 10px;
+    background: rgba(255, 251, 243, 0.96);
+    color: #2d1a0d;
+    font-family: "Acme", sans-serif;
+    font-size: 0.98rem;
+}
+
+.popup-marche-action {
+    min-width: 92px;
+    min-height: 38px;
+    border: none;
+    border-radius: 10px;
+    color: #fff8e7;
+    font-family: "Acme", sans-serif;
+    font-size: 0.98rem;
+    cursor: pointer;
+    transition: transform 0.15s ease, filter 0.15s ease, opacity 0.15s ease;
+}
+
+.popup-marche-action:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.05);
+}
+
+.popup-marche-action:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    filter: none;
+}
+
+.popup-marche-action--buy {
+    background: linear-gradient(180deg, #3db860 0%, #278e45 100%);
+}
+
+.popup-marche-action--sell {
+    background: linear-gradient(180deg, #4d6ee2 0%, #3853b0 100%);
+}
+
+.popup-marche-vente-form {
+    display: grid;
+    gap: 12px;
+    max-width: 380px;
+    padding: 10px 12px 14px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.28);
+}
+
+.popup-marche-form-label,
+.popup-marche-stock-line {
+    margin: 0;
+    font-family: "Acme", sans-serif;
+    font-size: 1.02rem;
+    color: #5c3817;
+}
+
+.popup-marche-select {
+    min-height: 42px;
+    padding: 8px 10px;
+    border: 2px solid rgba(102, 60, 22, 0.18);
+    border-radius: 10px;
+    background: rgba(255, 251, 243, 0.96);
+    color: #2d1a0d;
+    font-family: "Acme", sans-serif;
+    font-size: 1rem;
+}
+
+#marche-vente-submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 52px;
+    margin-top: 8px;
+    font-size: 1.12rem;
+    box-shadow: 0 10px 20px rgba(56, 83, 176, 0.22);
 }
 
 .entete-bois {
@@ -1058,14 +1408,87 @@ img {
 .farm-canvas {
     position: absolute;
     inset: 0;
-    z-index: 40;
+}
+
+.care-inventory {
+    position: absolute;
+    top: clamp(86px, 12.5vh, 138px);
+    left: 50%;
+    transform: translate(-50%, -8.3333%);
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px;
+    width: min(540px, 52vw);
+    z-index: 210;
+}
+
+.care-item-card {
+    display: grid;
+    justify-items: center;
+    gap: 6px;
+    padding: 10px 8px 8px;
+    border-radius: 18px;
+    background: linear-gradient(180deg, rgba(255, 248, 228, 0.92) 0%, rgba(232, 205, 146, 0.95) 100%);
+    border: 2px solid rgba(113, 66, 24, 0.28);
+    box-shadow: 0 14px 24px rgba(52, 28, 10, 0.16);
+}
+
+.care-item-visual {
+    width: clamp(34px, 3vw, 46px);
+    height: clamp(34px, 3vw, 46px);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    filter: drop-shadow(0 4px 8px rgba(47, 23, 6, 0.18));
+}
+
+.care-item-visual--feed-bag {
+    background-image: url("../assets/sacnourriture.svg");
+}
+
+.care-item-visual--straw-bales {
+    background-image: url("../assets/paille.svg");
+}
+
+.care-item-visual--syringe {
+    background-image: url("../assets/seringue.svg");
+}
+
+.care-item-visual--water-bucket {
+    background-image: url("../assets/seaudeau.svg");
+}
+
+.care-item-visual--soap {
+    background-image: url("../assets/savon.svg");
+}
+
+.care-item-label {
+    margin: 0;
+    min-height: 30px;
+    color: #4f2d12;
+    font-family: "Acme", sans-serif;
+    font-size: clamp(0.72rem, 0.5vw + 0.42rem, 0.94rem);
+    line-height: 1.05;
+    text-align: center;
+}
+
+.care-item-count {
+    margin: 0;
+    min-width: 34px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(91, 47, 18, 0.12);
+    color: #4f2d12;
+    font-family: "ADLaM Display", cursive;
+    font-size: clamp(0.95rem, 0.55vw + 0.6rem, 1.18rem);
+    line-height: 1;
+    text-align: center;
 }
 
 .zone {
     position: absolute;
     width: calc(510 / 1024 * 100%);
     box-sizing: border-box;
-    z-index: 45;
 }
 
 .zone-poulailler {
@@ -1090,6 +1513,7 @@ img {
     position: relative;
     width: 100%;
     height: 100%;
+    z-index: 0;
 }
 
 .animals-zone-shell:not(.has-overflow) .animals-zone-nav {
@@ -1245,9 +1669,9 @@ img {
 }
 
 .animal-icon--chicken {
-    width: clamp(28px, 2.6vw, 40px);
-    min-width: clamp(28px, 2.6vw, 40px);
-    height: clamp(38px, 4.1vw, 56px);
+    width: clamp(38px, 3.6vw, 50px);
+    min-width: clamp(38px, 3.6vw, 50px);
+    height: clamp(48px, 4.1vw, 66px);
     padding-top: 10px;
 }
 
@@ -1259,9 +1683,9 @@ img {
 }
 
 .animal-icon--rabbit {
-    width: clamp(22px, 2vw, 32px);
-    min-width: clamp(22px, 2vw, 32px);
-    height: clamp(24px, 2.2vw, 36px);
+    width: clamp(32px, 3vw, 2px);
+    min-width: clamp(32px, 3vw, 32px);
+    height: clamp(34px, 3.2vw, 46px);
     padding-top: 4px;
 }
 
@@ -1508,17 +1932,52 @@ img {
     }
 
     .collectivite-panel {
-        top: 8.1%;
-        width: clamp(255px, 29vw, 360px);
+        top: 4.5%;
+        right: -12px;
+        width: clamp(270px, 30vw, 374px);
+    }
+
+    .care-inventory {
+        top: clamp(78px, 10.5vh, 118px);
+        left: 50%;
+        transform: translate(-50%, -8.3333%);
+        width: min(470px, 50vw);
+        gap: 8px;
+    }
+
+    .care-item-card {
+        padding: 8px 6px;
+        border-radius: 15px;
+    }
+
+    .care-item-label {
+        min-height: 26px;
+        font-size: clamp(0.62rem, 0.42vw + 0.38rem, 0.8rem);
     }
 
     .collectivite-panel-inner {
-        padding: 18px 16px 14px;
+        padding: 14px 16px 14px;
     }
 
     .collectivite-list {
         width: 100%;
         gap: 8px;
+    }
+
+    .farm-owner-panel {
+        top: clamp(114px, 14vh, 162px);
+        left: 14px;
+        width: min(206px, 23vw);
+        min-height: 152px;
+        padding: 14px 14px 18px;
+    }
+
+    .farm-owner-label {
+        font-size: clamp(0.88rem, 0.4vw + 0.66rem, 1.08rem);
+    }
+
+    .farm-owner-value {
+        font-size: clamp(0.95rem, 0.46vw + 0.68rem, 1.16rem);
     }
 
     .animal-icon {
@@ -1620,6 +2079,44 @@ img {
         background: rgba(120, 69, 31, 0.82);
         box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
         backdrop-filter: blur(4px);
+    }
+
+    .care-inventory {
+        top: 86px;
+        left: 12px;
+        right: 12px;
+        transform: translateY(-8.3333%);
+        width: auto;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 6px;
+    }
+
+    .care-item-card {
+        padding: 8px 4px 7px;
+    }
+
+    .care-item-visual {
+        width: 28px;
+        height: 28px;
+    }
+
+    .care-item-label {
+        min-height: 24px;
+        font-size: 0.58rem;
+    }
+
+    .care-item-count {
+        min-width: 28px;
+        padding: 4px 8px;
+        font-size: 0.9rem;
+    }
+
+    .farm-owner-panel {
+        top: 126px;
+        left: 12px;
+        width: min(190px, calc(100vw - 24px));
+        min-height: 144px;
+        padding: 14px 14px 18px;
     }
 
     .collectivite-title {

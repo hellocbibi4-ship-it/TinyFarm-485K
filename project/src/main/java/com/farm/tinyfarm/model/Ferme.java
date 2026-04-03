@@ -32,6 +32,10 @@ public class Ferme{
     private LocalDateTime dateCreation;
     private Integer score;
     private LocalDateTime derniereCo;
+    private LocalDateTime dernierePonteOeufs;
+    private Integer nbVaches = 1;
+    private Integer nbPoules = 3;
+    private Integer nbLapins = 2;
     @OneToOne(mappedBy = "ferme", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore
     private Remise remise;

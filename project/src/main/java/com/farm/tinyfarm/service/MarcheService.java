@@ -1,118 +1,157 @@
 package com.farm.tinyfarm.service;
 
-import com.farm.tinyfarm.model.Ferme;
-import com.farm.tinyfarm.model.Remise;
-import com.farm.tinyfarm.model.Marche;
-import com.farm.tinyfarm.repository.FermeRepository;
-import com.farm.tinyfarm.repository.RemiseRepository;
-import com.farm.tinyfarm.repository.MarcheRepository;
-import com.farm.tinyfarm.model.TypeStock;
-import jakarta.transaction.Transactional;
+import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
+import com.farm.tinyfarm.model.Ferme;
+import com.farm.tinyfarm.model.Marche;
+import com.farm.tinyfarm.model.TypeStock;
+import com.farm.tinyfarm.repository.FermeRepository;
+import com.farm.tinyfarm.repository.MarcheRepository;
+
+import jakarta.transaction.Transactional;
+
 @Service
 public class MarcheService {
-    
+
     private final FermeRepository fermeRepository;
-    private final RemiseRepository remiseRepository;
     private final MarcheRepository marcheRepository;
     private final RemiseService remiseService;
 
-    //Constructeur
-    public MarcheService(FermeRepository fermeRepository, RemiseRepository remiseRepository, MarcheRepository marcheRepository){
+    public MarcheService(
+        FermeRepository fermeRepository,
+        MarcheRepository marcheRepository,
+        RemiseService remiseService
+    ) {
         this.fermeRepository = fermeRepository;
-        this.remiseRepository = remiseRepository;
         this.marcheRepository = marcheRepository;
-        this.remiseService = new RemiseService(remiseRepository, fermeRepository);
+        this.remiseService = remiseService;
     }
 
-
-    //Fonction de création d'une ferme
-    public Marche create(Integer fermeId, String produit, Integer quantite, Integer prix){
+    @Transactional
+    public Marche create(Integer fermeId, String produit, Integer quantite, Integer prix) {
         Ferme ferme = fermeRepository.findById(fermeId)
-            .orElseThrow(() -> new RuntimeException("Ferme non trouvée"));
-        
+            .orElseThrow(() -> new RuntimeException("Ferme non trouvee"));
+
+        if (quantite == null || quantite <= 0) {
+            throw new IllegalArgumentException("Impossible de proposer cette offre, la quantite doit etre superieure a 0");
+        }
+
+        if (prix == null || prix <= 0) {
+            throw new IllegalArgumentException("Impossible de proposer un prix inferieur ou egal a 0");
+        }
+
+        TypeStock typeStock = remiseService.fromProduitMarche(produit);
+        if (typeStock == TypeStock.LAPIN) {
+            int lapinsDisponibles = ferme.getNbLapins() == null ? 0 : ferme.getNbLapins();
+
+            if (lapinsDisponibles < quantite) {
+                throw new IllegalArgumentException("Stock insuffisant pour lapins");
+            }
+
+            ferme.setNbLapins(lapinsDisponibles - quantite);
+        } else {
+            remiseService.retirerStock(fermeId, typeStock, quantite);
+        }
+
         Marche marche = new Marche();
-        marche.setFerme(ferme); // @MapsId récupère l'ID
-
-
-
-        if(quantite <= 0) {
-            throw new IllegalArgumentException("Impossible de proposer cette offre, vous devez proposer une quantité supérieur à 0");
-            }
-        if( prix < 0) {
-            throw new IllegalArgumentException("Impossible de proposer un prix négatif.");
-            }
-        marche.setProduit(produit);
+        marche.setFerme(ferme);
+        marche.setProduit(toMarcheProductValue(typeStock));
         marche.setQuantite(quantite);
         marche.setPrix(prix);
-
         return marcheRepository.save(marche);
     }
-    public Marche getById(Integer id){
-    return marcheRepository.findById(id)
+
+    public Marche getById(Integer id) {
+        return marcheRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Offre introuvable"));
     }
 
-    //Procédure d'ajout d'écus à la ferme qui vend
     @Transactional
-    public void ajouterEcus(Integer idFerme, Marche marche){
-        Ferme ferme = fermeRepository.findById(idFerme)
-            .orElseThrow(() -> new RuntimeException("Impossible d'ajouter les écus: la ferme n'existe pas"));
-        
-        if (marche.getPrix() < 0){
-            throw new IllegalArgumentException("Le montant d'écus à ajouter doit être positif");
-        }
-
-        int montantTotal = ferme.getSoldeEcus() + marche.getPrix();
-        ferme.setSoldeEcus(montantTotal);
+    public List<Map<String, Object>> getOffresPourFront() {
+        return marcheRepository.findAllByOrderByPrixUnitaireAscIdOffreAsc().stream()
+            .map(offre -> Map.<String, Object>of(
+                "id", offre.getIdOffre(),
+                "sellerFarmId", offre.getFerme().getIdFerme(),
+                "sellerName", offre.getFerme().getUtilisateur() != null && offre.getFerme().getUtilisateur().getGithubUsername() != null
+                    ? offre.getFerme().getUtilisateur().getGithubUsername()
+                    : offre.getFerme().getNom(),
+                "product", offre.getProduit(),
+                "quantity", offre.getQuantite(),
+                "unitPrice", offre.getPrix()
+            ))
+            .toList();
     }
 
-    //Procédure de retrait d'écus à la ferme qui achète
     @Transactional
-    public void retirerEcus(Integer idFerme, Marche marche){
-        Ferme ferme = fermeRepository.findById(idFerme)
-            .orElseThrow(() -> new RuntimeException("Impossible d'ajouter les écus: la ferme n'existe pas"));
-        
-        if (marche.getPrix() < 0){
-            throw new IllegalArgumentException("Le montant d'écus à retirer doit être positif");
+    public void transaction(Integer idAcheteur, Integer idOffre, Integer quantite) {
+        Marche marche = marcheRepository.findById(idOffre)
+            .orElseThrow(() -> new RuntimeException("Offre introuvable"));
+
+        if (quantite == null || quantite <= 0) {
+            throw new IllegalArgumentException("La quantite doit etre superieure a 0.");
         }
 
-        int montantTotal = ferme.getSoldeEcus() - marche.getPrix();
-        ferme.setSoldeEcus(montantTotal);
-    }
-    /*public Ferme getFerme(){
-        return marcheRepository.ferme
-        .orElseThrow(() -> new RuntimeException("Ferme introuvable"));
-    }*/
+        if (quantite > marche.getQuantite()) {
+            throw new IllegalArgumentException("La quantite ne peut pas etre superieure a la disponibilite.");
+        }
 
-    @Transactional
-    public void transaction(Integer idAcheteur, Marche marche,Integer quantite){
-        if (quantite<=0){
-            throw new IllegalArgumentException("La quantité doit être supérieur à 0.");
-        }
-        if (quantite>marche.getQuantite()){
-            throw new IllegalArgumentException("La quantité ne peux pas être supérieur à la disponibilité.");
-        }
         Ferme acheteur = fermeRepository.findById(idAcheteur)
-        .orElseThrow(() -> new RuntimeException("Acheteur introuvable"));
-        Remise remiseAcheteur = remiseRepository.findById(idAcheteur)
-        .orElseThrow(() -> new RuntimeException("Remise introuvable"));
-        if (acheteur.getSoldeEcus() < marche.getPrix() * quantite) {
-        throw new IllegalArgumentException("Solde d'écus insuffisant.");
-        }
-        for (int i =0; i < quantite; i++) {
-        
-        TypeStock typeStock = TypeStock.valueOf(marche.getProduit().toUpperCase());
+            .orElseThrow(() -> new RuntimeException("Acheteur introuvable"));
 
-        retirerEcus(idAcheteur,marche);
-        ajouterEcus(marche.getFerme().getIdFerme(),marche);
-
-        //Remise remise_ach = marche.getFerme().getRemise();
-        remiseService.ajouterStock(idAcheteur, typeStock, 1);
-        remiseService.retirerStock(marche.getFerme().getIdFerme(), typeStock, 1);
+        if (acheteur.getIdFerme().equals(marche.getFerme().getIdFerme())) {
+            throw new IllegalArgumentException("Impossible d'acheter sa propre offre.");
         }
-        marche.setQuantite(marche.getQuantite()- quantite);
+
+        int montantTotal = marche.getPrix() * quantite;
+        if (acheteur.getSoldeEcus() < montantTotal) {
+            throw new IllegalArgumentException("Solde d'ecus insuffisant.");
+        }
+
+        TypeStock typeStock = remiseService.fromProduitMarche(marche.getProduit());
+        acheteur.setSoldeEcus(acheteur.getSoldeEcus() - montantTotal);
+
+        Ferme vendeur = marche.getFerme();
+        vendeur.setSoldeEcus(vendeur.getSoldeEcus() + montantTotal);
+
+        if (typeStock == TypeStock.LAPIN) {
+            int lapinsAcheteur = acheteur.getNbLapins() == null ? 0 : acheteur.getNbLapins();
+            acheteur.setNbLapins(lapinsAcheteur + quantite);
+        } else {
+            remiseService.ajouterStock(idAcheteur, typeStock, quantite);
+        }
+
+        int quantiteRestante = marche.getQuantite() - quantite;
+        if (quantiteRestante <= 0) {
+            marcheRepository.delete(marche);
+        } else {
+            marche.setQuantite(quantiteRestante);
+            marcheRepository.save(marche);
+        }
+    }
+
+    private String toMarcheProductValue(TypeStock typeStock) {
+        switch (typeStock) {
+            case OEUF:
+                return "oeuf";
+            case LAIT:
+                return "lait";
+            case LAPIN:
+                return "lapin";
+            case NOURRITURE:
+                return "grain";
+            case EAU:
+                return "eau";
+            case SAVON:
+                return "savon";
+            case SERINGUE:
+                return "seringue";
+            case PAILLE:
+                return "paille";
+            default:
+                throw new IllegalArgumentException("Produit de marche inconnu");
+        }
     }
 }

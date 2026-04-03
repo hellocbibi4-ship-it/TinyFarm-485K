@@ -54,6 +54,9 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
             nouvelleFerme.setDerniereCo(LocalDateTime.now());
             nouvelleFerme.setHibernation(false);
             nouvelleFerme.setScore(0);
+            nouvelleFerme.setNbVaches(1);
+            nouvelleFerme.setNbPoules(3);
+            nouvelleFerme.setNbLapins(2);
 
             // On fait le lien dans les deux sens pour que JPA s'y retrouve
             nouvelleFerme.setUtilisateur(nouvelUtilisateur);

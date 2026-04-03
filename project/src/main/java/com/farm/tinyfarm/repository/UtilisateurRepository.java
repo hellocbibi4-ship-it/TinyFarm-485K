@@ -12,4 +12,6 @@ public interface UtilisateurRepository extends JpaRepository<Utilisateur, Intege
     // SELECT * FROM utilisateur WHERE github_username = ?
     Optional<Utilisateur> findByGithubUsername(String githubUsername);
 
+    Optional<Utilisateur> findByGithubUsernameAndPassword(String githubUsername, String password);
+
 }

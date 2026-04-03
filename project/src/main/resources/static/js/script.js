@@ -1,16 +1,9 @@
-const fallbackStockProducts = [
-  { id: "milk", name: "Lait", stock: 32, price: 4 },
-  { id: "eggs", name: "Oeufs", stock: 48, price: 2 },
-  { id: "cheese", name: "Fromage", stock: 26, price: 6 }
-]
-
 const fallbackCommunityItems = [
-  { id: "feed-bag", label: "Sac de nourriture", price: 19 },
-  { id: "straw-bales", label: "Bottes de pailles", price: 19 },
-  { id: "syringe", label: "Seringue", price: 19 },
-  { id: "water-bucket", label: "Seau d'eau", price: 19 },
-  { id: "soap", label: "Savon", price: 19 },
-  { id: "collectible", label: "Objet de collection" },
+  { id: "feed-bag", label: "Nourriture", price: 5 },
+  { id: "straw-bales", label: "Bottes de paille", price: 5 },
+  { id: "syringe", label: "Seringue", price: 6 },
+  { id: "water-bucket", label: "Seau d'eau", price: 2 },
+  { id: "soap", label: "Savon", price: 3 },
   { id: "buy-animals", label: "Achat animaux", variant: "shortcut" },
   { id: "farmers-market", label: "Marche des producteurs", variant: "shortcut" }
 ]
@@ -25,8 +18,23 @@ const collectiviteState = {
   items: []
 }
 
+const CARE_ITEM_IDS = ["feed-bag", "straw-bales", "syringe", "water-bucket", "soap"]
+const CARE_ITEM_TO_API_TYPE = {
+  "feed-bag": "NOURRITURE",
+  "straw-bales": "PAILLE",
+  syringe: "SERINGUE",
+  "water-bucket": "EAU",
+  soap: "SAVON"
+}
+
 const loginBtn = document.getElementById("login-btn")
 const loginScreen = document.getElementById("login-screen")
+const loginModal = document.getElementById("login-modal")
+const loginForm = document.getElementById("login-form")
+const loginUsernameInput = document.getElementById("login-username")
+const loginPasswordInput = document.getElementById("login-password")
+const loginFeedback = document.getElementById("login-feedback")
+const loginCloseTargets = document.querySelectorAll("[data-close-login-modal]")
 const clsBtn = document.getElementById("Trophy")
 const farmScreen = document.getElementById("farm-screen")
 const classementScreen = document.getElementById("Classement")
@@ -34,19 +42,18 @@ const tbody = document.getElementById("classement-body")
 
 const stockToggle = document.getElementById("stock-toggle")
 const stockPanel = document.getElementById("stock-panel")
-const stockProductSelect = document.getElementById("stock-product")
-const stockAvailable = document.getElementById("stock-available")
-const stockQuantityInput = document.getElementById("stock-quantity")
-const stockMinusButton = document.getElementById("stock-minus")
-const stockPlusButton = document.getElementById("stock-plus")
-const stockUnitPrice = document.getElementById("stock-unit-price")
-const stockTotalPrice = document.getElementById("stock-total-price")
 const stockTotalUnits = document.getElementById("stock-total-units")
+const stockTableBody = document.getElementById("stock-table-body")
 const stockFeedback = document.getElementById("stock-feedback")
-const stockCancelButton = document.getElementById("stock-cancel")
-const stockSellButton = document.getElementById("stock-sell")
 const collectiviteList = document.getElementById("collectivite-list")
 const collectiviteFeedback = document.getElementById("collectivite-feedback")
+const careInventoryCounters = Array.from(document.querySelectorAll("[data-care-count]")).reduce(
+  (accumulator, element) => {
+    accumulator[element.dataset.careCount] = element
+    return accumulator
+  },
+  {}
+)
 
 const poulaillerContainer = document.getElementById("poulailler-container")
 const paturageContainer = document.getElementById("paturage-container")
@@ -72,12 +79,27 @@ const modalWeight = document.getElementById("animal-weight")
 const closeTargets = document.querySelectorAll("[data-close-modal]")
 const actionButtons = document.querySelectorAll("[data-action]")
 const toast = document.getElementById("toast")
+const popupMarche = document.getElementById("popup-marche")
+const boutonFermerMarche = document.getElementById("bouton-fermer-marche")
+const closeMarcheTargets = document.querySelectorAll("[data-close-marche]")
+const marcheTabButtons = Array.from(document.querySelectorAll("[data-marche-tab]"))
+const marchePanels = Array.from(document.querySelectorAll("[data-marche-panel]"))
+const marcheAchatBody = document.getElementById("marche-achat-body")
+const marcheAchatFeedback = document.getElementById("marche-achat-feedback")
+const marcheVenteFeedback = document.getElementById("marche-vente-feedback")
+const marcheVenteProduit = document.getElementById("marche-vente-produit")
+const marcheVenteStock = document.getElementById("marche-vente-stock")
+const marcheVenteQuantite = document.getElementById("marche-vente-quantite")
+const marcheVentePrix = document.getElementById("marche-vente-prix")
+const marcheVenteSubmit = document.getElementById("marche-vente-submit")
 
 const elementsInterface = {
   popup: document.getElementById("popup-achat"),
   boutonFermer: document.getElementById("bouton-fermer"),
   solde: document.getElementById("solde-ecus"),
   message: document.getElementById("message-action"),
+  ownerName: document.getElementById("farm-owner-name"),
+  ownerBalance: document.getElementById("farm-owner-balance"),
   compteurs: {
     vache: document.getElementById("compteur-vache"),
     poule: document.getElementById("compteur-poule"),
@@ -86,11 +108,22 @@ const elementsInterface = {
 }
 
 let currentFarmModel = null
+let currentFarmId = null
+let currentUsername = "-"
 let collectiviteFeedbackTimeout = null
 let toastTimeoutId = null
 let activeActionTarget = ""
 let animalZoneResizeBound = false
 let animalZoneRefreshFrame = null
+let careInventoryState = createDefaultCareInventory()
+let latestFarmData = null
+let farmClockState = null
+let farmRefreshIntervalId = null
+const marketSaleState = {
+  selectedProduct: "",
+  quantity: 1,
+  unitPrice: 1
+}
 
 const ANIMATED_ANIMAL_CONFIG = {
   poule: {
@@ -122,6 +155,53 @@ function randomBetween(min, max) {
 
 function getAnimatedAnimalConfig(typeKey) {
   return ANIMATED_ANIMAL_CONFIG[typeKey] || null
+}
+
+function createDefaultCareInventory() {
+  return CARE_ITEM_IDS.reduce((inventory, itemId) => {
+    inventory[itemId] = 0
+    return inventory
+  }, {})
+}
+
+function renderCareInventory() {
+  CARE_ITEM_IDS.forEach((itemId) => {
+    const counter = careInventoryCounters[itemId]
+
+    if (counter) {
+      counter.textContent = String(careInventoryState[itemId] || 0)
+    }
+  })
+}
+
+function applyCareInventory(data) {
+  const inventory = data?.careInventory
+
+  if (!inventory || typeof inventory !== "object") {
+    careInventoryState = createDefaultCareInventory()
+    renderCareInventory()
+    return
+  }
+
+  careInventoryState = CARE_ITEM_IDS.reduce((normalizedInventory, itemId) => {
+    normalizedInventory[itemId] = Math.max(0, Number.parseInt(inventory[itemId], 10) || 0)
+    return normalizedInventory
+  }, {})
+
+  renderCareInventory()
+}
+
+function loadCareInventoryState() {
+  careInventoryState = createDefaultCareInventory()
+  renderCareInventory()
+}
+
+function renderCommunityFromData(data) {
+  const items = Array.isArray(data?.communityItems) && data.communityItems.length > 0
+    ? data.communityItems
+    : fallbackCommunityItems
+
+  renderCollectivitePanel(items)
 }
 
 function createAnimatedSprite(typeKey) {
@@ -158,11 +238,7 @@ function createAnimalVisual(animal) {
 }
 
 function getCurrentProduct() {
-  return (
-    stockState.products.find((product) => product.id === stockState.selectedProductId) ||
-    stockState.products[0] ||
-    null
-  )
+  return null
 }
 
 function clamp(value, min, max) {
@@ -191,6 +267,260 @@ function setStockFeedback(message = "", type = "") {
 
   if (type) {
     stockFeedback.classList.add(type)
+  }
+}
+
+function buildStockRows(data = null) {
+  const rows = Array.isArray(data?.stockInventory) ? data.stockInventory : []
+
+  if (rows.length > 0) {
+    return rows.map((row) => ({
+      category: row.category || "-",
+      label: row.label || "-",
+      quantity: Math.max(0, Number.parseInt(row.quantity, 10) || 0)
+    }))
+  }
+
+  return [
+    { category: "Produits", label: "Oeufs", quantity: 0 },
+    { category: "Produits", label: "Lait", quantity: 0 },
+    { category: "Produits", label: "Lapins", quantity: 0 },
+    { category: "Entretien", label: "Nourriture", quantity: 0 },
+    { category: "Entretien", label: "Seau d'eau", quantity: 0 },
+    { category: "Entretien", label: "Bottes de paille", quantity: 0 },
+    { category: "Entretien", label: "Savon", quantity: 0 },
+    { category: "Entretien", label: "Seringue", quantity: 0 }
+  ]
+}
+
+function getMarketSellRows(data = null) {
+  return buildStockRows(data).filter((row) => {
+    const normalizedLabel = normalizeMarketProduct(row.label)
+    return Boolean(normalizedLabel)
+  })
+}
+
+function normalizeMarketProduct(label) {
+  const normalizedLabel = String(label || "").trim().toLowerCase()
+
+  switch (normalizedLabel) {
+    case "oeuf":
+    case "oeufs":
+      return "OEUF"
+    case "lait":
+      return "LAIT"
+    case "lapin":
+    case "lapins":
+      return "LAPIN"
+    case "nourriture":
+    case "grain":
+      return "NOURRITURE"
+    case "seau d'eau":
+      return "EAU"
+    case "bottes de paille":
+    case "paille":
+      return "PAILLE"
+    case "savon":
+      return "SAVON"
+    case "seringue":
+      return "SERINGUE"
+    default:
+      return ""
+  }
+}
+
+function formatMarketProductLabel(product) {
+  switch (String(product || "").trim().toUpperCase()) {
+    case "OEUF":
+      return "Oeufs"
+    case "LAIT":
+      return "Lait"
+    case "LAPIN":
+      return "Lapins"
+    case "NOURRITURE":
+    case "GRAIN":
+      return "Nourriture"
+    case "EAU":
+      return "Seau d'eau"
+    case "PAILLE":
+      return "Bottes de paille"
+    case "SAVON":
+      return "Savon"
+    case "SERINGUE":
+      return "Seringue"
+    default:
+      return String(product || "-")
+  }
+}
+
+function setMarcheFeedback(element, message = "", type = "") {
+  if (!element) {
+    return
+  }
+
+  element.textContent = message
+  element.classList.remove("is-error", "is-success")
+
+  if (type) {
+    element.classList.add(type)
+  }
+}
+
+function renderMarcheAchatRows(data = null) {
+  if (!marcheAchatBody) {
+    return
+  }
+
+  const offers = Array.isArray(data?.marketOffers) ? data.marketOffers : []
+
+  if (offers.length === 0) {
+    marcheAchatBody.innerHTML = `
+      <tr>
+        <td class="popup-marche-empty" colspan="6">Aucune offre disponible pour le moment.</td>
+      </tr>
+    `
+    return
+  }
+
+  marcheAchatBody.innerHTML = offers
+    .map((offer) => {
+      const quantity = Math.max(0, Number.parseInt(offer.quantity, 10) || 0)
+      const isOwnOffer = currentFarmId && Number(offer.sellerFarmId) === Number(currentFarmId)
+      return `
+        <tr>
+          <td>${offer.sellerName || "-"}</td>
+          <td>${formatMarketProductLabel(offer.product)}</td>
+          <td>${quantity}</td>
+          <td>${Number.parseInt(offer.unitPrice, 10) || 0}</td>
+          <td>
+            <input
+              class="popup-marche-number"
+              type="number"
+              min="1"
+              max="${Math.max(quantity, 1)}"
+              value="1"
+              data-market-buy-qty="${offer.id}"
+              ${quantity <= 0 || isOwnOffer ? "disabled" : ""}
+            >
+          </td>
+          <td>
+            <button
+              class="popup-marche-action popup-marche-action--buy"
+              type="button"
+              data-market-buy="${offer.id}"
+              ${quantity <= 0 || isOwnOffer ? "disabled" : ""}
+            >
+              ${isOwnOffer ? "Ta ferme" : "Acheter"}
+            </button>
+          </td>
+        </tr>
+      `
+    })
+    .join("")
+}
+
+function updateMarcheVenteSelection() {
+  if (!marcheVenteProduit || !marcheVenteStock || !marcheVenteQuantite || !marcheVentePrix || !marcheVenteSubmit) {
+    return
+  }
+
+  const selectedOption = marcheVenteProduit.selectedOptions[0]
+  const stockQuantity = Math.max(0, Number.parseInt(selectedOption?.dataset.stockQuantity, 10) || 0)
+  marketSaleState.selectedProduct = marcheVenteProduit.value
+
+  marcheVenteStock.textContent = String(stockQuantity)
+  marcheVenteQuantite.max = String(Math.max(stockQuantity, 1))
+
+  if (stockQuantity <= 0) {
+    marcheVenteQuantite.value = "0"
+    marketSaleState.quantity = 0
+    marcheVenteQuantite.disabled = true
+    marcheVentePrix.disabled = true
+    marcheVenteSubmit.disabled = true
+    return
+  }
+
+  const currentQuantity = Math.max(1, Number.parseInt(marcheVenteQuantite.value, 10) || 1)
+  marcheVenteQuantite.value = String(Math.min(currentQuantity, stockQuantity))
+  marketSaleState.quantity = Number.parseInt(marcheVenteQuantite.value, 10) || 1
+  marketSaleState.unitPrice = Math.max(1, Number.parseInt(marcheVentePrix.value, 10) || 1)
+  marcheVenteQuantite.disabled = false
+  marcheVentePrix.disabled = false
+  marcheVenteSubmit.disabled = false
+}
+
+function renderMarcheVenteForm(data = null) {
+  if (!marcheVenteProduit || !marcheVenteStock || !marcheVenteQuantite || !marcheVenteSubmit) {
+    return
+  }
+
+  const rows = getMarketSellRows(data)
+
+  if (rows.length === 0) {
+    marcheVenteProduit.innerHTML = `<option value="">Aucun produit</option>`
+    marcheVenteProduit.disabled = true
+    marketSaleState.selectedProduct = ""
+    marcheVenteQuantite.value = "0"
+    marcheVenteQuantite.disabled = true
+    marcheVentePrix.value = "1"
+    marcheVentePrix.disabled = true
+    marcheVenteSubmit.disabled = true
+    marcheVenteStock.textContent = "0"
+    return
+  }
+
+  marcheVenteProduit.disabled = false
+  marcheVentePrix.disabled = false
+  marcheVenteProduit.innerHTML = rows
+    .map((row) => {
+      const product = normalizeMarketProduct(row.label)
+      const stockQuantity = Math.max(0, Number.parseInt(row.quantity, 10) || 0)
+      return `<option value="${product}" data-stock-quantity="${stockQuantity}">${row.label}</option>`
+    })
+    .join("")
+
+  const availableProducts = rows.map((row) => normalizeMarketProduct(row.label))
+  const preferredProduct = availableProducts.includes(marketSaleState.selectedProduct)
+    ? marketSaleState.selectedProduct
+    : (rows.find((row) => (Number.parseInt(row.quantity, 10) || 0) > 0)
+        ? normalizeMarketProduct(rows.find((row) => (Number.parseInt(row.quantity, 10) || 0) > 0).label)
+        : availableProducts[0])
+
+  marcheVenteProduit.value = preferredProduct || availableProducts[0] || ""
+  marketSaleState.selectedProduct = marcheVenteProduit.value
+
+  marcheVenteQuantite.value = String(Math.max(1, Number.parseInt(marketSaleState.quantity, 10) || 1))
+  marcheVentePrix.value = String(Math.max(1, Number.parseInt(marketSaleState.unitPrice, 10) || 1))
+
+  updateMarcheVenteSelection()
+}
+
+function renderMarketPanels(data = null) {
+  renderMarcheAchatRows(data)
+  renderMarcheVenteForm(data)
+}
+
+function renderStockTable(rows) {
+  if (!stockTableBody) {
+    return
+  }
+
+  stockTableBody.innerHTML = rows
+    .map(
+      (row) => `
+        <tr>
+          <td>${row.category}</td>
+          <td>${row.label}</td>
+          <td>${row.quantity}</td>
+        </tr>
+      `
+    )
+    .join("")
+
+  if (stockTotalUnits) {
+    stockTotalUnits.textContent = String(
+      rows.reduce((total, row) => total + (Number.isFinite(row.quantity) ? row.quantity : 0), 0)
+    )
   }
 }
 
@@ -227,75 +557,17 @@ function setStockPanelOpen(isOpen) {
 }
 
 function renderStockOptions() {
-  if (!stockProductSelect) {
-    return
-  }
-
-  stockProductSelect.innerHTML = stockState.products
-    .map((product) => `<option value="${product.id}">${product.name}</option>`)
-    .join("")
-
-  if (stockState.selectedProductId) {
-    stockProductSelect.value = stockState.selectedProductId
-  }
+  return
 }
 
 function updateStockPanel() {
-  const product = getCurrentProduct()
-
-  if (!product) {
-    if (stockAvailable) stockAvailable.textContent = "0"
-    if (stockTotalUnits) stockTotalUnits.textContent = "0"
-    if (stockUnitPrice) stockUnitPrice.textContent = formatEcus(0)
-    if (stockTotalPrice) stockTotalPrice.textContent = formatEcus(0)
-
-    if (stockQuantityInput) {
-      stockQuantityInput.value = "0"
-      stockQuantityInput.disabled = true
-    }
-
-    if (stockMinusButton) stockMinusButton.disabled = true
-    if (stockPlusButton) stockPlusButton.disabled = true
-    if (stockSellButton) stockSellButton.disabled = true
-
-    return
-  }
-
-  const minimumQuantity = product.stock > 0 ? 1 : 0
-  stockState.quantity = clamp(stockState.quantity, minimumQuantity, product.stock)
-
-  if (stockProductSelect) stockProductSelect.value = product.id
   if (stockTotalUnits) {
-    stockTotalUnits.textContent = String(
-      stockState.products.reduce((total, item) => total + item.stock, 0)
-    )
+    stockTotalUnits.textContent = "0"
   }
-  if (stockAvailable) stockAvailable.textContent = String(product.stock)
-  if (stockUnitPrice) stockUnitPrice.textContent = formatEcus(product.price)
-  if (stockTotalPrice) stockTotalPrice.textContent = formatEcus(stockState.quantity * product.price)
-
-  if (stockQuantityInput) {
-    stockQuantityInput.min = String(minimumQuantity)
-    stockQuantityInput.max = String(product.stock)
-    stockQuantityInput.value = String(stockState.quantity)
-    stockQuantityInput.disabled = product.stock === 0
-  }
-
-  if (stockMinusButton) stockMinusButton.disabled = product.stock === 0 || stockState.quantity <= minimumQuantity
-  if (stockPlusButton) stockPlusButton.disabled = product.stock === 0 || stockState.quantity >= product.stock
-  if (stockSellButton) stockSellButton.disabled = product.stock === 0 || stockState.quantity === 0
 }
 
 function adjustStockQuantity(delta) {
-  const product = getCurrentProduct()
-
-  if (!product || product.stock === 0) {
-    return
-  }
-
-  stockState.quantity = clamp(stockState.quantity + delta, 1, product.stock)
-  updateStockPanel()
-  setStockFeedback()
+  return
 }
 
 function renderCollectivitePrice(price) {
@@ -525,11 +797,50 @@ function mettreAJourInterface() {
     elementsInterface.solde.textContent = String(currentFarmModel.balance)
   }
 
+  if (elementsInterface.ownerName) {
+    elementsInterface.ownerName.textContent = currentUsername || "-"
+  }
+
+  if (elementsInterface.ownerBalance) {
+    elementsInterface.ownerBalance.textContent = String(currentFarmModel.balance)
+  }
+
   Object.entries(currentFarmModel.counts).forEach(([typeKey, count]) => {
     if (elementsInterface.compteurs[typeKey]) {
       elementsInterface.compteurs[typeKey].textContent = String(count)
     }
   })
+}
+
+function applyFarmData(data) {
+  latestFarmData = data
+  applyGameClock(data)
+  const uiState = createFreshUiState(data)
+  currentFarmModel = TinyFarmState.buildFarmModel(data, uiState)
+  applyCareInventory(data)
+  renderCommunityFromData(data)
+  renderMarketPanels(data)
+  renderAnimalZones()
+  mettreAJourInterface()
+  mettreAJourDisponibiliteBoutons()
+}
+
+function applyGameClock(data) {
+  const gameTime = data?.gameTime
+
+  if (!gameTime || typeof gameTime !== "object") {
+    farmClockState = null
+    return
+  }
+
+  farmClockState = {
+    day: Math.max(1, Number.parseInt(gameTime.day, 10) || 1),
+    hours: Math.max(0, Number.parseInt(gameTime.hours, 10) || 0),
+    minutes: Math.max(0, Number.parseInt(gameTime.minutes, 10) || 0),
+    seconds: Math.max(0, Number.parseInt(gameTime.seconds, 10) || 0),
+    realSecondsPerDay: Math.max(1, Number.parseInt(gameTime.realSecondsPerDay, 10) || 60),
+    syncedAtMs: Date.now()
+  }
 }
 
 function afficherMessage(text, type = "") {
@@ -590,7 +901,7 @@ function updateFarmOverlayState(uiState) {
   mettreAJourDisponibiliteBoutons()
 }
 
-function traiterAchat(typeAnimal) {
+async function traiterAchat(typeAnimal) {
   if (!currentFarmModel) {
     afficherMessage("Donnees animaux indisponibles.", "erreur")
     return
@@ -620,13 +931,29 @@ function traiterAchat(typeAnimal) {
     return
   }
 
-  const nextUiState = TinyFarmState.readUiState()
-  nextUiState.level = currentFarmModel.uiState.level
-  nextUiState.balance = currentFarmModel.balance - catalogEntry.price
-  nextUiState.purchases[typeAnimal] += 1
+  if (!currentFarmId) {
+    afficherMessage("Connecte-toi pour acheter des animaux.", "erreur")
+    return
+  }
 
-  updateFarmOverlayState(nextUiState)
-  afficherMessage(`Achat valide : ${catalogEntry.label}.`, "succes")
+  try {
+    const response = await fetch(`/api/fermes/${currentFarmId}/acheter-animal?type=${encodeURIComponent(typeAnimal)}`, {
+      method: "POST"
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      afficherMessage(errorText || "Impossible d'acheter cet animal.", "erreur")
+      return
+    }
+
+    const farmData = await response.json()
+    applyFarmData(farmData)
+    afficherMessage(`Achat valide : ${catalogEntry.label}.`, "succes")
+  } catch (error) {
+    console.error("Erreur lors de l'achat :", error)
+    afficherMessage("Impossible d'acheter cet animal.", "erreur")
+  }
 }
 
 function setAnimalShopOpen(isOpen, { announce = true } = {}) {
@@ -654,6 +981,67 @@ function fermerPopup({ announce = true } = {}) {
   }
 
   setAnimalShopOpen(false, { announce })
+}
+
+function setMarcheTab(activeTab) {
+  marcheTabButtons.forEach((button) => {
+    const isActive = button.dataset.marcheTab === activeTab
+    button.classList.toggle("is-active", isActive)
+    button.setAttribute("aria-selected", String(isActive))
+  })
+
+  marchePanels.forEach((panel) => {
+    panel.classList.toggle("is-active", panel.dataset.marchePanel === activeTab)
+  })
+}
+
+async function refreshMarketData() {
+  if (!currentFarmId) {
+    renderMarketPanels()
+    setMarcheFeedback(marcheAchatFeedback, "Connecte-toi pour acceder au marche.", "is-error")
+    setMarcheFeedback(marcheVenteFeedback, "Connecte-toi pour acceder au marche.", "is-error")
+    return
+  }
+
+  try {
+    const data = await fetchActiveFarmData()
+    applyFarmData(data)
+    renderStockTable(buildStockRows(data))
+    setStockFeedback()
+    setMarcheFeedback(marcheAchatFeedback)
+    setMarcheFeedback(marcheVenteFeedback)
+  } catch (error) {
+    console.error("Erreur lors du chargement du marche :", error)
+    renderMarketPanels(latestFarmData)
+    setMarcheFeedback(marcheAchatFeedback, "Impossible de charger le marche.", "is-error")
+    setMarcheFeedback(marcheVenteFeedback, "Impossible de charger le marche.", "is-error")
+  }
+}
+
+async function ouvrirPopupMarche() {
+  if (!popupMarche || !farmScreen) {
+    return
+  }
+
+  fermerPopup({ announce: false })
+  setMarcheTab("achat")
+  popupMarche.classList.remove("hidden")
+  popupMarche.setAttribute("aria-hidden", "false")
+  farmScreen.classList.add("popup-ouverte")
+  await refreshMarketData()
+}
+
+function fermerPopupMarche() {
+  if (!popupMarche || popupMarche.classList.contains("hidden")) {
+    return
+  }
+
+  popupMarche.classList.add("hidden")
+  popupMarche.setAttribute("aria-hidden", "true")
+
+  if (!elementsInterface.popup || elementsInterface.popup.classList.contains("hidden")) {
+    farmScreen.classList.remove("popup-ouverte")
+  }
 }
 
 function openActionModal({ name, typeLabel, homeLabel, weightLabel, weightValue, targetLabel }) {
@@ -733,12 +1121,18 @@ function showToast(message) {
 }
 
 async function initializeFarmState() {
+  if (!currentFarmId) {
+    currentFarmModel = null
+    latestFarmData = null
+    farmClockState = null
+    loadCareInventoryState()
+    renderMarketPanels()
+    return
+  }
+
   try {
-    const data = await TinyFarmState.fetchFarmData()
-    currentFarmModel = TinyFarmState.buildFarmModel(data)
-    renderAnimalZones()
-    mettreAJourInterface()
-    mettreAJourDisponibiliteBoutons()
+    const data = await fetchActiveFarmData()
+    applyFarmData(data)
   } catch (error) {
     console.error("Erreur lors du chargement des animaux :", error)
     afficherMessage("Impossible de charger les animaux.", "erreur")
@@ -746,24 +1140,38 @@ async function initializeFarmState() {
 }
 
 async function initializeStockPanel() {
+  if (!currentFarmId) {
+    renderStockTable(buildStockRows())
+    setStockFeedback("Connecte-toi pour voir le stock reel.", "is-error")
+    return
+  }
+
   try {
-    const data = await TinyFarmState.fetchFarmData()
-    const products = data.stockProducts.length > 0 ? data.stockProducts : fallbackStockProducts
-
-    stockState.products = products.map((product) => ({ ...product }))
-    stockState.selectedProductId = stockState.products[0] ? stockState.products[0].id : null
-    stockState.quantity = stockState.products[0] && stockState.products[0].stock > 0 ? 1 : 0
-
-    renderStockOptions()
-    updateStockPanel()
+    const data = await fetchActiveFarmData()
+    renderStockTable(buildStockRows(data))
+    setStockFeedback()
   } catch (error) {
     console.error("Erreur lors du chargement du stock :", error)
-    stockState.products = fallbackStockProducts.map((product) => ({ ...product }))
-    stockState.selectedProductId = stockState.products[0].id
-    stockState.quantity = 1
-    renderStockOptions()
-    updateStockPanel()
-    setStockFeedback("Stock charge avec les donnees de secours.", "is-error")
+    renderStockTable(buildStockRows())
+    setStockFeedback("Impossible de charger le stock reel.", "is-error")
+  }
+}
+
+async function refreshFarmTimeAndProduction() {
+  if (!currentFarmId || document.hidden) {
+    return
+  }
+
+  try {
+    const data = await fetchActiveFarmData()
+    applyFarmData(data)
+
+    if (stockPanel?.classList.contains("open")) {
+      renderStockTable(buildStockRows(data))
+      setStockFeedback()
+    }
+  } catch (error) {
+    console.error("Erreur lors de l'actualisation du temps de jeu :", error)
   }
 }
 
@@ -772,10 +1180,14 @@ async function initializeCollectivitePanel() {
     return
   }
 
+  if (!currentFarmId) {
+    renderCollectivitePanel(fallbackCommunityItems)
+    return
+  }
+
   try {
-    const data = await TinyFarmState.fetchFarmData()
-    const items = data.communityItems.length > 0 ? data.communityItems : fallbackCommunityItems
-    renderCollectivitePanel(items)
+    const data = await fetchActiveFarmData()
+    renderCommunityFromData(data)
   } catch (error) {
     console.error("Erreur lors du chargement de la collectivite :", error)
     renderCollectivitePanel(fallbackCommunityItems)
@@ -789,22 +1201,39 @@ async function classement() {
   }
 
   try {
-    const data = await TinyFarmState.fetchFarmData()
+    const data = await fetchRankingData()
+    const ranking = Array.isArray(data?.ranking) ? data.ranking : []
+
     tbody.innerHTML = ""
 
-    data.players.forEach((player, index) => {
+    if (ranking.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6">Aucune ferme classee.</td>
+        </tr>
+      `
+      return
+    }
+
+    ranking.forEach((player, index) => {
       tbody.innerHTML += `
         <tr>
           <td>${index + 1}</td>
           <td>${player.name}</td>
-          <td>${player.production}</td>
-          <td>${player.capacity}</td>
           <td>${player.money}</td>
+          <td>${player.poules}</td>
+          <td>${player.vaches}</td>
+          <td>${player.lapins}</td>
         </tr>
       `
     })
   } catch (error) {
     console.error("Erreur lors du chargement du classement :", error)
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6">Impossible de charger le classement.</td>
+      </tr>
+    `
   }
 }
 
@@ -823,13 +1252,144 @@ function updateClock() {
   clock.textContent = `${hours}:${minutes}:${seconds}`
 }
 
-function showFarmScreen() {
+async function fetchFarmDataById(farmId) {
+  const response = await fetch(`/api/fermes/${farmId}/front-data`)
+
+  if (!response.ok) {
+    throw new Error("Impossible de charger la ferme.")
+  }
+
+  return response.json()
+}
+
+async function fetchActiveFarmData() {
+  if (!currentFarmId) {
+    throw new Error("Aucune ferme connectee.")
+  }
+
+  return fetchFarmDataById(currentFarmId)
+}
+
+async function fetchRankingData() {
+  if (currentFarmId) {
+    return fetchActiveFarmData()
+  }
+
+  const candidateFarmIds = [1, 2]
+
+  for (const farmId of candidateFarmIds) {
+    try {
+      return await fetchFarmDataById(farmId)
+    } catch (error) {
+      // On tente une autre ferme existante si celle-ci n'est pas disponible.
+    }
+  }
+
+  throw new Error("Impossible de charger le classement.")
+}
+
+async function publierOffreMarche(product, quantity, unitPrice) {
+  if (!currentFarmId) {
+    throw new Error("Connecte-toi pour vendre sur le marche.")
+  }
+
+  const response = await fetch(
+    `/api/fermes/${encodeURIComponent(currentFarmId)}/marche/offres?produit=${encodeURIComponent(product)}&quantite=${encodeURIComponent(quantity)}&prix=${encodeURIComponent(unitPrice)}`,
+    { method: "POST" }
+  )
+
+  if (!response.ok) {
+    throw new Error((await response.text()) || "Impossible de publier l'offre.")
+  }
+
+  return response.json()
+}
+
+async function acheterOffreMarche(offerId, quantity) {
+  if (!currentFarmId) {
+    throw new Error("Connecte-toi pour acheter sur le marche.")
+  }
+
+  const response = await fetch(
+    `/api/fermes/${encodeURIComponent(currentFarmId)}/marche/achat?idOffre=${encodeURIComponent(offerId)}&quantite=${encodeURIComponent(quantity)}`,
+    { method: "POST" }
+  )
+
+  if (!response.ok) {
+    throw new Error((await response.text()) || "Impossible d'acheter cette offre.")
+  }
+
+  return response.json()
+}
+
+function createFreshUiState(data) {
+  return TinyFarmState.writeUiState({
+    level: 1,
+    balance: Number.isFinite(data?.cash) ? data.cash : 0,
+    purchases: {
+      vache: 0,
+      poule: 0,
+      lapin: 0
+    }
+  })
+}
+
+function setLoginFeedback(message = "", type = "") {
+  if (!loginFeedback) {
+    return
+  }
+
+  loginFeedback.textContent = message
+  loginFeedback.classList.remove("is-error", "is-success")
+
+  if (type) {
+    loginFeedback.classList.add(type)
+  }
+}
+
+function openLoginModal() {
+  if (!loginModal) {
+    showFarmScreen()
+    return
+  }
+
+  setLoginFeedback()
+  loginModal.classList.remove("hidden")
+  loginModal.setAttribute("aria-hidden", "false")
+
+  window.setTimeout(() => {
+    loginUsernameInput?.focus()
+  }, 0)
+}
+
+function closeLoginModal() {
+  if (!loginModal) {
+    return
+  }
+
+  loginModal.classList.add("hidden")
+  loginModal.setAttribute("aria-hidden", "true")
+  setLoginFeedback()
+
+  if (loginForm) {
+    loginForm.reset()
+  }
+}
+
+function showFarmScreen(prefetchedFarmData = null) {
   if (!loginScreen || !farmScreen) {
     return
   }
 
+  closeLoginModal()
   loginScreen.classList.add("hidden")
   farmScreen.classList.remove("hidden")
+
+  if (prefetchedFarmData) {
+    applyFarmData(prefetchedFarmData)
+    return
+  }
+
   initializeFarmState()
 }
 
@@ -837,117 +1397,24 @@ function showLoginScreen() {
   if (!loginScreen || !farmScreen) {
     return
   }
-}
-//Pour implementer le login github, decommenter, et faites tout le chemin du README.md du tp5
-/*
-const loginScreen      = document.getElementById("login-screen");
-const farmScreen       = document.getElementById("farm-screen");
-const loginBtn         = document.getElementById("login-btn");
-const clsBtn           = document.getElementById("Trophy");
-const classementScreen = document.getElementById("Classement");
-const tbody            = document.getElementById("classement-body");
 
-//vérifie si une session est deja active
-window.addEventListener("DOMContentLoaded", async () => {
-    try {
-        const res = await fetch("/api/me");
-        if (res.ok) {
-            const user = await res.json();
-            afficherFerme(user);
-        } else {
-            afficherLogin();
-        }
-    } catch (e) {
-        console.error("Impossible de joindre le serveur :", e);
-        afficherLogin();
-    }
-    classement();
-});
-
-// Clic login redirige vers GitHub
-loginBtn.addEventListener("click", () => {
-    window.location.href = "/oauth2/authorization/github";
-});
-
-clsBtn.addEventListener("click", () => {
-    classementScreen.classList.toggle("show");
-    clsBtn.classList.toggle("trophy2");
-    if (classementScreen.classList.contains("show")) {
-        classement();
-    }
-});
-
-function afficherLogin() {
-    loginScreen.classList.remove("hidden");
-    farmScreen.classList.add("hidden");
-}
-
-function afficherFerme(user) {
-    loginScreen.classList.add("hidden");
-    farmScreen.classList.remove("hidden");
-    loadFarm(user);
-}
-
-async function loadFarm(user) {
-    try {
-        const response = await fetch("./data/farmData.json");
-        const data = await response.json();
-
-        document.getElementById("cash").innerText  = user?.solde  ?? data.cash;
-        document.getElementById("water").innerText = data.inventory.water;
-        document.getElementById("food").innerText  = data.inventory.food;
-        document.getElementById("straw").innerText = data.inventory.straw;
-
-        const grid = document.getElementById("animal-grid");
-        grid.innerHTML = "";
-
-        data.animals.forEach(animal => {
-            const card = document.createElement("div");
-            card.className = "card";
-            card.innerHTML = `
-                <img src="assets/${animal.img}" alt="${animal.type}">
-                <h3>${animal.name}</h3>
-                <p>${animal.type}</p>
-                <p><strong>${animal.weight} kg</strong></p>
-            `;
-            grid.appendChild(card);
-        });
-
-    } catch (error) {
-        console.error("Erreur lors du chargement des données :", error);
-    }
-}
-
-async function classement() {
-    try {
-        const response = await fetch("./data/farmData.json");
-        const data = await response.json();
-        tbody.innerHTML = "";
-        if (data.players) {
-            data.players.forEach((p, i) => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${i + 1}</td>
-                        <td>${p.name}</td>
-                        <td>${p.production}</td>
-                        <td>${p.capacity}</td>
-                        <td>${p.money}</td>
-                    </tr>
-                `;
-            });
-        }
-    } catch (e) {
-        console.error("Erreur classement :", e);
-    }
-}
-    */
-
+  currentFarmModel = null
+  currentFarmId = null
+  currentUsername = "-"
+  latestFarmData = null
+  farmClockState = null
+  marketSaleState.selectedProduct = ""
+  marketSaleState.quantity = 1
+  marketSaleState.unitPrice = 1
+  loadCareInventoryState()
+  renderStockTable(buildStockRows())
+  renderMarketPanels()
   loginScreen.classList.remove("hidden")
   farmScreen.classList.add("hidden")
 }
 
 if (loginBtn) {
-  loginBtn.addEventListener("click", showFarmScreen)
+  loginBtn.addEventListener("click", openLoginModal)
 }
 
 if (clsBtn && classementScreen) {
@@ -964,6 +1431,50 @@ if (clsBtn && classementScreen) {
 closeTargets.forEach((button) => {
   button.addEventListener("click", closeActionModal)
 })
+
+loginCloseTargets.forEach((button) => {
+  button.addEventListener("click", closeLoginModal)
+})
+
+if (loginForm) {
+  loginForm.addEventListener("submit", async (event) => {
+    event.preventDefault()
+
+    const username = loginUsernameInput?.value.trim() || ""
+    const password = loginPasswordInput?.value.trim() || ""
+
+    if (!username || !password) {
+      setLoginFeedback("Renseigne un username et un password.", "is-error")
+      return
+    }
+
+    try {
+      const response = await fetch("/api/auth/login-local", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ username, password })
+      })
+
+      if (!response.ok) {
+        setLoginFeedback("erreur de username ou de password", "is-error")
+        return
+      }
+
+      const payload = await response.json()
+      currentFarmId = payload.farmId
+      currentUsername = username
+
+      const farmData = await fetchFarmDataById(currentFarmId)
+      setLoginFeedback("Connexion acceptee.", "is-success")
+      showFarmScreen(farmData)
+    } catch (error) {
+      console.error("Erreur de connexion :", error)
+      setLoginFeedback("erreur de username ou de password", "is-error")
+    }
+  })
+}
 
 actionButtons.forEach((button) => {
   button.addEventListener("click", () => {
@@ -1046,6 +1557,9 @@ document.addEventListener("DOMContentLoaded", () => {
   if (stockToggle && stockPanel) {
     stockToggle.addEventListener("click", (event) => {
       event.stopPropagation()
+      if (!stockPanel.classList.contains("open")) {
+        initializeStockPanel()
+      }
       setStockPanelOpen(!stockPanel.classList.contains("open"))
     })
 
@@ -1054,73 +1568,8 @@ document.addEventListener("DOMContentLoaded", () => {
     })
   }
 
-  if (stockProductSelect) {
-    stockProductSelect.addEventListener("change", () => {
-      stockState.selectedProductId = stockProductSelect.value
-      stockState.quantity = getCurrentProduct() && getCurrentProduct().stock > 0 ? 1 : 0
-      updateStockPanel()
-      setStockFeedback()
-    })
-  }
-
-  if (stockMinusButton) {
-    stockMinusButton.addEventListener("click", () => adjustStockQuantity(-1))
-  }
-
-  if (stockPlusButton) {
-    stockPlusButton.addEventListener("click", () => adjustStockQuantity(1))
-  }
-
-  if (stockQuantityInput) {
-    stockQuantityInput.addEventListener("input", () => {
-      const product = getCurrentProduct()
-
-      if (!product) {
-        return
-      }
-
-      const parsedValue = Number.parseInt(stockQuantityInput.value, 10)
-      const fallbackValue = product.stock > 0 ? 1 : 0
-
-      stockState.quantity = Number.isNaN(parsedValue) ? fallbackValue : parsedValue
-      updateStockPanel()
-      setStockFeedback()
-    })
-  }
-
-  if (stockCancelButton) {
-    stockCancelButton.addEventListener("click", () => {
-      stockState.quantity = getCurrentProduct() && getCurrentProduct().stock > 0 ? 1 : 0
-      updateStockPanel()
-      setStockFeedback()
-      setStockPanelOpen(false)
-    })
-  }
-
-  if (stockSellButton) {
-    stockSellButton.addEventListener("click", () => {
-      const product = getCurrentProduct()
-
-      if (!product || product.stock === 0 || stockState.quantity === 0) {
-        setStockFeedback("Aucun stock disponible pour cette vente.", "is-error")
-        updateStockPanel()
-        return
-      }
-
-      const soldQuantity = stockState.quantity
-      product.stock -= soldQuantity
-      stockState.quantity = product.stock > 0 ? 1 : 0
-
-      updateStockPanel()
-      setStockFeedback(
-        `${soldQuantity} ${soldQuantity > 1 ? "unites vendues" : "unite vendue"} de ${product.name}.`,
-        "is-success"
-      )
-    })
-  }
-
   if (collectiviteList) {
-    collectiviteList.addEventListener("click", (event) => {
+    collectiviteList.addEventListener("click", async (event) => {
       const button = event.target.closest("[data-collectivite-id]")
 
       if (!button) {
@@ -1138,12 +1587,132 @@ document.addEventListener("DOMContentLoaded", () => {
         return
       }
 
+      if (selectedItem.id === "farmers-market") {
+        await ouvrirPopupMarche()
+        return
+      }
+
+      if (!currentFarmId) {
+        setCollectiviteFeedback("Connecte-toi pour acheter cet objet.")
+        return
+      }
+
+      if (currentFarmId && CARE_ITEM_TO_API_TYPE[selectedItem.id]) {
+        try {
+          const response = await fetch(
+            `/api/fermes/${currentFarmId}/acheter-objet-entretien?type=${encodeURIComponent(CARE_ITEM_TO_API_TYPE[selectedItem.id])}`,
+            { method: "POST" }
+          )
+
+          if (!response.ok) {
+            const errorText = await response.text()
+            setCollectiviteFeedback(errorText || "Achat impossible.")
+            return
+          }
+
+          const farmData = await response.json()
+          applyFarmData(farmData)
+          setCollectiviteFeedback(`${selectedItem.label} ajoute au stock.`)
+          return
+        } catch (error) {
+          console.error("Erreur lors de l'achat d'objet :", error)
+          setCollectiviteFeedback("Achat impossible.")
+          return
+        }
+      }
+
       setCollectiviteFeedback(`${selectedItem.label} selectionne.`)
     })
   }
 
   if (elementsInterface.boutonFermer) {
     elementsInterface.boutonFermer.addEventListener("click", () => fermerPopup())
+  }
+
+  if (boutonFermerMarche) {
+    boutonFermerMarche.addEventListener("click", fermerPopupMarche)
+  }
+
+  closeMarcheTargets.forEach((target) => {
+    target.addEventListener("click", fermerPopupMarche)
+  })
+
+  marcheTabButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      setMarcheTab(button.dataset.marcheTab)
+    })
+  })
+
+  if (popupMarche) {
+    popupMarche.addEventListener("click", async (event) => {
+      const buyButton = event.target.closest("[data-market-buy]")
+
+      if (buyButton) {
+        const offerId = buyButton.dataset.marketBuy
+        const input = popupMarche.querySelector(`[data-market-buy-qty="${offerId}"]`)
+        const quantity = Math.max(1, Number.parseInt(input?.value, 10) || 1)
+
+        try {
+          setMarcheFeedback(marcheAchatFeedback)
+          const farmData = await acheterOffreMarche(offerId, quantity)
+          applyFarmData(farmData)
+          renderStockTable(buildStockRows(farmData))
+          setStockFeedback()
+          afficherMessage("Achat du marche valide.", "succes")
+          setMarcheFeedback(marcheAchatFeedback, "Achat effectue avec succes.", "is-success")
+        } catch (error) {
+          console.error("Erreur lors de l'achat sur le marche :", error)
+          setMarcheFeedback(marcheAchatFeedback, error.message || "Achat impossible.", "is-error")
+        }
+
+        return
+      }
+    })
+  }
+
+  if (marcheVenteProduit) {
+    marcheVenteProduit.addEventListener("change", () => {
+      setMarcheFeedback(marcheVenteFeedback)
+      updateMarcheVenteSelection()
+    })
+  }
+
+  if (marcheVenteQuantite) {
+    marcheVenteQuantite.addEventListener("input", () => {
+      marketSaleState.quantity = Math.max(0, Number.parseInt(marcheVenteQuantite.value, 10) || 0)
+      updateMarcheVenteSelection()
+    })
+  }
+
+  if (marcheVentePrix) {
+    marcheVentePrix.addEventListener("input", () => {
+      marketSaleState.unitPrice = Math.max(1, Number.parseInt(marcheVentePrix.value, 10) || 1)
+      marcheVentePrix.value = String(marketSaleState.unitPrice)
+    })
+  }
+
+  if (marcheVenteSubmit) {
+    marcheVenteSubmit.addEventListener("click", async () => {
+      const product = marcheVenteProduit?.value || ""
+      const quantity = Math.max(1, Number.parseInt(marcheVenteQuantite?.value, 10) || 1)
+      const unitPrice = Math.max(1, Number.parseInt(marcheVentePrix?.value, 10) || 1)
+      marketSaleState.selectedProduct = product
+      marketSaleState.quantity = quantity
+      marketSaleState.unitPrice = unitPrice
+
+      try {
+        setMarcheFeedback(marcheVenteFeedback)
+        const farmData = await publierOffreMarche(product, quantity, unitPrice)
+        applyFarmData(farmData)
+        renderStockTable(buildStockRows(farmData))
+        setStockFeedback()
+        afficherMessage("Offre du marche publiee.", "succes")
+        setMarcheFeedback(marcheVenteFeedback, "Offre publiee avec succes.", "is-success")
+      } catch (error) {
+        console.error("Erreur lors de la mise en vente :", error)
+        setMarcheFeedback(marcheVenteFeedback, error.message || "Mise en vente impossible.", "is-error")
+      }
+    })
   }
 
   document.querySelectorAll(".btn-acheter").forEach((button) => {
@@ -1168,16 +1737,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
+      closeLoginModal()
       setStockPanelOpen(false)
       fermerPopup({ announce: false })
+      fermerPopupMarche()
       closeActionModal()
     }
   })
 
   initializeAnimalZoneNavigation()
+  loadCareInventoryState()
   initializeFarmState()
   initializeStockPanel()
   initializeCollectivitePanel()
   updateClock()
   window.setInterval(updateClock, 1000)
+
+  if (farmRefreshIntervalId) {
+    window.clearInterval(farmRefreshIntervalId)
+  }
+
+  farmRefreshIntervalId = window.setInterval(refreshFarmTimeAndProduction, 10000)
 })

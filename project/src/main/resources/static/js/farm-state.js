@@ -41,8 +41,6 @@
     }
   }
 
-  let farmDataPromise = null
-
   function cloneUiState(uiState = BASE_UI_STATE) {
     return {
       level: Number.isFinite(uiState.level) ? uiState.level : DEFAULT_LEVEL,
@@ -187,20 +185,6 @@
     }
   }
 
-  function fetchFarmData() {
-    if (!farmDataPromise) {
-      farmDataPromise = fetch("./data/farmData.json").then((response) => {
-        if (!response.ok) {
-          throw new Error("Impossible de charger les donnees de la ferme.")
-        }
-
-        return response.json()
-      })
-    }
-
-    return farmDataPromise
-  }
-
   function getAnimalsByType(model, typeKey) {
     return model.animals.filter((animal) => animal.typeKey === typeKey)
   }
@@ -208,7 +192,6 @@
   global.TinyFarmState = {
     STORAGE_KEY,
     ANIMAL_CATALOG,
-    fetchFarmData,
     readUiState,
     writeUiState,
     ensureUiState,
