@@ -22,7 +22,7 @@ public class Habitat {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer idHabitat;
 
-    @OneToOne
+    @OneToMany
     @JoinColumn(name = "idFerme")
     private Ferme ferme;
 
