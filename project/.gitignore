@@ -32,6 +32,9 @@ build/
 ### VS Code ###
 .vscode/
 
+### Secrets ###
+application-local.properties
+
 ### Pycache ###
 __pycache__/
 *.pyc

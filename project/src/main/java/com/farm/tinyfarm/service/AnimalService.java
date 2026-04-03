@@ -139,6 +139,7 @@ public class AnimalService {
         fermeService.retirerEcus(id, 3);
 
         updateChickenStatus(animal);
+        animalRepository.save(animal);
     }
 
     public void hydraterPoule(Animal animal){
@@ -155,6 +156,7 @@ public class AnimalService {
         //Retrait d'écus
         Integer id = animal.getFerme().getIdFerme();
         fermeService.retirerEcus(id, 1);
+        animalRepository.save(animal);
     }
 
     @Transactional
@@ -167,6 +169,7 @@ public class AnimalService {
         // Retrait d'écus
         Integer id = animal.getFerme().getIdFerme();
         fermeService.retirerEcus(id, 6);
+        animalRepository.save(animal);
     }
 
     //TODO

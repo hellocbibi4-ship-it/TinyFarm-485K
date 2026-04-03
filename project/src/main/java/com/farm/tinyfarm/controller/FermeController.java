@@ -2,6 +2,8 @@ package com.farm.tinyfarm.controller;
 
 import com.farm.tinyfarm.service.FermeService;
 import com.farm.tinyfarm.model.Ferme;
+import com.farm.tinyfarm.repository.FermeRepository;
+import com.farm.tinyfarm.repository.AnimalRepository;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -10,10 +12,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 
 @RestController
@@ -21,9 +28,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 public class FermeController{
     private final FermeService fermeService;
+    private final FermeRepository fermeRepository;
+    private final AnimalRepository animalRepository;
 
-    public FermeController(FermeService fermeService){
+    public FermeController(FermeService fermeService, FermeRepository fermeRepository, AnimalRepository animalRepository){
         this.fermeService = fermeService;
+        this.fermeRepository = fermeRepository;
+        this.animalRepository = animalRepository;
     }
 
     //Création d'une ferme
@@ -76,6 +87,21 @@ public class FermeController{
         String message = "Etat d'hibernation : " + etat;
         return ResponseEntity.ok(message);
 
+    }
+
+    //Classement des fermes par score
+    @GetMapping("/classement")
+    public ResponseEntity<List<Map<String, Object>>> getClassement() {
+        List<Ferme> fermes = fermeRepository.findAllByOrderByScoreDesc();
+        List<Map<String, Object>> classement = fermes.stream().map(f -> {
+            Map<String, Object> entry = new HashMap<>();
+            entry.put("name", f.getNom());
+            entry.put("score", f.getScore());
+            entry.put("money", f.getSoldeEcus());
+            entry.put("capacity", animalRepository.findByFerme_IdFerme(f.getIdFerme()).size());
+            return entry;
+        }).toList();
+        return ResponseEntity.ok(classement);
     }
 
     //Gestion des erreurs
