@@ -1,9 +1,13 @@
 package com.farm.tinyfarm.controller;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -39,6 +43,17 @@ public class MarcheController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping
+    public ResponseEntity<List<Map<String, Object>>> getOffres() {
+        return ResponseEntity.ok(marcheService.getOffresPourFront());
+    }
+
+    @DeleteMapping
+    public ResponseEntity<Void> resetOffres() {
+        marcheService.reset();
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Marche> getById(@PathVariable Integer id) {
         Marche marche = marcheService.getById(id);
@@ -53,5 +68,15 @@ public class MarcheController {
     ) {
         marcheService.transaction(idFerme, idOffre, quantite);
         return ResponseEntity.ok("Transaction effectuee avec succes");
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<String> handleRuntime(RuntimeException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<String> handleIllegal(IllegalArgumentException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }
 }

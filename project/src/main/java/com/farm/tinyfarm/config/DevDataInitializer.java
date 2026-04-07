@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.farm.tinyfarm.model.Ferme;
+import com.farm.tinyfarm.model.TypeStock;
 import com.farm.tinyfarm.model.Utilisateur;
 import com.farm.tinyfarm.repository.FermeRepository;
 import com.farm.tinyfarm.repository.UtilisateurRepository;
@@ -71,6 +72,52 @@ public class DevDataInitializer {
             remiseService.getOrCreateByFermeId(utilisateur.getFerme().getIdFerme());
         }
 
+        seedDemoFarmState(username, utilisateur.getFerme(), fermeRepository, remiseService);
         utilisateurRepository.save(utilisateur);
+    }
+
+    private void seedDemoFarmState(
+        String username,
+        Ferme ferme,
+        FermeRepository fermeRepository,
+        RemiseService remiseService
+    ) {
+        if (ferme == null) {
+            return;
+        }
+
+        if ("a".equals(username)) {
+            ferme.setNbPoules(Math.max(ferme.getNbPoules() == null ? 0 : ferme.getNbPoules(), 3));
+            ferme.setNbLapins(Math.max(ferme.getNbLapins() == null ? 0 : ferme.getNbLapins(), 3));
+            fermeRepository.save(ferme);
+            ensureMinimumStock(remiseService, ferme.getIdFerme(), TypeStock.OEUF, 6);
+            ensureMinimumStock(remiseService, ferme.getIdFerme(), TypeStock.NOURRITURE, 2);
+            return;
+        }
+
+        if ("b".equals(username)) {
+            ferme.setNbPoules(Math.max(ferme.getNbPoules() == null ? 0 : ferme.getNbPoules(), 3));
+            ferme.setNbLapins(Math.max(ferme.getNbLapins() == null ? 0 : ferme.getNbLapins(), 2));
+            fermeRepository.save(ferme);
+            ensureMinimumStock(remiseService, ferme.getIdFerme(), TypeStock.OEUF, 4);
+            ensureMinimumStock(remiseService, ferme.getIdFerme(), TypeStock.SAVON, 1);
+        }
+    }
+
+    private void ensureMinimumStock(RemiseService remiseService, Integer fermeId, TypeStock typeStock, int minimum) {
+        int stockActuel = switch (typeStock) {
+            case OEUF -> remiseService.getById(fermeId).getStockOeuf();
+            case LAIT -> remiseService.getById(fermeId).getStockLait();
+            case LAPIN -> remiseService.getById(fermeId).getStockLapin();
+            case NOURRITURE -> remiseService.getById(fermeId).getStockNourriture();
+            case EAU -> remiseService.getById(fermeId).getStockEau();
+            case PAILLE -> remiseService.getById(fermeId).getStockPaille();
+            case SAVON -> remiseService.getById(fermeId).getStockSavon();
+            case SERINGUE -> remiseService.getById(fermeId).getStockSeringue();
+        };
+
+        if (stockActuel < minimum) {
+            remiseService.ajouterStock(fermeId, typeStock, minimum - stockActuel);
+        }
     }
 }

@@ -2031,6 +2031,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (marcheVenteSubmit) {
     marcheVenteSubmit.addEventListener("click", async () => {
+      if (marcheVenteSubmit.disabled) {
+        return
+      }
+
       const product = marcheVenteProduit?.value || ""
       const quantity = Math.max(1, Number.parseInt(marcheVenteQuantite?.value, 10) || 1)
       const unitPrice = Math.max(1, Number.parseInt(marcheVentePrix?.value, 10) || 1)
@@ -2039,6 +2043,7 @@ document.addEventListener("DOMContentLoaded", () => {
       marketSaleState.unitPrice = unitPrice
 
       try {
+        marcheVenteSubmit.disabled = true
         setMarcheFeedback(marcheVenteFeedback)
         const farmData = await publierOffreMarche(product, quantity, unitPrice)
         applyFarmData(farmData)
@@ -2049,6 +2054,8 @@ document.addEventListener("DOMContentLoaded", () => {
       } catch (error) {
         console.error("Erreur lors de la mise en vente :", error)
         setMarcheFeedback(marcheVenteFeedback, error.message || "Mise en vente impossible.", "is-error")
+      } finally {
+        updateMarcheVenteSelection()
       }
     })
   }

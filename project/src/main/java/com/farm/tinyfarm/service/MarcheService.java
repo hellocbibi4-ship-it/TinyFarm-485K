@@ -56,17 +56,30 @@ public class MarcheService {
             remiseService.retirerStock(fermeId, typeStock, quantite);
         }
 
-        Marche marche = new Marche();
-        marche.setFerme(ferme);
-        marche.setProduit(toMarcheProductValue(typeStock));
-        marche.setQuantite(quantite);
-        marche.setPrix(prix);
+        String produitNormalise = toMarcheProductValue(typeStock);
+        Marche marche = marcheRepository
+            .findByFerme_IdFermeAndProduitAndPrixUnitaire(fermeId, produitNormalise, prix)
+            .orElseGet(() -> {
+                Marche nouvelleOffre = new Marche();
+                nouvelleOffre.setFerme(ferme);
+                nouvelleOffre.setProduit(produitNormalise);
+                nouvelleOffre.setPrix(prix);
+                nouvelleOffre.setQuantite(0);
+                return nouvelleOffre;
+            });
+
+        marche.setQuantite((marche.getQuantite() == null ? 0 : marche.getQuantite()) + quantite);
         return marcheRepository.save(marche);
     }
 
     public Marche getById(Integer id) {
         return marcheRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Offre introuvable"));
+    }
+
+    @Transactional
+    public void reset() {
+        marcheRepository.deleteAll();
     }
 
     @Transactional

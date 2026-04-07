@@ -4320,3 +4320,150 @@ select r1_0.ferme_id_ferme,f1_0.id_ferme,f1_0.date_creation,f1_0.derniere_co,f1_
 	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1365)
 	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1354)
 	at com.farm.tinyfarm.TinyfarmApplication.main(TinyfarmApplication.java:10)
+2026-04-07 22:18:56.998281+02:00 database: close
+org.h2.message.DbException: IO Exception: "Closing"
+IO Exception: "Closing" [90028-240]
+	at org.h2.message.DbException.get(DbException.java:212)
+	at org.h2.mvstore.db.Store.close(Store.java:352)
+	at org.h2.engine.Database.closeOpenFilesAndUnlock(Database.java:1314)
+	at org.h2.engine.Database.closeImpl(Database.java:1276)
+	at org.h2.engine.Database.close(Database.java:1195)
+	at org.h2.engine.Database.onShutdown(Database.java:1180)
+	at org.h2.engine.OnExitDatabaseCloser.onShutdown(OnExitDatabaseCloser.java:85)
+	at org.h2.engine.OnExitDatabaseCloser.run(OnExitDatabaseCloser.java:114)
+Caused by: org.h2.jdbc.JdbcSQLNonTransientException: IO Exception: "Closing"
+IO Exception: "Closing" [90028-240]
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:566)
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:489)
+	... 8 more
+Caused by: org.h2.mvstore.MVStoreException: java.lang.AssertionError: 19 [2.4.240/3]
+	at org.h2.mvstore.DataUtils.newMVStoreException(DataUtils.java:996)
+	at org.h2.mvstore.MVStore.executeFilestoreOperation(MVStore.java:1048)
+	at org.h2.mvstore.RandomAccessStore.compactMoveChunks(RandomAccessStore.java:463)
+	at org.h2.mvstore.RandomAccessStore.compactStore(RandomAccessStore.java:443)
+	at org.h2.mvstore.FileStore.compactStore(FileStore.java:891)
+	at org.h2.mvstore.FileStore.stop(FileStore.java:275)
+	at org.h2.mvstore.MVStore.closeStore(MVStore.java:803)
+	at org.h2.mvstore.MVStore.close(MVStore.java:763)
+	at org.h2.mvstore.db.Store.close(Store.java:348)
+	... 6 more
+Caused by: java.lang.AssertionError: 19
+	at org.h2.mvstore.FreeSpaceBitSet.allocate(FreeSpaceBitSet.java:153)
+	at org.h2.mvstore.FreeSpaceBitSet.predictAllocation(FreeSpaceBitSet.java:133)
+	at org.h2.mvstore.RandomAccessStore.predictAllocation(RandomAccessStore.java:101)
+	at org.h2.mvstore.RandomAccessStore.moveChunkInside(RandomAccessStore.java:628)
+	at org.h2.mvstore.RandomAccessStore.compactMoveChunks(RandomAccessStore.java:569)
+	at org.h2.mvstore.RandomAccessStore.compactMoveChunks(RandomAccessStore.java:481)
+	at org.h2.mvstore.RandomAccessStore.lambda$compactMoveChunks$1(RandomAccessStore.java:468)
+	at org.h2.mvstore.FileStore.executeFileStoreOperation(FileStore.java:1894)
+	at org.h2.mvstore.MVStore.executeFilestoreOperation(MVStore.java:1044)
+	... 13 more
+2026-04-07 22:25:25.613758+02:00 database: close
+org.h2.message.DbException: IO Exception: "Closing"
+IO Exception: "Closing" [90028-240]
+	at org.h2.message.DbException.get(DbException.java:212)
+	at org.h2.mvstore.db.Store.close(Store.java:352)
+	at org.h2.engine.Database.closeOpenFilesAndUnlock(Database.java:1314)
+	at org.h2.engine.Database.closeImpl(Database.java:1276)
+	at org.h2.engine.Database.close(Database.java:1195)
+	at org.h2.engine.Database.onShutdown(Database.java:1180)
+	at org.h2.engine.OnExitDatabaseCloser.onShutdown(OnExitDatabaseCloser.java:85)
+	at org.h2.engine.OnExitDatabaseCloser.run(OnExitDatabaseCloser.java:114)
+Caused by: org.h2.jdbc.JdbcSQLNonTransientException: IO Exception: "Closing"
+IO Exception: "Closing" [90028-240]
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:566)
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:489)
+	... 8 more
+Caused by: org.h2.mvstore.MVStoreException: java.lang.AssertionError: 17 [2.4.240/3]
+	at org.h2.mvstore.DataUtils.newMVStoreException(DataUtils.java:996)
+	at org.h2.mvstore.MVStore.executeFilestoreOperation(MVStore.java:1048)
+	at org.h2.mvstore.RandomAccessStore.compactMoveChunks(RandomAccessStore.java:463)
+	at org.h2.mvstore.RandomAccessStore.compactStore(RandomAccessStore.java:443)
+	at org.h2.mvstore.FileStore.compactStore(FileStore.java:891)
+	at org.h2.mvstore.FileStore.stop(FileStore.java:275)
+	at org.h2.mvstore.MVStore.closeStore(MVStore.java:803)
+	at org.h2.mvstore.MVStore.close(MVStore.java:763)
+	at org.h2.mvstore.db.Store.close(Store.java:348)
+	... 6 more
+Caused by: java.lang.AssertionError: 17
+	at org.h2.mvstore.FreeSpaceBitSet.allocate(FreeSpaceBitSet.java:153)
+	at org.h2.mvstore.FreeSpaceBitSet.predictAllocation(FreeSpaceBitSet.java:133)
+	at org.h2.mvstore.RandomAccessStore.predictAllocation(RandomAccessStore.java:101)
+	at org.h2.mvstore.RandomAccessStore.moveChunkInside(RandomAccessStore.java:628)
+	at org.h2.mvstore.RandomAccessStore.compactMoveChunks(RandomAccessStore.java:569)
+	at org.h2.mvstore.RandomAccessStore.compactMoveChunks(RandomAccessStore.java:481)
+	at org.h2.mvstore.RandomAccessStore.lambda$compactMoveChunks$1(RandomAccessStore.java:468)
+	at org.h2.mvstore.FileStore.executeFileStoreOperation(FileStore.java:1894)
+	at org.h2.mvstore.MVStore.executeFilestoreOperation(MVStore.java:1044)
+	... 13 more
+2026-04-07 22:33:06.944269+02:00 database: flush
+org.h2.message.DbException: Erreur générale: "org.h2.mvstore.MVStoreException: The file is locked: C:/Users/rapha/TinyFarm-485K/project/data/tinyfarm-db.mv.db [2.4.240/7]"
+General error: "org.h2.mvstore.MVStoreException: The file is locked: C:/Users/rapha/TinyFarm-485K/project/data/tinyfarm-db.mv.db [2.4.240/7]" [50000-240]
+	at org.h2.message.DbException.get(DbException.java:212)
+	at org.h2.message.DbException.convert(DbException.java:407)
+	at org.h2.mvstore.db.Store.lambda$new$0(Store.java:122)
+	at org.h2.mvstore.MVStore.handleException(MVStore.java:1675)
+	at org.h2.mvstore.MVStore.panic(MVStore.java:502)
+	at org.h2.mvstore.MVStore.<init>(MVStore.java:296)
+	at org.h2.mvstore.MVStore$Builder.open(MVStore.java:2164)
+	at org.h2.mvstore.db.Store.<init>(Store.java:133)
+	at org.h2.engine.Database.<init>(Database.java:328)
+	at org.h2.engine.Engine.openSession(Engine.java:92)
+	at org.h2.engine.Engine.openSession(Engine.java:222)
+	at org.h2.engine.Engine.createSession(Engine.java:201)
+	at org.h2.engine.SessionRemote.connectEmbeddedOrServer(SessionRemote.java:350)
+	at org.h2.jdbc.JdbcConnection.<init>(JdbcConnection.java:124)
+	at org.h2.Driver.connect(Driver.java:59)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:613)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:199)
+	at CheckMarketCount.main(CheckMarketCount.java:5)
+Caused by: org.h2.jdbc.JdbcSQLNonTransientException: Erreur générale: "org.h2.mvstore.MVStoreException: The file is locked: C:/Users/rapha/TinyFarm-485K/project/data/tinyfarm-db.mv.db [2.4.240/7]"
+General error: "org.h2.mvstore.MVStoreException: The file is locked: C:/Users/rapha/TinyFarm-485K/project/data/tinyfarm-db.mv.db [2.4.240/7]" [50000-240]
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:566)
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:489)
+	... 18 more
+Caused by: org.h2.mvstore.MVStoreException: The file is locked: C:/Users/rapha/TinyFarm-485K/project/data/tinyfarm-db.mv.db [2.4.240/7]
+	at org.h2.mvstore.DataUtils.newMVStoreException(DataUtils.java:996)
+	at org.h2.mvstore.SingleFileStore.lockFileChannel(SingleFileStore.java:143)
+	at org.h2.mvstore.SingleFileStore.open(SingleFileStore.java:117)
+	at org.h2.mvstore.SingleFileStore.open(SingleFileStore.java:81)
+	at org.h2.mvstore.MVStore.<init>(MVStore.java:291)
+	... 12 more
+2026-04-07 22:59:16.630746+02:00 database: close
+org.h2.message.DbException: IO Exception: "Closing"
+IO Exception: "Closing" [90028-240]
+	at org.h2.message.DbException.get(DbException.java:212)
+	at org.h2.mvstore.db.Store.close(Store.java:352)
+	at org.h2.engine.Database.closeOpenFilesAndUnlock(Database.java:1314)
+	at org.h2.engine.Database.closeImpl(Database.java:1276)
+	at org.h2.engine.Database.close(Database.java:1195)
+	at org.h2.engine.Database.onShutdown(Database.java:1180)
+	at org.h2.engine.OnExitDatabaseCloser.onShutdown(OnExitDatabaseCloser.java:85)
+	at org.h2.engine.OnExitDatabaseCloser.run(OnExitDatabaseCloser.java:114)
+Caused by: org.h2.jdbc.JdbcSQLNonTransientException: IO Exception: "Closing"
+IO Exception: "Closing" [90028-240]
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:566)
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:489)
+	... 8 more
+Caused by: org.h2.mvstore.MVStoreException: java.lang.AssertionError: 19 [2.4.240/3]
+	at org.h2.mvstore.DataUtils.newMVStoreException(DataUtils.java:996)
+	at org.h2.mvstore.MVStore.executeFilestoreOperation(MVStore.java:1048)
+	at org.h2.mvstore.RandomAccessStore.compactMoveChunks(RandomAccessStore.java:463)
+	at org.h2.mvstore.RandomAccessStore.compactStore(RandomAccessStore.java:443)
+	at org.h2.mvstore.FileStore.compactStore(FileStore.java:891)
+	at org.h2.mvstore.FileStore.stop(FileStore.java:275)
+	at org.h2.mvstore.MVStore.closeStore(MVStore.java:803)
+	at org.h2.mvstore.MVStore.close(MVStore.java:763)
+	at org.h2.mvstore.db.Store.close(Store.java:348)
+	... 6 more
+Caused by: java.lang.AssertionError: 19
+	at org.h2.mvstore.FreeSpaceBitSet.allocate(FreeSpaceBitSet.java:153)
+	at org.h2.mvstore.FreeSpaceBitSet.predictAllocation(FreeSpaceBitSet.java:133)
+	at org.h2.mvstore.RandomAccessStore.predictAllocation(RandomAccessStore.java:101)
+	at org.h2.mvstore.RandomAccessStore.moveChunkInside(RandomAccessStore.java:628)
+	at org.h2.mvstore.RandomAccessStore.compactMoveChunks(RandomAccessStore.java:569)
+	at org.h2.mvstore.RandomAccessStore.compactMoveChunks(RandomAccessStore.java:481)
+	at org.h2.mvstore.RandomAccessStore.lambda$compactMoveChunks$1(RandomAccessStore.java:468)
+	at org.h2.mvstore.FileStore.executeFileStoreOperation(FileStore.java:1894)
+	at org.h2.mvstore.MVStore.executeFilestoreOperation(MVStore.java:1044)
+	... 13 more
