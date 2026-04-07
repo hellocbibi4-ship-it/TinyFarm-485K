@@ -36,6 +36,13 @@ public class Ferme{
     private Integer nbVaches = 1;
     private Integer nbPoules = 3;
     private Integer nbLapins = 2;
+    private Integer nbLapinsMalades = 0;
+    private Integer nbVachesAffamees = 0;
+    private Integer nbVachesAssoiffees = 0;
+    private Integer nbPouleAffamees = 0;
+    private Integer nbPouleAssoiffees = 0;
+    private Integer nbLapinsAffames = 0;
+    private Integer nbLapinsAssoiffes = 0;
     @OneToOne(mappedBy = "ferme", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore
     private Remise remise;

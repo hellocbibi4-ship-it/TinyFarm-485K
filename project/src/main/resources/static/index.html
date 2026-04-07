@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TinyFarm - Front Merge</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=4">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=ADLaM+Display&display=swap" rel="stylesheet">
@@ -37,6 +37,12 @@
 
         <button id="login-btn" class="login-btn" type="button" aria-label="Entrer dans la ferme"></button>
 
+        <div class="login-shortcut-panel">
+            <p class="login-shortcut-text">Connexion rapide :</p>
+            <button id="login-shortcut-a" class="auth-submit auth-submit--demo" type="button">Connexion A</button>
+            <button id="login-shortcut-b" class="auth-submit auth-submit--demo" type="button">Connexion B</button>
+        </div>
+
         <div id="login-modal" class="auth-modal hidden" aria-hidden="true">
             <div class="auth-modal-backdrop" data-close-login-modal></div>
             <div class="auth-modal-card" role="dialog" aria-modal="true" aria-labelledby="login-modal-title">
@@ -52,8 +58,13 @@
                     <input id="login-password" class="auth-input" name="password" type="password" autocomplete="current-password" required>
 
                     <p id="login-feedback" class="auth-feedback" aria-live="polite"></p>
+                    <p class="auth-note">Identifiants de démo : <strong>a / a1</strong> ou <strong>b / b2</strong></p>
 
                     <button id="login-submit" class="auth-submit" type="submit">Accepter</button>
+                    <div class="demo-login-row">
+                        <button id="demo-login-a" class="auth-submit auth-submit--demo" type="button">Connexion A</button>
+                        <button id="demo-login-b" class="auth-submit auth-submit--demo" type="button">Connexion B</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -114,6 +125,7 @@
             <p id="farm-owner-name" class="farm-owner-value">-</p>
             <p class="farm-owner-label farm-owner-label--money">Argent :</p>
             <p id="farm-owner-balance" class="farm-owner-value">0</p>
+            <p id="farm-data-status" class="farm-data-status">Aucune donnée de ferme chargée.</p>
         </aside>
 
         <div class="farm-canvas" aria-label="Zones de la ferme">
@@ -234,7 +246,7 @@
 
         <aside id="collectivite-panel" class="collectivite-panel" aria-labelledby="collectivite-title">
             <div class="collectivite-panel-inner">
-                <h2 id="collectivite-title" class="collectivite-title">Collectivite</h2>
+                <h2 id="collectivite-title" class="collectivite-title">Collectivité</h2>
                 <div id="collectivite-list" class="collectivite-list"></div>
                 <p id="collectivite-feedback" class="collectivite-feedback" aria-live="polite"></p>
             </div>
@@ -242,7 +254,7 @@
 
         <section id="popup-achat" class="popup-achat hidden" role="dialog" aria-modal="true" aria-labelledby="titre-popup">
             <header class="entete-bois">
-                <h2 id="titre-popup">Achat animaux</h2>
+                <h2 id="titre-popup">Achat d'animaux</h2>
             </header>
 
             <p class="ligne-solde">Solde : <span id="solde-ecus">120</span> <span class="piece" aria-hidden="true"></span></p>
@@ -296,7 +308,7 @@
                 <button id="bouton-fermer-marche" class="popup-marche-fermer" type="button" aria-label="Fermer">X</button>
             </header>
 
-            <div class="popup-marche-onglets" role="tablist" aria-label="Sections du marche">
+            <div class="popup-marche-onglets" role="tablist" aria-label="Sections du marché">
                 <button
                     id="marche-tab-achat"
                     class="popup-marche-onglet is-active"
@@ -321,7 +333,7 @@
 
             <div class="popup-marche-contenu">
                 <section class="popup-marche-panneau is-active" data-marche-panel="achat">
-                    <p class="popup-marche-texte">Achete les offres publiees par les autres fermes.</p>
+                    <p class="popup-marche-texte">Achète les offres publiées par les autres fermes.</p>
                     <p id="marche-achat-feedback" class="popup-marche-feedback" aria-live="polite"></p>
                     <div class="popup-marche-table-shell">
                         <table class="popup-marche-table">
@@ -331,7 +343,7 @@
                                     <th>Produit</th>
                                     <th>Dispo</th>
                                     <th>Prix/u</th>
-                                    <th>Quantite</th>
+                                    <th>Quantité</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -340,7 +352,7 @@
                     </div>
                 </section>
                 <section class="popup-marche-panneau" data-marche-panel="vente">
-                    <p class="popup-marche-texte">Depose une offre a partir du stock de ta ferme.</p>
+                    <p class="popup-marche-texte">Dépose une offre à partir du stock de ta ferme.</p>
                     <p id="marche-vente-feedback" class="popup-marche-feedback" aria-live="polite"></p>
                     <div class="popup-marche-vente-form">
                         <label class="popup-marche-form-label" for="marche-vente-produit">Produit</label>
@@ -351,7 +363,7 @@
                             <span id="marche-vente-stock">0</span>
                         </p>
 
-                        <label class="popup-marche-form-label" for="marche-vente-quantite">Quantite</label>
+                        <label class="popup-marche-form-label" for="marche-vente-quantite">Quantité</label>
                         <input id="marche-vente-quantite" class="popup-marche-number" type="number" min="1" value="1">
 
                         <label class="popup-marche-form-label" for="marche-vente-prix">Prix unitaire</label>
@@ -372,16 +384,22 @@
                     <h2 id="animal-name">Animal</h2>
                     <button type="button" class="close-btn" data-close-modal aria-label="Fermer">X</button>
                 </div>
-                <div class="modal-info">
-                    <p><span class="info-label">Type :</span> <span id="animal-type">-</span></p>
-                    <p><span class="info-label">Lieu :</span> <span id="animal-place">-</span></p>
-                    <p><span id="animal-weight-label" class="info-label">Poids :</span> <span id="animal-weight">-</span></p>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="action-btn" data-action="Nourrir">Nourrir</button>
-                    <button type="button" class="action-btn" data-action="Abreuver">Abreuver</button>
-                    <button type="button" class="action-btn" data-action="Soigner">Soigner</button>
-                    <button type="button" class="action-btn" data-action="Nettoyer">Nettoyer</button>
+                <div class="modal-body">
+                    <div class="modal-info">
+                        <p><span class="info-label">Type :</span> <span id="animal-type">-</span></p>
+                        <p><span class="info-label">Lieu :</span> <span id="animal-place">-</span></p>
+                        <p><span class="info-label">Statut :</span> <span id="animal-status">-</span></p>
+                        <p><span class="info-label">Santé :</span> <span id="animal-health">-</span></p>
+                        <p><span class="info-label">Faim :</span> <span id="animal-hunger">-</span></p>
+                        <p><span class="info-label">Hydratation :</span> <span id="animal-hydration">-</span></p>
+                        <p><span id="animal-weight-label" class="info-label">Poids :</span> <span id="animal-weight">-</span></p>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="action-btn" data-action="Nourrir">Nourrir</button>
+                        <button type="button" class="action-btn" data-action="Abreuver">Abreuver</button>
+                        <button type="button" class="action-btn" data-action="Soigner">Soigner</button>
+                        <button type="button" class="action-btn" data-action="Nettoyer">Nettoyer</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -409,7 +427,32 @@
         </div>
     </section>
 
-    <script src="js/farm-state.js"></script>
-    <script src="js/script.js"></script>
+    <div id="poulailler-list-modal" class="modal hidden" aria-hidden="true">
+        <div class="modal-backdrop" data-close-modal></div>
+        <div class="modal-card modal-card--wide" role="dialog" aria-modal="true" aria-labelledby="poulailler-list-title">
+            <div class="modal-header">
+                <h2 id="poulailler-list-title">Poulailler</h2>
+                <button type="button" class="close-btn" data-close-modal aria-label="Fermer">X</button>
+            </div>
+            <div class="modal-body">
+                <table class="poulailler-table">
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>État</th>
+                            <th>Santé</th>
+                            <th>Faim</th>
+                            <th>Hydratation</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="poulailler-list-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/farm-state.js?v=4"></script>
+    <script src="js/script.js?v=4"></script>
 </body>
 </html>

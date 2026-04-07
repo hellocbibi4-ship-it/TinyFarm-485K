@@ -123,6 +123,7 @@
     return {
       id: `base-${typeKey}-${index + 1}`,
       name: rawAnimal?.name || `${catalogEntry.label} ${index + 1}`,
+      type: typeKey,
       typeKey,
       typeLabel: catalogEntry.label,
       homeLabel: catalogEntry.home,
@@ -153,6 +154,7 @@
         return {
           id: `purchase-${typeKey}-${displayIndex}`,
           name: `${catalogEntry.label} ${displayIndex}`,
+          type: typeKey,
           typeKey,
           typeLabel: catalogEntry.label,
           homeLabel: catalogEntry.home,

@@ -6,6 +6,7 @@ import com.farm.tinyfarm.model.TypeStock;
 import com.farm.tinyfarm.service.FermeService;
 import com.farm.tinyfarm.service.MarcheService;
 import com.farm.tinyfarm.service.RemiseService;
+import com.farm.tinyfarm.repository.FermeRepository;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,11 +32,13 @@ public class FermeController {
     private final FermeService fermeService;
     private final RemiseService remiseService;
     private final MarcheService marcheService;
+    private final FermeRepository fermeRepository;
 
-    public FermeController(FermeService fermeService, RemiseService remiseService, MarcheService marcheService) {
+    public FermeController(FermeService fermeService, RemiseService remiseService, MarcheService marcheService, FermeRepository fermeRepository) {
         this.fermeService = fermeService;
         this.remiseService = remiseService;
         this.marcheService = marcheService;
+        this.fermeRepository = fermeRepository;
     }
 
     @PostMapping
@@ -120,6 +123,150 @@ public class FermeController {
         return ResponseEntity.ok(message);
     }
 
+    @GetMapping("/{id}/animaux/clapier")
+    public ResponseEntity<Map<String, Integer>> getClapierStatus(@PathVariable Integer id) {
+        Ferme ferme = fermeService.getById(id);
+        Map<String, Integer> response = new HashMap<>();
+        response.put("totalLapins", ferme.getNbLapins() == null ? 0 : ferme.getNbLapins());
+        response.put("sickLapins", ferme.getNbLapinsMalades() == null ? 0 : ferme.getNbLapinsMalades());
+        response.put("hungryLapins", ferme.getNbLapinsAffames() == null ? 0 : ferme.getNbLapinsAffames());
+        response.put("thirstyLapins", ferme.getNbLapinsAssoiffes() == null ? 0 : ferme.getNbLapinsAssoiffes());
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{id}/animaux/{type}/status")
+    public ResponseEntity<Map<String, Integer>> getAnimalTypeStatus(@PathVariable Integer id, @PathVariable String type) {
+        Ferme ferme = fermeService.getById(id);
+        Map<String, Integer> response = new HashMap<>();
+        String normalized = type.toLowerCase().trim();
+
+        switch (normalized) {
+            case "vache":
+            case "vaches":
+                response.put("total", ferme.getNbVaches() == null ? 0 : ferme.getNbVaches());
+                response.put("hungry", ferme.getNbVachesAffamees() == null ? 0 : ferme.getNbVachesAffamees());
+                response.put("thirsty", ferme.getNbVachesAssoiffees() == null ? 0 : ferme.getNbVachesAssoiffees());
+                break;
+            case "poule":
+            case "poules":
+                response.put("total", ferme.getNbPoules() == null ? 0 : ferme.getNbPoules());
+                response.put("hungry", ferme.getNbPouleAffamees() == null ? 0 : ferme.getNbPouleAffamees());
+                response.put("thirsty", ferme.getNbPouleAssoiffees() == null ? 0 : ferme.getNbPouleAssoiffees());
+                break;
+            case "lapin":
+            case "lapins":
+                response.put("total", ferme.getNbLapins() == null ? 0 : ferme.getNbLapins());
+                response.put("hungry", ferme.getNbLapinsAffames() == null ? 0 : ferme.getNbLapinsAffames());
+                response.put("thirsty", ferme.getNbLapinsAssoiffes() == null ? 0 : ferme.getNbLapinsAssoiffes());
+                break;
+            default:
+                return ResponseEntity.badRequest().build();
+        }
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{id}/animaux/{type}/feed")
+    public ResponseEntity<Map<String, Object>> feedAnimals(@PathVariable Integer id, @PathVariable String type) {
+        Ferme ferme = fermeService.getById(id);
+        String normalized = type.toLowerCase().trim();
+
+        int cost = 5;
+        if (ferme.getSoldeEcus() < cost) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Solde insuffisant"));
+        }
+
+        ferme.setSoldeEcus(ferme.getSoldeEcus() - cost);
+
+        switch (normalized) {
+            case "vache":
+            case "vaches":
+                ferme.setNbVachesAffamees(Math.max(0, (ferme.getNbVachesAffamees() == null ? 0 : ferme.getNbVachesAffamees()) - 1));
+                break;
+            case "poule":
+            case "poules":
+                ferme.setNbPouleAffamees(Math.max(0, (ferme.getNbPouleAffamees() == null ? 0 : ferme.getNbPouleAffamees()) - 1));
+                break;
+            case "lapin":
+            case "lapins":
+                ferme.setNbLapinsAffames(Math.max(0, (ferme.getNbLapinsAffames() == null ? 0 : ferme.getNbLapinsAffames()) - 1));
+                break;
+            default:
+                return ResponseEntity.badRequest().build();
+        }
+
+        fermeRepository.save(ferme);
+        return ResponseEntity.ok(buildFrontData(ferme));
+    }
+
+    @PostMapping("/{id}/animaux/{type}/water")
+    public ResponseEntity<Map<String, Object>> waterAnimals(@PathVariable Integer id, @PathVariable String type) {
+        Ferme ferme = fermeService.getById(id);
+        String normalized = type.toLowerCase().trim();
+
+        int cost = 2;
+        if (ferme.getSoldeEcus() < cost) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Solde insuffisant"));
+        }
+
+        ferme.setSoldeEcus(ferme.getSoldeEcus() - cost);
+
+        switch (normalized) {
+            case "vache":
+            case "vaches":
+                ferme.setNbVachesAssoiffees(Math.max(0, (ferme.getNbVachesAssoiffees() == null ? 0 : ferme.getNbVachesAssoiffees()) - 1));
+                break;
+            case "poule":
+            case "poules":
+                ferme.setNbPouleAssoiffees(Math.max(0, (ferme.getNbPouleAssoiffees() == null ? 0 : ferme.getNbPouleAssoiffees()) - 1));
+                break;
+            case "lapin":
+            case "lapins":
+                ferme.setNbLapinsAssoiffes(Math.max(0, (ferme.getNbLapinsAssoiffes() == null ? 0 : ferme.getNbLapinsAssoiffes()) - 1));
+                break;
+            default:
+                return ResponseEntity.badRequest().build();
+        }
+
+        fermeRepository.save(ferme);
+        return ResponseEntity.ok(buildFrontData(ferme));
+    }
+
+    @PostMapping("/{id}/animaux/{type}/heal")
+    public ResponseEntity<Map<String, Object>> healAnimals(@PathVariable Integer id, @PathVariable String type) {
+        Ferme ferme = fermeService.getById(id);
+        String normalized = type.toLowerCase().trim();
+
+        int cost = 6;
+        if (ferme.getSoldeEcus() < cost) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Solde insuffisant"));
+        }
+
+        ferme.setSoldeEcus(ferme.getSoldeEcus() - cost);
+
+        if ("lapin".equals(normalized) || "lapins".equals(normalized)) {
+            ferme.setNbLapinsMalades(Math.max(0, (ferme.getNbLapinsMalades() == null ? 0 : ferme.getNbLapinsMalades()) - 1));
+        }
+
+        fermeRepository.save(ferme);
+        return ResponseEntity.ok(buildFrontData(ferme));
+    }
+
+    @PostMapping("/{id}/animaux/{type}/clean")
+    public ResponseEntity<Map<String, Object>> cleanAnimals(@PathVariable Integer id, @PathVariable String type) {
+        Ferme ferme = fermeService.getById(id);
+        String normalized = type.toLowerCase().trim();
+
+        int cost = 3;
+        if (ferme.getSoldeEcus() < cost) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Solde insuffisant"));
+        }
+
+        ferme.setSoldeEcus(ferme.getSoldeEcus() - cost);
+        fermeRepository.save(ferme);
+        return ResponseEntity.ok(buildFrontData(ferme));
+    }
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<String> handleRuntime(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
@@ -132,10 +279,53 @@ public class FermeController {
 
     private List<Map<String, Object>> buildAnimals(Ferme ferme) {
         List<Map<String, Object>> animals = new ArrayList<>();
-        addAnimals(animals, "Vache", "vache.png", 520, ferme.getNbVaches(), "Bella");
-        addAnimals(animals, "Poule", "poule.png", 1.5, ferme.getNbPoules(), "Poule");
-        addAnimals(animals, "Lapin", "lapin.png", 2.0, ferme.getNbLapins(), "Lapin");
+        addAnimalEntries(animals, "vache", "Vache", "vache.png", "Paturage", ferme.getNbVaches(), 500f, "Adulte");
+        addAnimalEntries(animals, "poule", "Poule", "poule.png", "Poulailler", ferme.getNbPoules(), 2f, "Adulte");
+        addAnimalEntries(animals, "lapin", "Lapin", "lapin.png", "Clapier", ferme.getNbLapins(), 2f, "Adulte");
         return animals;
+    }
+
+    private void addAnimalEntries(
+        List<Map<String, Object>> animals,
+        String type,
+        String typeLabel,
+        String image,
+        String homeLabel,
+        Integer count,
+        float defaultWeight,
+        String defaultStage
+    ) {
+        int total = count == null ? 0 : count;
+        for (int i = 0; i < total; i++) {
+            animals.add(createAnimalData(type, typeLabel, image, homeLabel, i + 1, defaultWeight, defaultStage));
+        }
+    }
+
+    private Map<String, Object> createAnimalData(
+        String type,
+        String typeLabel,
+        String image,
+        String homeLabel,
+        int index,
+        float weight,
+        String stage
+    ) {
+        Map<String, Object> animal = new HashMap<>();
+        animal.put("id", type + "-" + index);
+        animal.put("name", typeLabel + " " + index);
+        animal.put("type", type);
+        animal.put("typeLabel", typeLabel);
+        animal.put("homeLabel", homeLabel);
+        animal.put("img", image);
+        animal.put("weight", weight);
+        animal.put("age", 1);
+        animal.put("stage", stage);
+        animal.put("status", "En bonne santé");
+        animal.put("health", 100);
+        animal.put("hunger", 100);
+        animal.put("hydration", 100);
+        animal.put("cleanliness", 100);
+        return animal;
     }
 
     private Map<String, Object> buildFrontData(Ferme ferme) {
@@ -150,6 +340,10 @@ public class FermeController {
         response.put("stockInventory", buildStockInventory(ferme, remise));
         response.put("careInventory", buildCareInventory(remise));
         response.put("gameTime", buildGameTime(ferme));
+        response.put("rabbitHealth", Map.of(
+            "totalLapins", ferme.getNbLapins() == null ? 0 : ferme.getNbLapins(),
+            "sickLapins", ferme.getNbLapinsMalades() == null ? 0 : ferme.getNbLapinsMalades()
+        ));
         response.put("communityItems", buildCommunityItems());
         response.put("ranking", fermeService.getClassementData());
         response.put("marketOffers", marcheService.getOffresPourFront());
@@ -208,8 +402,8 @@ public class FermeController {
         items.add(createCommunityItem("syringe", "Seringue", remiseService.getCout(TypeStock.SERINGUE)));
         items.add(createCommunityItem("water-bucket", "Seau d'eau", remiseService.getCout(TypeStock.EAU)));
         items.add(createCommunityItem("soap", "Savon", remiseService.getCout(TypeStock.SAVON)));
-        items.add(createShortcutItem("buy-animals", "Achat animaux"));
-        items.add(createShortcutItem("farmers-market", "Marche des producteurs"));
+        items.add(createShortcutItem("buy-animals", "Achat d'animaux"));
+        items.add(createShortcutItem("farmers-market", "Marché des producteurs"));
         return items;
     }
 
@@ -233,24 +427,5 @@ public class FermeController {
         row.put("label", label);
         row.put("quantity", quantity == null ? 0 : quantity);
         return row;
-    }
-
-    private void addAnimals(
-        List<Map<String, Object>> animals,
-        String type,
-        String img,
-        double weight,
-        Integer count,
-        String namePrefix
-    ) {
-        int safeCount = count == null ? 0 : count;
-        for (int index = 0; index < safeCount; index++) {
-            Map<String, Object> animal = new HashMap<>();
-            animal.put("name", safeCount == 1 ? namePrefix : namePrefix + " " + (index + 1));
-            animal.put("type", type);
-            animal.put("img", img);
-            animal.put("weight", weight);
-            animals.add(animal);
-        }
     }
 }

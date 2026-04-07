@@ -39,6 +39,13 @@ public class FermeService {
         ferme.setNbVaches(1);
         ferme.setNbPoules(3);
         ferme.setNbLapins(2);
+        ferme.setNbLapinsMalades(0);
+        ferme.setNbVachesAffamees(0);
+        ferme.setNbVachesAssoiffees(0);
+        ferme.setNbPouleAffamees(0);
+        ferme.setNbPouleAssoiffees(0);
+        ferme.setNbLapinsAffames(0);
+        ferme.setNbLapinsAssoiffes(0);
 
         Ferme savedFerme = fermeRepository.save(ferme);
 

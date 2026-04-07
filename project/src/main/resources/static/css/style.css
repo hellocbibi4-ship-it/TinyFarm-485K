@@ -308,6 +308,37 @@ img {
     box-shadow: 0 18px 28px rgba(39, 142, 69, 0.34);
 }
 
+.login-shortcut-panel {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    width: min(640px, calc(100% - 32px));
+    padding: 16px;
+    background: rgba(255, 251, 241, 0.9);
+    border: 2px solid rgba(127, 78, 32, 0.25);
+    border-radius: 18px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.14);
+    z-index: 2;
+}
+
+.login-shortcut-text {
+    width: 100%;
+    text-align: center;
+    font-family: "Acme", sans-serif;
+    color: #6c411a;
+    font-size: 0.95rem;
+    margin: 0 0 8px;
+}
+
+.login-shortcut-panel .auth-submit {
+    flex: 1 1 140px;
+}
+
 .settings-login-btn {
     position: absolute;
     top: 0;
@@ -1793,13 +1824,20 @@ img {
 
 .modal-card {
     position: relative;
-    width: min(420px, calc(100vw - 32px));
+    width: min(620px, calc(100vw - 32px));
     margin: 16vh auto 0;
     padding: 18px 18px 20px;
     border-radius: 16px;
     background: linear-gradient(180deg, #fff4de 0%, #f4ddb6 100%);
     color: #2d1a0d;
     box-shadow: 0 22px 34px rgba(0, 0, 0, 0.34);
+}
+
+.modal-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(240px, 1fr);
+    gap: 20px;
+    align-items: start;
 }
 
 .modal-header {
@@ -2027,8 +2065,12 @@ img {
         font-size: 1.45rem;
     }
 
-    .modal-actions {
+    .modal-body {
         grid-template-columns: 1fr;
+    }
+
+    .modal-actions {
+        grid-template-columns: 1fr 1fr;
     }
 
     .modal-card {
@@ -2129,4 +2171,85 @@ img {
         margin: 0 auto;
         overflow-y: auto;
     }
+}
+
+/* ============================================================
+   MODAL LARGE (liste poules)
+   ============================================================ */
+
+#poulailler-list-modal .modal-body {
+    display: block;
+}
+
+.modal-card--wide {
+    width: min(900px, calc(100vw - 32px));
+}
+
+.poulailler-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 16px;
+    font-size: 1rem;
+    background-color: #fff4de;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    display: block;
+}
+
+.poulailler-table thead {
+    display: table-header-group;
+}
+
+.poulailler-table tbody {
+    display: block;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.poulailler-table tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+}
+
+.poulailler-table th,
+.poulailler-table td {
+    padding: 12px 8px;
+    text-align: left;
+    border-bottom: 1px solid #e0d4b6;
+}
+
+.poulailler-table th {
+    background: linear-gradient(180deg, #a65f2b 0%, #8b4513 100%);
+    color: #fff8e7;
+    font-weight: 700;
+    font-family: "Acme", sans-serif;
+}
+
+.poulailler-table td {
+    color: #2d1a0d;
+    background-color: #fff4de;
+}
+
+.poulailler-table td:last-child {
+    text-align: center;
+}
+
+.poulailler-view-btn {
+    min-height: 32px;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    background: linear-gradient(180deg, #65bf39 0%, #3c9023 100%);
+    color: #fff8e7;
+    font-family: "Acme", sans-serif;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.poulailler-view-btn:hover {
+    transform: scale(1.05);
+    filter: brightness(1.1);
 }

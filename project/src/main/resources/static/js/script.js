@@ -4,15 +4,18 @@ const fallbackCommunityItems = [
   { id: "syringe", label: "Seringue", price: 6 },
   { id: "water-bucket", label: "Seau d'eau", price: 2 },
   { id: "soap", label: "Savon", price: 3 },
-  { id: "buy-animals", label: "Achat animaux", variant: "shortcut" },
-  { id: "farmers-market", label: "Marche des producteurs", variant: "shortcut" }
+  { id: "buy-animals", label: "Achat d'animaux", variant: "shortcut" },
+  { id: "farmers-market", label: "Marché des producteurs", variant: "shortcut" }
 ]
+
+console.log("TinyFarm script loaded")
 
 const stockState = {
   products: [],
   selectedProductId: null,
   quantity: 1
 }
+
 
 const collectiviteState = {
   items: []
@@ -74,6 +77,10 @@ const modal = document.getElementById("animal-modal")
 const modalName = document.getElementById("animal-name")
 const modalType = document.getElementById("animal-type")
 const modalPlace = document.getElementById("animal-place")
+const modalStatus = document.getElementById("animal-status")
+const modalHealth = document.getElementById("animal-health")
+const modalHunger = document.getElementById("animal-hunger")
+const modalHydration = document.getElementById("animal-hydration")
 const modalWeightLabel = document.getElementById("animal-weight-label")
 const modalWeight = document.getElementById("animal-weight")
 const closeTargets = document.querySelectorAll("[data-close-modal]")
@@ -93,6 +100,9 @@ const marcheVenteQuantite = document.getElementById("marche-vente-quantite")
 const marcheVentePrix = document.getElementById("marche-vente-prix")
 const marcheVenteSubmit = document.getElementById("marche-vente-submit")
 
+const poulaillerListModal = document.getElementById("poulailler-list-modal")
+const poulaillerListBody = document.getElementById("poulailler-list-body")
+
 const elementsInterface = {
   popup: document.getElementById("popup-achat"),
   boutonFermer: document.getElementById("bouton-fermer"),
@@ -110,19 +120,24 @@ const elementsInterface = {
 let currentFarmModel = null
 let currentFarmId = null
 let currentUsername = "-"
+let latestFarmData = null
+let farmClockState = null
+let farmRefreshIntervalId = null
+let marketSaleState = {
+  selectedProduct: "",
+  quantity: 1,
+  unitPrice: 1
+}
 let collectiviteFeedbackTimeout = null
 let toastTimeoutId = null
 let activeActionTarget = ""
 let animalZoneResizeBound = false
 let animalZoneRefreshFrame = null
 let careInventoryState = createDefaultCareInventory()
-let latestFarmData = null
-let farmClockState = null
-let farmRefreshIntervalId = null
-const marketSaleState = {
-  selectedProduct: "",
-  quantity: 1,
-  unitPrice: 1
+let currentAnimalAction = {
+  farmId: null,
+  animalType: null,
+  animalName: null
 }
 
 const ANIMATED_ANIMAL_CONFIG = {
@@ -771,6 +786,7 @@ function renderAnimalZones() {
     }
   }
 
+
   if (clapierContainer) {
     clapierContainer.innerHTML = ""
     clapierContainer.dataset.groupTooltip = `${rabbits.length} lapin${rabbits.length > 1 ? "s" : ""} - actions de groupe`
@@ -807,7 +823,10 @@ function mettreAJourInterface() {
 
   Object.entries(currentFarmModel.counts).forEach(([typeKey, count]) => {
     if (elementsInterface.compteurs[typeKey]) {
-      elementsInterface.compteurs[typeKey].textContent = String(count)
+      elementsInterface.compteurs[typeKey].textContent =
+        typeKey === "vache" || typeKey === "poule"
+          ? `${count}/${count}`
+          : String(count)
     }
   })
 }
@@ -817,12 +836,31 @@ function applyFarmData(data) {
   applyGameClock(data)
   const uiState = createFreshUiState(data)
   currentFarmModel = TinyFarmState.buildFarmModel(data, uiState)
+  console.log("DEBUG: applyFarmData called")
+  console.log("DEBUG: data.animals count:", data?.animals?.length)
+  console.log("DEBUG: currentFarmModel.animals count:", currentFarmModel?.animals?.length)
+  console.log("DEBUG: currentFarmModel.counts:", currentFarmModel?.counts)
   applyCareInventory(data)
   renderCommunityFromData(data)
   renderMarketPanels(data)
   renderAnimalZones()
   mettreAJourInterface()
+  renderFarmDataStatus(data)
   mettreAJourDisponibiliteBoutons()
+}
+
+function renderFarmDataStatus(data) {
+  const statusElement = document.getElementById("farm-data-status")
+
+  if (!statusElement) {
+    return
+  }
+
+  const animalsCount = Array.isArray(data?.animals) ? data.animals.length : 0
+  const cashValue = Number(data?.cash)
+  const cashText = Number.isFinite(cashValue) ? `${cashValue} ecus` : "0 ecus"
+
+  statusElement.textContent = `Données chargées : ${animalsCount} animaux, ${cashText}`
 }
 
 function applyGameClock(data) {
@@ -903,7 +941,7 @@ function updateFarmOverlayState(uiState) {
 
 async function traiterAchat(typeAnimal) {
   if (!currentFarmModel) {
-    afficherMessage("Donnees animaux indisponibles.", "erreur")
+    afficherMessage("Données animales indisponibles.", "erreur")
     return
   }
 
@@ -998,8 +1036,8 @@ function setMarcheTab(activeTab) {
 async function refreshMarketData() {
   if (!currentFarmId) {
     renderMarketPanels()
-    setMarcheFeedback(marcheAchatFeedback, "Connecte-toi pour acceder au marche.", "is-error")
-    setMarcheFeedback(marcheVenteFeedback, "Connecte-toi pour acceder au marche.", "is-error")
+    setMarcheFeedback(marcheAchatFeedback, "Connecte-toi pour accéder au marché.", "is-error")
+    setMarcheFeedback(marcheVenteFeedback, "Connecte-toi pour accéder au marché.", "is-error")
     return
   }
 
@@ -1013,8 +1051,8 @@ async function refreshMarketData() {
   } catch (error) {
     console.error("Erreur lors du chargement du marche :", error)
     renderMarketPanels(latestFarmData)
-    setMarcheFeedback(marcheAchatFeedback, "Impossible de charger le marche.", "is-error")
-    setMarcheFeedback(marcheVenteFeedback, "Impossible de charger le marche.", "is-error")
+    setMarcheFeedback(marcheAchatFeedback, "Impossible de charger le marché.", "is-error")
+    setMarcheFeedback(marcheVenteFeedback, "Impossible de charger le marché.", "is-error")
   }
 }
 
@@ -1044,7 +1082,18 @@ function fermerPopupMarche() {
   }
 }
 
-function openActionModal({ name, typeLabel, homeLabel, weightLabel, weightValue, targetLabel }) {
+function openActionModal({
+  name,
+  typeLabel,
+  homeLabel,
+  statusValue,
+  healthValue,
+  hungerValue,
+  hydrationValue,
+  weightLabel,
+  weightValue,
+  targetLabel
+}) {
   if (!modal) {
     return
   }
@@ -1052,6 +1101,10 @@ function openActionModal({ name, typeLabel, homeLabel, weightLabel, weightValue,
   modalName.textContent = name
   modalType.textContent = typeLabel
   modalPlace.textContent = homeLabel
+  modalStatus.textContent = statusValue || "-"
+  modalHealth.textContent = healthValue || "-"
+  modalHunger.textContent = hungerValue || "-"
+  modalHydration.textContent = hydrationValue || "-"
   modalWeightLabel.textContent = weightLabel
   modalWeight.textContent = weightValue
   activeActionTarget = targetLabel
@@ -1059,19 +1112,103 @@ function openActionModal({ name, typeLabel, homeLabel, weightLabel, weightValue,
   modal.setAttribute("aria-hidden", "false")
 }
 
-function openAnimalModal(animal) {
-  openActionModal({
-    name: animal.name,
-    typeLabel: animal.typeLabel,
-    homeLabel: animal.homeLabel,
-    weightLabel: "Poids :",
-    weightValue: formatWeight(animal.weight),
-    targetLabel: animal.name
-  })
+function deriveAnimalStatus(animal) {
+  if (animal?.status) {
+    return animal.status
+  }
+
+  if (Number(animal?.health) < 60) {
+    return "Fragile"
+  }
+
+  if (Number(animal?.hunger) < 60) {
+    return "Affame"
+  }
+
+  if (Number(animal?.hydration) < 60) {
+    return "Detrempe"
+  }
+
+  return animal?.stage ? String(animal.stage) : "En bonne sante"
 }
 
-function openClapierModal() {
-  if (!currentFarmModel) {
+function isCattleOrChicken(type) {
+  return ["vache", "poule"].includes(String(type || "").toLowerCase())
+}
+
+function deriveHungerState(animalDetails, animalStats) {
+  if (animalStats && Number.isFinite(animalStats.total) && animalStats.total > 0) {
+    return animalStats.hungry > 0 ? "Affamé" : "Rassasié"
+  }
+
+  return Number(animalDetails.hunger) < 60 ? "Affamé" : "Rassasié"
+}
+
+function deriveHydrationState(animalDetails, animalStats) {
+  if (animalStats && Number.isFinite(animalStats.total) && animalStats.total > 0) {
+    return animalStats.thirsty > 0 ? "Assoiffé" : "Hydraté"
+  }
+
+  return Number(animalDetails.hydration) < 60 ? "Assoiffé" : "Hydraté"
+}
+
+async function openAnimalModal(animal) {
+  if (!animal || !animal.id) {
+    return
+  }
+
+  let animalDetails = animal
+  let animalStats = null
+
+  try {
+    animalDetails = await fetchAnimalDetail(animal.id)
+  } catch (error) {
+    console.warn("Impossible de charger les donnees detaillees de l'animal :", error)
+  }
+
+  if (currentFarmId && animal.type) {
+    try {
+      const response = await fetch(`/api/fermes/${encodeURIComponent(currentFarmId)}/animaux/${encodeURIComponent(animal.type)}/status`)
+      if (response.ok) {
+        animalStats = await response.json()
+      }
+    } catch (error) {
+      console.warn("Impossible de charger les stats du type d'animal :", error)
+    }
+  }
+
+  const hungerValue = isCattleOrChicken(animal.type)
+    ? deriveHungerState(animalDetails, animalStats)
+    : animalStats
+    ? `${animalStats.hungry}/${animalStats.total} affames`
+    : `${animalDetails.hunger ?? 100}%`
+
+  const thirstValue = isCattleOrChicken(animal.type)
+    ? deriveHydrationState(animalDetails, animalStats)
+    : animalStats
+    ? `${animalStats.thirsty}/${animalStats.total} assoffes`
+    : `${animalDetails.hydration ?? 100}%`
+
+  openActionModal({
+    name: animalDetails.name || animal.name,
+    typeLabel: animalDetails.typeLabel || animal.type,
+    homeLabel: animalDetails.homeLabel || animal.homeLabel || "Ferme",
+    statusValue: deriveAnimalStatus(animalDetails),
+    healthValue: `${animalDetails.health ?? 100}%`,
+    hungerValue,
+    hydrationValue: thirstValue,
+    weightLabel: "Poids :",
+    weightValue: formatWeight(animalDetails.weight),
+    targetLabel: animalDetails.name || animal.name
+  })
+
+  currentAnimalAction.animalType = animal.type
+  currentAnimalAction.farmId = currentFarmId
+  currentAnimalAction.animalName = animalDetails.name || animal.name
+}
+
+async function openClapierModal() {
+  if (!currentFarmModel || !currentFarmId) {
     return
   }
 
@@ -1081,14 +1218,119 @@ function openClapierModal() {
     return
   }
 
+  let rabbitHealth = {
+    totalLapins: rabbits.length,
+    sickLapins: 0,
+    hungryLapins: 0,
+    thirstyLapins: 0
+  }
+
+  try {
+    const response = await fetch(`/api/fermes/${encodeURIComponent(currentFarmId)}/animaux/clapier`)
+    if (response.ok) {
+      rabbitHealth = await response.json()
+    }
+  } catch (error) {
+    console.warn("Impossible de charger les donnees du clapier :", error)
+  }
+
+  const rabbitStatusValue = rabbitHealth.sickLapins === 0
+    ? "Aucun lapin malade"
+    : `${rabbitHealth.sickLapins}/${rabbitHealth.totalLapins} sont malades`
+
+  const rabbitHealthValue = rabbitHealth.sickLapins === 0
+    ? "Tous sains"
+    : `${Math.max(0, rabbitHealth.totalLapins - rabbitHealth.sickLapins)}/${rabbitHealth.totalLapins} sains`
+
+  const rabbitHungerValue = rabbitHealth.hungryLapins === 0
+    ? "Personne n'a faim"
+    : `${rabbitHealth.hungryLapins}/${rabbitHealth.totalLapins} ont faim`
+
+  const rabbitHydrationValue = rabbitHealth.thirstyLapins === 0
+    ? "Personne n'a soif"
+    : `${rabbitHealth.thirstyLapins}/${rabbitHealth.totalLapins} ont soif`
+
   openActionModal({
     name: "Clapier",
     typeLabel: "Lapins",
     homeLabel: "Clapier",
+    statusValue: rabbitStatusValue,
+    healthValue: rabbitHealthValue,
+    hungerValue: rabbitHungerValue,
+    hydrationValue: rabbitHydrationValue,
     weightLabel: "Effectif :",
-    weightValue: `${rabbits.length} lapin${rabbits.length > 1 ? "s" : ""}`,
+    weightValue: `${rabbitHealth.totalLapins} lapin${(rabbitHealth.totalLapins || 0) > 1 ? "s" : ""}`,
     targetLabel: "tout le clapier"
   })
+
+  currentAnimalAction.animalType = "lapin"
+  currentAnimalAction.farmId = currentFarmId
+  currentAnimalAction.animalName = "clapier"
+}
+
+async function openPoulaillerListModal() {
+  if (!currentFarmModel || !currentFarmId) {
+    return
+  }
+
+  const chickens = TinyFarmState.getAnimalsByType(currentFarmModel, "poule")
+
+  if (chickens.length === 0) {
+    return
+  }
+
+  if (!poulaillerListBody) {
+    return
+  }
+
+  poulaillerListBody.innerHTML = ""
+
+  for (const chicken of chickens) {
+    let animalDetails = chicken
+
+    try {
+      animalDetails = await fetchAnimalDetail(chicken.id)
+    } catch (error) {
+      console.warn("Impossible de charger les donnees detaillees de la poule :", error)
+    }
+
+    const statusValue = deriveAnimalStatus(animalDetails)
+    const healthValue = `${animalDetails.health ?? 100}%`
+    const hungerValue = deriveHungerState(animalDetails, null)
+    const hydrationValue = deriveHydrationState(animalDetails, null)
+
+    const row = document.createElement("tr")
+    row.className = "poulailler-row"
+    row.innerHTML = `
+      <td>${animalDetails.name || chicken.name}</td>
+      <td>${statusValue}</td>
+      <td>${healthValue}</td>
+      <td>${hungerValue}</td>
+      <td>${hydrationValue}</td>
+      <td><button type="button" class="action-btn poulailler-view-btn" data-animal-id="${chicken.id}">Voir</button></td>
+    `
+
+    // Add event listener to the button
+    const viewButton = row.querySelector('.poulailler-view-btn')
+    viewButton.addEventListener("click", () => {
+      closePoulaillerListModal()
+      openAnimalModal(chicken)
+    })
+
+    poulaillerListBody.appendChild(row)
+  }
+
+  poulaillerListModal.classList.remove("hidden")
+  poulaillerListModal.setAttribute("aria-hidden", "false")
+}
+
+function closePoulaillerListModal() {
+  if (!poulaillerListModal) {
+    return
+  }
+
+  poulaillerListModal.classList.add("hidden")
+  poulaillerListModal.setAttribute("aria-hidden", "true")
 }
 
 function closeActionModal() {
@@ -1098,6 +1340,13 @@ function closeActionModal() {
 
   modal.classList.add("hidden")
   modal.setAttribute("aria-hidden", "true")
+}
+
+function closeAllModals() {
+  closeActionModal()
+  closePoulaillerListModal()
+  fermerPopup()
+  fermerPopupMarche()
 }
 
 function showToast(message) {
@@ -1191,7 +1440,7 @@ async function initializeCollectivitePanel() {
   } catch (error) {
     console.error("Erreur lors du chargement de la collectivite :", error)
     renderCollectivitePanel(fallbackCommunityItems)
-    setCollectiviteFeedback("Collectivite chargee avec les donnees de secours.")
+    setCollectiviteFeedback("Collectivité chargée avec les données de secours.")
   }
 }
 
@@ -1262,6 +1511,33 @@ async function fetchFarmDataById(farmId) {
   return response.json()
 }
 
+async function fetchAnimalDetail(animalId) {
+  if (!animalId) {
+    throw new Error("Animal ID invalide.")
+  }
+
+  try {
+    const data = await fetchActiveFarmData()
+    const foundAnimal = Array.isArray(data?.animals)
+      ? data.animals.find((item) => String(item.id) === String(animalId))
+      : null
+
+    if (foundAnimal) {
+      return foundAnimal
+    }
+  } catch (error) {
+    console.warn("Impossible de recharger les donnees de l'animal :", error)
+  }
+
+  const fallbackAnimal = currentFarmModel?.animals?.find((item) => String(item.id) === String(animalId))
+
+  if (!fallbackAnimal) {
+    throw new Error("Animal introuvable.")
+  }
+
+  return fallbackAnimal
+}
+
 async function fetchActiveFarmData() {
   if (!currentFarmId) {
     throw new Error("Aucune ferme connectee.")
@@ -1290,7 +1566,7 @@ async function fetchRankingData() {
 
 async function publierOffreMarche(product, quantity, unitPrice) {
   if (!currentFarmId) {
-    throw new Error("Connecte-toi pour vendre sur le marche.")
+    throw new Error("Connecte-toi pour vendre sur le marché.")
   }
 
   const response = await fetch(
@@ -1307,7 +1583,7 @@ async function publierOffreMarche(product, quantity, unitPrice) {
 
 async function acheterOffreMarche(offerId, quantity) {
   if (!currentFarmId) {
-    throw new Error("Connecte-toi pour acheter sur le marche.")
+    throw new Error("Connecte-toi pour acheter sur le marché.")
   }
 
   const response = await fetch(
@@ -1323,9 +1599,11 @@ async function acheterOffreMarche(offerId, quantity) {
 }
 
 function createFreshUiState(data) {
+  const cashValue = Number(data?.cash)
+
   return TinyFarmState.writeUiState({
     level: 1,
-    balance: Number.isFinite(data?.cash) ? data.cash : 0,
+    balance: Number.isFinite(cashValue) ? cashValue : 0,
     purchases: {
       vache: 0,
       poule: 0,
@@ -1429,12 +1707,47 @@ if (clsBtn && classementScreen) {
 }
 
 closeTargets.forEach((button) => {
-  button.addEventListener("click", closeActionModal)
+  button.addEventListener("click", closeAllModals)
 })
 
 loginCloseTargets.forEach((button) => {
   button.addEventListener("click", closeLoginModal)
 })
+
+async function loginWithCredentials(username, password) {
+  if (!username || !password) {
+    setLoginFeedback("Renseigne un username et un password.", "is-error")
+    return
+  }
+
+  setLoginFeedback()
+
+  try {
+    const response = await fetch("/api/auth/login-local", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ username, password })
+    })
+
+    if (!response.ok) {
+      setLoginFeedback("erreur de username ou de password", "is-error")
+      return
+    }
+
+    const payload = await response.json()
+    currentFarmId = payload.farmId
+    currentUsername = username
+
+    const farmData = await fetchFarmDataById(currentFarmId)
+    setLoginFeedback("Connexion acceptee.", "is-success")
+    showFarmScreen(farmData)
+  } catch (error) {
+    console.error("Erreur de connexion :", error)
+    setLoginFeedback("erreur de username ou de password", "is-error")
+  }
+}
 
 if (loginForm) {
   loginForm.addEventListener("submit", async (event) => {
@@ -1442,45 +1755,70 @@ if (loginForm) {
 
     const username = loginUsernameInput?.value.trim() || ""
     const password = loginPasswordInput?.value.trim() || ""
+    await loginWithCredentials(username, password)
+  })
+}
 
-    if (!username || !password) {
-      setLoginFeedback("Renseigne un username et un password.", "is-error")
+const demoLoginAButton = document.getElementById("demo-login-a")
+const demoLoginBButton = document.getElementById("demo-login-b")
+const loginShortcutAButton = document.getElementById("login-shortcut-a")
+const loginShortcutBButton = document.getElementById("login-shortcut-b")
+if (demoLoginAButton) {
+  demoLoginAButton.addEventListener("click", () => loginWithCredentials("a", "a1"))
+}
+if (demoLoginBButton) {
+  demoLoginBButton.addEventListener("click", () => loginWithCredentials("b", "b2"))
+}
+if (loginShortcutAButton) {
+  loginShortcutAButton.addEventListener("click", () => loginWithCredentials("a", "a1"))
+}
+if (loginShortcutBButton) {
+  loginShortcutBButton.addEventListener("click", () => loginWithCredentials("b", "b2"))
+}
+
+actionButtons.forEach((button) => {
+  button.addEventListener("click", async () => {
+    const action = button.dataset.action
+    const target = activeActionTarget || "la ferme"
+
+    if (!currentFarmId || !currentAnimalAction.animalType) {
+      showToast(`${action} : impossible (pas connecte ou animal invalide)`)
       return
     }
 
     try {
-      const response = await fetch("/api/auth/login-local", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ username, password })
-      })
+      const actionMap = {
+        "Nourrir": "feed",
+        "Abreuver": "water",
+        "Soigner": "heal",
+        "Nettoyer": "clean"
+      }
 
-      if (!response.ok) {
-        setLoginFeedback("erreur de username ou de password", "is-error")
+      const apiAction = actionMap[action]
+      if (!apiAction) {
+        showToast(`${action} : action inconnue`)
         return
       }
 
-      const payload = await response.json()
-      currentFarmId = payload.farmId
-      currentUsername = username
+      const response = await fetch(
+        `/api/fermes/${encodeURIComponent(currentFarmId)}/animaux/${encodeURIComponent(currentAnimalAction.animalType)}/${apiAction}`,
+        { method: "POST" }
+      )
 
-      const farmData = await fetchFarmDataById(currentFarmId)
-      setLoginFeedback("Connexion acceptee.", "is-success")
-      showFarmScreen(farmData)
+      if (!response.ok) {
+        const error = await response.text()
+        showToast(`${action} : ${error || "impossible"}`)
+        return
+      }
+
+      const farmData = await response.json()
+      applyFarmData(farmData)
+      showToast(`${action} : ${target} - OK`)
+      closeActionModal()
     } catch (error) {
-      console.error("Erreur de connexion :", error)
-      setLoginFeedback("erreur de username ou de password", "is-error")
+      console.error(`Erreur lors de ${action} :`, error)
+      showToast(`${action} : erreur`)
     }
-  })
-}
-
-actionButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    const action = button.dataset.action
-    const target = activeActionTarget || "la ferme"
-    showToast(`${action} : ${target} - OK`)
   })
 })
 
@@ -1612,7 +1950,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
           const farmData = await response.json()
           applyFarmData(farmData)
-          setCollectiviteFeedback(`${selectedItem.label} ajoute au stock.`)
+          setCollectiviteFeedback(`${selectedItem.label} ajouté au stock.`)
           return
         } catch (error) {
           console.error("Erreur lors de l'achat d'objet :", error)
@@ -1621,7 +1959,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
 
-      setCollectiviteFeedback(`${selectedItem.label} selectionne.`)
+      setCollectiviteFeedback(`${selectedItem.label} sélectionné.`)
     })
   }
 
@@ -1658,8 +1996,8 @@ document.addEventListener("DOMContentLoaded", () => {
           applyFarmData(farmData)
           renderStockTable(buildStockRows(farmData))
           setStockFeedback()
-          afficherMessage("Achat du marche valide.", "succes")
-          setMarcheFeedback(marcheAchatFeedback, "Achat effectue avec succes.", "is-success")
+          afficherMessage("Achat du marché validé.", "succes")
+          setMarcheFeedback(marcheAchatFeedback, "Achat effectué avec succès.", "is-success")
         } catch (error) {
           console.error("Erreur lors de l'achat sur le marche :", error)
           setMarcheFeedback(marcheAchatFeedback, error.message || "Achat impossible.", "is-error")
@@ -1731,6 +2069,15 @@ document.addEventListener("DOMContentLoaded", () => {
     })
   }
 
+  if (poulaillerContainer) {
+    poulaillerContainer.addEventListener("click", (event) => {
+      // Only open list modal if clicking on the background (not on an animal icon)
+      if (event.target === poulaillerContainer || event.target.classList.contains("animals-empty")) {
+        openPoulaillerListModal()
+      }
+    })
+  }
+
   document.addEventListener("click", () => {
     setStockPanelOpen(false)
   })
@@ -1739,9 +2086,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (event.key === "Escape") {
       closeLoginModal()
       setStockPanelOpen(false)
-      fermerPopup({ announce: false })
-      fermerPopupMarche()
-      closeActionModal()
+      closeAllModals()
     }
   })
 
