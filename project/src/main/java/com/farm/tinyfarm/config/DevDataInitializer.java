@@ -3,6 +3,7 @@ package com.farm.tinyfarm.config;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 
 import com.farm.tinyfarm.model.Ferme;
 import com.farm.tinyfarm.model.TypeStock;
@@ -16,6 +17,7 @@ import com.farm.tinyfarm.service.RemiseService;
 public class DevDataInitializer {
 
     @Bean
+    @Order(1)
     CommandLineRunner seedLocalUsers(
         UtilisateurRepository utilisateurRepository,
         FermeRepository fermeRepository,
@@ -87,19 +89,27 @@ public class DevDataInitializer {
         }
 
         if ("a".equals(username)) {
+            ferme.setJourActuel(ferme.getJourActuel() == null ? 1 : Math.max(1, ferme.getJourActuel()));
+            ferme.setAchatsCollectiviteRestants(
+                ferme.getAchatsCollectiviteRestants() == null ? 12 : Math.max(0, Math.min(12, ferme.getAchatsCollectiviteRestants()))
+            );
             ferme.setNbPoules(Math.max(ferme.getNbPoules() == null ? 0 : ferme.getNbPoules(), 3));
             ferme.setNbLapins(Math.max(ferme.getNbLapins() == null ? 0 : ferme.getNbLapins(), 3));
             fermeRepository.save(ferme);
-            ensureMinimumStock(remiseService, ferme.getIdFerme(), TypeStock.OEUF, 6);
+            setExactStock(remiseService, ferme.getIdFerme(), TypeStock.OEUF, 0);
             ensureMinimumStock(remiseService, ferme.getIdFerme(), TypeStock.NOURRITURE, 2);
             return;
         }
 
         if ("b".equals(username)) {
+            ferme.setJourActuel(ferme.getJourActuel() == null ? 1 : Math.max(1, ferme.getJourActuel()));
+            ferme.setAchatsCollectiviteRestants(
+                ferme.getAchatsCollectiviteRestants() == null ? 12 : Math.max(0, Math.min(12, ferme.getAchatsCollectiviteRestants()))
+            );
             ferme.setNbPoules(Math.max(ferme.getNbPoules() == null ? 0 : ferme.getNbPoules(), 3));
             ferme.setNbLapins(Math.max(ferme.getNbLapins() == null ? 0 : ferme.getNbLapins(), 2));
             fermeRepository.save(ferme);
-            ensureMinimumStock(remiseService, ferme.getIdFerme(), TypeStock.OEUF, 4);
+            setExactStock(remiseService, ferme.getIdFerme(), TypeStock.OEUF, 0);
             ensureMinimumStock(remiseService, ferme.getIdFerme(), TypeStock.SAVON, 1);
         }
     }
@@ -118,6 +128,25 @@ public class DevDataInitializer {
 
         if (stockActuel < minimum) {
             remiseService.ajouterStock(fermeId, typeStock, minimum - stockActuel);
+        }
+    }
+
+    private void setExactStock(RemiseService remiseService, Integer fermeId, TypeStock typeStock, int expectedValue) {
+        int stockActuel = switch (typeStock) {
+            case OEUF -> remiseService.getById(fermeId).getStockOeuf();
+            case LAIT -> remiseService.getById(fermeId).getStockLait();
+            case LAPIN -> remiseService.getById(fermeId).getStockLapin();
+            case NOURRITURE -> remiseService.getById(fermeId).getStockNourriture();
+            case EAU -> remiseService.getById(fermeId).getStockEau();
+            case PAILLE -> remiseService.getById(fermeId).getStockPaille();
+            case SAVON -> remiseService.getById(fermeId).getStockSavon();
+            case SERINGUE -> remiseService.getById(fermeId).getStockSeringue();
+        };
+
+        if (stockActuel > expectedValue) {
+            remiseService.retirerStock(fermeId, typeStock, stockActuel - expectedValue);
+        } else if (stockActuel < expectedValue) {
+            remiseService.ajouterStock(fermeId, typeStock, expectedValue - stockActuel);
         }
     }
 }

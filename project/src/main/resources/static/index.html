@@ -246,11 +246,18 @@
 
         <aside id="collectivite-panel" class="collectivite-panel" aria-labelledby="collectivite-title">
             <div class="collectivite-panel-inner">
+                <div class="collectivite-header">
                 <h2 id="collectivite-title" class="collectivite-title">Collectivité</h2>
+                <div class="collectivite-header">
+                    <p id="collectivite-counter" class="collectivite-counter" aria-live="polite">12/12</p>
+                </div>
+                </div>
                 <div id="collectivite-list" class="collectivite-list"></div>
                 <p id="collectivite-feedback" class="collectivite-feedback" aria-live="polite"></p>
             </div>
         </aside>
+
+        <button id="pass-day-button" class="pass-day-button" type="button">Passez le jour</button>
 
         <section id="popup-achat" class="popup-achat hidden" role="dialog" aria-modal="true" aria-labelledby="titre-popup">
             <header class="entete-bois">
@@ -388,7 +395,7 @@
                     <div class="modal-info">
                         <p><span class="info-label">Type :</span> <span id="animal-type">-</span></p>
                         <p><span class="info-label">Lieu :</span> <span id="animal-place">-</span></p>
-                        <p><span class="info-label">Statut :</span> <span id="animal-status">-</span></p>
+                        <p><span class="info-label">Propreté :</span> <span id="animal-status">-</span></p>
                         <p><span class="info-label">Santé :</span> <span id="animal-health">-</span></p>
                         <p><span class="info-label">Faim :</span> <span id="animal-hunger">-</span></p>
                         <p><span class="info-label">Hydratation :</span> <span id="animal-hydration">-</span></p>
@@ -406,7 +413,7 @@
 
         <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
-        <div id="clock"></div>
+        <div id="clock" aria-live="polite"></div>
 
         <button class="side-btn right settings-btn" type="button" aria-label="Ouvrir les reglages"></button>
         <div class="settings-panel">

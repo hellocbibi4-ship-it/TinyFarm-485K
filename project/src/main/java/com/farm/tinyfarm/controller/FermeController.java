@@ -1,12 +1,14 @@
 package com.farm.tinyfarm.controller;
 
+import com.farm.tinyfarm.model.Animal;
 import com.farm.tinyfarm.model.Ferme;
 import com.farm.tinyfarm.model.Remise;
+import com.farm.tinyfarm.model.TypeAnimal;
 import com.farm.tinyfarm.model.TypeStock;
+import com.farm.tinyfarm.repository.FermeRepository;
 import com.farm.tinyfarm.service.FermeService;
 import com.farm.tinyfarm.service.MarcheService;
 import com.farm.tinyfarm.service.RemiseService;
-import com.farm.tinyfarm.repository.FermeRepository;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,7 +36,12 @@ public class FermeController {
     private final MarcheService marcheService;
     private final FermeRepository fermeRepository;
 
-    public FermeController(FermeService fermeService, RemiseService remiseService, MarcheService marcheService, FermeRepository fermeRepository) {
+    public FermeController(
+        FermeService fermeService,
+        RemiseService remiseService,
+        MarcheService marcheService,
+        FermeRepository fermeRepository
+    ) {
         this.fermeService = fermeService;
         this.remiseService = remiseService;
         this.marcheService = marcheService;
@@ -49,7 +56,7 @@ public class FermeController {
 
     @GetMapping("/{id}/front-data")
     public ResponseEntity<Map<String, Object>> getFrontData(@PathVariable Integer id) {
-        Ferme ferme = fermeService.mettreAJourTempsEtPonte(id);
+        Ferme ferme = fermeService.getById(id);
         return ResponseEntity.ok(buildFrontData(ferme));
     }
 
@@ -62,22 +69,19 @@ public class FermeController {
     @PatchMapping("/{id}/score")
     public ResponseEntity<Ferme> augmenterScore(@PathVariable Integer id, @RequestParam Integer montant) {
         fermeService.ajouterScore(id, montant);
-        Ferme fermeMAJ = fermeService.getById(id);
-        return ResponseEntity.ok(fermeMAJ);
+        return ResponseEntity.ok(fermeService.getById(id));
     }
 
     @PatchMapping("/{id}/ajout-ecus")
     public ResponseEntity<Ferme> ajouterEcus(@PathVariable Integer id, @RequestParam Integer montant) {
         fermeService.ajouterEcus(id, montant);
-        Ferme fermeMAJ = fermeService.getById(id);
-        return ResponseEntity.ok(fermeMAJ);
+        return ResponseEntity.ok(fermeService.getById(id));
     }
 
     @PatchMapping("/{id}/retirer-ecus")
     public ResponseEntity<Ferme> retirerEcus(@PathVariable Integer id, @RequestParam Integer montant) {
         fermeService.retirerEcus(id, montant);
-        Ferme fermeMAJ = fermeService.getById(id);
-        return ResponseEntity.ok(fermeMAJ);
+        return ResponseEntity.ok(fermeService.getById(id));
     }
 
     @PostMapping("/{id}/acheter-animal")
@@ -86,11 +90,16 @@ public class FermeController {
         return ResponseEntity.ok(buildFrontData(fermeMAJ));
     }
 
+    @PostMapping("/{id}/passer-jour")
+    public ResponseEntity<Map<String, Object>> passerJour(@PathVariable Integer id) {
+        Ferme fermeMAJ = fermeService.passerJour(id);
+        return ResponseEntity.ok(buildFrontData(fermeMAJ));
+    }
+
     @PostMapping("/{id}/acheter-objet-entretien")
     public ResponseEntity<Map<String, Object>> acheterObjetEntretien(@PathVariable Integer id, @RequestParam TypeStock type) {
         remiseService.acheterObjetEntretien(id, type);
-        Ferme fermeMAJ = fermeService.getById(id);
-        return ResponseEntity.ok(buildFrontData(fermeMAJ));
+        return ResponseEntity.ok(buildFrontData(fermeService.getById(id)));
     }
 
     @PostMapping("/{id}/marche/offres")
@@ -101,8 +110,7 @@ public class FermeController {
         @RequestParam Integer prix
     ) {
         marcheService.create(id, produit, quantite, prix);
-        Ferme fermeMAJ = fermeService.getById(id);
-        return ResponseEntity.ok(buildFrontData(fermeMAJ));
+        return ResponseEntity.ok(buildFrontData(fermeService.getById(id)));
     }
 
     @PostMapping("/{id}/marche/achat")
@@ -112,15 +120,13 @@ public class FermeController {
         @RequestParam Integer quantite
     ) {
         marcheService.transaction(id, idOffre, quantite);
-        Ferme fermeMAJ = fermeService.getById(id);
-        return ResponseEntity.ok(buildFrontData(fermeMAJ));
+        return ResponseEntity.ok(buildFrontData(fermeService.getById(id)));
     }
 
     @PatchMapping("/{id}/hibernation")
     public ResponseEntity<String> changerHibernation(@PathVariable Integer id, @RequestParam boolean etat) {
         fermeService.hibernation(id, etat);
-        String message = "Etat d'hibernation : " + etat;
-        return ResponseEntity.ok(message);
+        return ResponseEntity.ok("Etat d'hibernation : " + etat);
     }
 
     @GetMapping("/{id}/animaux/clapier")
@@ -167,104 +173,103 @@ public class FermeController {
     }
 
     @PostMapping("/{id}/animaux/{type}/feed")
-    public ResponseEntity<Map<String, Object>> feedAnimals(@PathVariable Integer id, @PathVariable String type) {
-        Ferme ferme = fermeService.getById(id);
+    public ResponseEntity<Map<String, Object>> feedAnimals(
+        @PathVariable Integer id,
+        @PathVariable String type,
+        @RequestParam(required = false) Integer animalId
+    ) {
         String normalized = type.toLowerCase().trim();
 
-        int cost = 5;
-        if (ferme.getSoldeEcus() < cost) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Solde insuffisant"));
+        if ("lapin".equals(normalized) || "lapins".equals(normalized)) {
+            List<Animal> lapins = animauxParType(id, TypeAnimal.LAPIN);
+            if (lapins.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Aucun lapin dans le clapier"));
+            }
+            remiseService.retirerStock(id, TypeStock.NOURRITURE, 1);
+            lapins.forEach(animal -> animal.setJaugeFaim(100));
+            return ResponseEntity.ok(buildFrontData(fermeService.sauvegarderApresActionsAnimaux(id, lapins)));
         }
 
-        ferme.setSoldeEcus(ferme.getSoldeEcus() - cost);
-
-        switch (normalized) {
-            case "vache":
-            case "vaches":
-                ferme.setNbVachesAffamees(Math.max(0, (ferme.getNbVachesAffamees() == null ? 0 : ferme.getNbVachesAffamees()) - 1));
-                break;
-            case "poule":
-            case "poules":
-                ferme.setNbPouleAffamees(Math.max(0, (ferme.getNbPouleAffamees() == null ? 0 : ferme.getNbPouleAffamees()) - 1));
-                break;
-            case "lapin":
-            case "lapins":
-                ferme.setNbLapinsAffames(Math.max(0, (ferme.getNbLapinsAffames() == null ? 0 : ferme.getNbLapinsAffames()) - 1));
-                break;
-            default:
-                return ResponseEntity.badRequest().build();
-        }
-
-        fermeRepository.save(ferme);
-        return ResponseEntity.ok(buildFrontData(ferme));
+        Animal animal = requireIndividualAnimal(id, normalized, animalId);
+        remiseService.retirerStock(id, "vache".equals(normalized) || "vaches".equals(normalized) ? TypeStock.PAILLE : TypeStock.NOURRITURE, 1);
+        animal.setJaugeFaim(100);
+        return ResponseEntity.ok(buildFrontData(fermeService.sauvegarderApresActionsAnimaux(id, List.of(animal))));
     }
 
     @PostMapping("/{id}/animaux/{type}/water")
-    public ResponseEntity<Map<String, Object>> waterAnimals(@PathVariable Integer id, @PathVariable String type) {
-        Ferme ferme = fermeService.getById(id);
+    public ResponseEntity<Map<String, Object>> waterAnimals(
+        @PathVariable Integer id,
+        @PathVariable String type,
+        @RequestParam(required = false) Integer animalId
+    ) {
         String normalized = type.toLowerCase().trim();
 
-        int cost = 2;
-        if (ferme.getSoldeEcus() < cost) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Solde insuffisant"));
+        if ("lapin".equals(normalized) || "lapins".equals(normalized)) {
+            List<Animal> lapins = animauxParType(id, TypeAnimal.LAPIN);
+            if (lapins.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Aucun lapin dans le clapier"));
+            }
+            remiseService.retirerStock(id, TypeStock.EAU, 1);
+            lapins.forEach(animal -> animal.setJaugeHydratation(100));
+            return ResponseEntity.ok(buildFrontData(fermeService.sauvegarderApresActionsAnimaux(id, lapins)));
         }
 
-        ferme.setSoldeEcus(ferme.getSoldeEcus() - cost);
-
-        switch (normalized) {
-            case "vache":
-            case "vaches":
-                ferme.setNbVachesAssoiffees(Math.max(0, (ferme.getNbVachesAssoiffees() == null ? 0 : ferme.getNbVachesAssoiffees()) - 1));
-                break;
-            case "poule":
-            case "poules":
-                ferme.setNbPouleAssoiffees(Math.max(0, (ferme.getNbPouleAssoiffees() == null ? 0 : ferme.getNbPouleAssoiffees()) - 1));
-                break;
-            case "lapin":
-            case "lapins":
-                ferme.setNbLapinsAssoiffes(Math.max(0, (ferme.getNbLapinsAssoiffes() == null ? 0 : ferme.getNbLapinsAssoiffes()) - 1));
-                break;
-            default:
-                return ResponseEntity.badRequest().build();
-        }
-
-        fermeRepository.save(ferme);
-        return ResponseEntity.ok(buildFrontData(ferme));
+        Animal animal = requireIndividualAnimal(id, normalized, animalId);
+        remiseService.retirerStock(id, TypeStock.EAU, 1);
+        animal.setJaugeHydratation(100);
+        return ResponseEntity.ok(buildFrontData(fermeService.sauvegarderApresActionsAnimaux(id, List.of(animal))));
     }
 
     @PostMapping("/{id}/animaux/{type}/heal")
-    public ResponseEntity<Map<String, Object>> healAnimals(@PathVariable Integer id, @PathVariable String type) {
-        Ferme ferme = fermeService.getById(id);
+    public ResponseEntity<Map<String, Object>> healAnimals(
+        @PathVariable Integer id,
+        @PathVariable String type,
+        @RequestParam(required = false) Integer animalId
+    ) {
         String normalized = type.toLowerCase().trim();
 
-        int cost = 6;
-        if (ferme.getSoldeEcus() < cost) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Solde insuffisant"));
-        }
-
-        ferme.setSoldeEcus(ferme.getSoldeEcus() - cost);
-
         if ("lapin".equals(normalized) || "lapins".equals(normalized)) {
-            ferme.setNbLapinsMalades(Math.max(0, (ferme.getNbLapinsMalades() == null ? 0 : ferme.getNbLapinsMalades()) - 1));
+            List<Animal> lapins = animauxParType(id, TypeAnimal.LAPIN);
+            if (lapins.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Aucun lapin dans le clapier"));
+            }
+            remiseService.retirerStock(id, TypeStock.SERINGUE, 1);
+            lapins.forEach(animal -> {
+                animal.setJaugeSante(100);
+                animal.setEstMalade(false);
+            });
+            return ResponseEntity.ok(buildFrontData(fermeService.sauvegarderApresActionsAnimaux(id, lapins)));
         }
 
-        fermeRepository.save(ferme);
-        return ResponseEntity.ok(buildFrontData(ferme));
+        Animal animal = requireIndividualAnimal(id, normalized, animalId);
+        remiseService.retirerStock(id, TypeStock.SERINGUE, 1);
+        animal.setJaugeSante(100);
+        animal.setEstMalade(false);
+        return ResponseEntity.ok(buildFrontData(fermeService.sauvegarderApresActionsAnimaux(id, List.of(animal))));
     }
 
     @PostMapping("/{id}/animaux/{type}/clean")
-    public ResponseEntity<Map<String, Object>> cleanAnimals(@PathVariable Integer id, @PathVariable String type) {
-        Ferme ferme = fermeService.getById(id);
+    public ResponseEntity<Map<String, Object>> cleanAnimals(
+        @PathVariable Integer id,
+        @PathVariable String type,
+        @RequestParam(required = false) Integer animalId
+    ) {
         String normalized = type.toLowerCase().trim();
 
-        int cost = 3;
-        if (ferme.getSoldeEcus() < cost) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Solde insuffisant"));
+        if ("lapin".equals(normalized) || "lapins".equals(normalized)) {
+            List<Animal> lapins = animauxParType(id, TypeAnimal.LAPIN);
+            if (lapins.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Aucun lapin dans le clapier"));
+            }
+            remiseService.retirerStock(id, TypeStock.SAVON, 1);
+            lapins.forEach(animal -> animal.setJaugeProprete(100));
+            return ResponseEntity.ok(buildFrontData(fermeService.sauvegarderApresActionsAnimaux(id, lapins)));
         }
 
-        ferme.setSoldeEcus(ferme.getSoldeEcus() - cost);
-        fermeRepository.save(ferme);
-        return ResponseEntity.ok(buildFrontData(ferme));
+        Animal animal = requireIndividualAnimal(id, normalized, animalId);
+        remiseService.retirerStock(id, TypeStock.SAVON, 1);
+        animal.setJaugeProprete(100);
+        return ResponseEntity.ok(buildFrontData(fermeService.sauvegarderApresActionsAnimaux(id, List.of(animal))));
     }
 
     @ExceptionHandler(RuntimeException.class)
@@ -277,59 +282,92 @@ public class FermeController {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }
 
-    private List<Map<String, Object>> buildAnimals(Ferme ferme) {
-        List<Map<String, Object>> animals = new ArrayList<>();
-        addAnimalEntries(animals, "vache", "Vache", "vache.png", "Paturage", ferme.getNbVaches(), 500f, "Adulte");
-        addAnimalEntries(animals, "poule", "Poule", "poule.png", "Poulailler", ferme.getNbPoules(), 2f, "Adulte");
-        addAnimalEntries(animals, "lapin", "Lapin", "lapin.png", "Clapier", ferme.getNbLapins(), 2f, "Adulte");
-        return animals;
+    private List<Animal> animauxParType(Integer farmId, TypeAnimal typeAnimal) {
+        return fermeService.getAnimaux(farmId).stream()
+            .filter(animal -> animal.getTypeAnimal() == typeAnimal)
+            .toList();
     }
 
-    private void addAnimalEntries(
-        List<Map<String, Object>> animals,
-        String type,
-        String typeLabel,
-        String image,
-        String homeLabel,
-        Integer count,
-        float defaultWeight,
-        String defaultStage
-    ) {
-        int total = count == null ? 0 : count;
-        for (int i = 0; i < total; i++) {
-            animals.add(createAnimalData(type, typeLabel, image, homeLabel, i + 1, defaultWeight, defaultStage));
+    private Animal requireIndividualAnimal(Integer farmId, String normalizedType, Integer animalId) {
+        if (animalId == null) {
+            throw new IllegalArgumentException("animalId requis pour cette action");
         }
-    }
 
-    private Map<String, Object> createAnimalData(
-        String type,
-        String typeLabel,
-        String image,
-        String homeLabel,
-        int index,
-        float weight,
-        String stage
-    ) {
-        Map<String, Object> animal = new HashMap<>();
-        animal.put("id", type + "-" + index);
-        animal.put("name", typeLabel + " " + index);
-        animal.put("type", type);
-        animal.put("typeLabel", typeLabel);
-        animal.put("homeLabel", homeLabel);
-        animal.put("img", image);
-        animal.put("weight", weight);
-        animal.put("age", 1);
-        animal.put("stage", stage);
-        animal.put("status", "En bonne santé");
-        animal.put("health", 100);
-        animal.put("hunger", 100);
-        animal.put("hydration", 100);
-        animal.put("cleanliness", 100);
+        Animal animal = fermeService.getAnimalDeFerme(farmId, animalId);
+        TypeAnimal expectedType = switch (normalizedType) {
+            case "vache", "vaches" -> TypeAnimal.VACHE;
+            case "poule", "poules" -> TypeAnimal.POULE;
+            default -> throw new IllegalArgumentException("Type d'animal inconnu");
+        };
+
+        if (animal.getTypeAnimal() != expectedType) {
+            throw new IllegalArgumentException("Cet animal ne correspond pas au type demande");
+        }
+
         return animal;
     }
 
+    private List<Map<String, Object>> buildAnimals(Ferme ferme) {
+        List<Map<String, Object>> animals = new ArrayList<>();
+        for (Animal animal : fermeService.getAnimaux(ferme.getIdFerme())) {
+            animals.add(createAnimalData(animal));
+        }
+        return animals;
+    }
+
+    private Map<String, Object> createAnimalData(Animal sourceAnimal) {
+        Map<String, Object> animal = new HashMap<>();
+        animal.put("id", "animal-" + sourceAnimal.getIdAnimal());
+        animal.put("idAnimal", sourceAnimal.getIdAnimal());
+        animal.put("name", sourceAnimal.getNom());
+        animal.put("type", normalizeType(sourceAnimal.getTypeAnimal()));
+        animal.put("typeLabel", typeLabel(sourceAnimal.getTypeAnimal()));
+        animal.put("homeLabel", homeLabel(sourceAnimal.getTypeAnimal()));
+        animal.put("img", imageName(sourceAnimal.getTypeAnimal()));
+        animal.put("weight", sourceAnimal.getPoids());
+        animal.put("age", sourceAnimal.getAge());
+        animal.put("stage", sourceAnimal.getStade() == null ? "Adulte" : sourceAnimal.getStade().name());
+        animal.put("isSick", sourceAnimal.estMalade());
+        animal.put("health", sourceAnimal.getJaugeSante());
+        animal.put("hunger", sourceAnimal.getJaugeFaim());
+        animal.put("hydration", sourceAnimal.getJaugeHydratation());
+        animal.put("cleanliness", sourceAnimal.getJaugeProprete());
+        return animal;
+    }
+
+    private String normalizeType(TypeAnimal typeAnimal) {
+        return switch (typeAnimal) {
+            case VACHE -> "vache";
+            case POULE -> "poule";
+            case LAPIN -> "lapin";
+        };
+    }
+
+    private String typeLabel(TypeAnimal typeAnimal) {
+        return switch (typeAnimal) {
+            case VACHE -> "Vache";
+            case POULE -> "Poule";
+            case LAPIN -> "Lapin";
+        };
+    }
+
+    private String homeLabel(TypeAnimal typeAnimal) {
+        return switch (typeAnimal) {
+            case VACHE -> "Paturage";
+            case POULE -> "Poulailler";
+            case LAPIN -> "Clapier";
+        };
+    }
+
+    private String imageName(TypeAnimal typeAnimal) {
+        return switch (typeAnimal) {
+            case VACHE -> "vache.png";
+            case POULE -> "poule.png";
+            case LAPIN -> "lapin.png";
+        };
+    }
+
     private Map<String, Object> buildFrontData(Ferme ferme) {
-        ferme = fermeService.mettreAJourTempsEtPonte(ferme.getIdFerme());
         Remise remise = remiseService.getById(ferme.getIdFerme());
         Map<String, Object> response = new HashMap<>();
         response.put("farmId", ferme.getIdFerme());
@@ -345,6 +383,7 @@ public class FermeController {
             "sickLapins", ferme.getNbLapinsMalades() == null ? 0 : ferme.getNbLapinsMalades()
         ));
         response.put("communityItems", buildCommunityItems());
+        response.put("communityPurchases", buildCommunityPurchases(ferme));
         response.put("ranking", fermeService.getClassementData());
         response.put("marketOffers", marcheService.getOffresPourFront());
         return response;
@@ -352,24 +391,22 @@ public class FermeController {
 
     private Map<String, Object> buildGameTime(Ferme ferme) {
         Map<String, Object> gameTime = new HashMap<>();
-        long elapsedSeconds = java.time.Duration.between(
-            ferme.getDateCreation() == null ? java.time.LocalDateTime.now() : ferme.getDateCreation(),
-            java.time.LocalDateTime.now()
-        ).getSeconds();
-        long dayIndex = (elapsedSeconds / FermeService.GAME_DAY_DURATION_SECONDS) + 1;
-        long secondsInDay = elapsedSeconds % FermeService.GAME_DAY_DURATION_SECONDS;
-        long totalGameSeconds = secondsInDay * (86400 / FermeService.GAME_DAY_DURATION_SECONDS);
-        long hours = totalGameSeconds / 3600;
-        long minutes = (totalGameSeconds % 3600) / 60;
-        long seconds = totalGameSeconds % 60;
-
-        gameTime.put("day", dayIndex);
-        gameTime.put("hours", hours);
-        gameTime.put("minutes", minutes);
-        gameTime.put("seconds", seconds);
+        gameTime.put("day", ferme.getJourActuel() == null ? 1 : ferme.getJourActuel());
+        gameTime.put("hours", 0);
+        gameTime.put("minutes", 0);
+        gameTime.put("seconds", 0);
         gameTime.put("realSecondsPerDay", FermeService.GAME_DAY_DURATION_SECONDS);
-        gameTime.put("eggsPerDay", ferme.getNbPoules() == null ? 0 : ferme.getNbPoules());
         return gameTime;
+    }
+
+    private Map<String, Object> buildCommunityPurchases(Ferme ferme) {
+        Map<String, Object> communityPurchases = new HashMap<>();
+        int remaining = ferme.getAchatsCollectiviteRestants() == null
+            ? FermeService.DAILY_COMMUNITY_PURCHASE_LIMIT
+            : ferme.getAchatsCollectiviteRestants();
+        communityPurchases.put("remaining", remaining);
+        communityPurchases.put("maxPerDay", FermeService.DAILY_COMMUNITY_PURCHASE_LIMIT);
+        return communityPurchases;
     }
 
     private List<Map<String, Object>> buildStockInventory(Ferme ferme, Remise remise) {
@@ -403,7 +440,7 @@ public class FermeController {
         items.add(createCommunityItem("water-bucket", "Seau d'eau", remiseService.getCout(TypeStock.EAU)));
         items.add(createCommunityItem("soap", "Savon", remiseService.getCout(TypeStock.SAVON)));
         items.add(createShortcutItem("buy-animals", "Achat d'animaux"));
-        items.add(createShortcutItem("farmers-market", "Marché des producteurs"));
+        items.add(createShortcutItem("farmers-market", "Marche des producteurs"));
         return items;
     }
 

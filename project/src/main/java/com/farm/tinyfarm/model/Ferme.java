@@ -32,7 +32,8 @@ public class Ferme{
     private LocalDateTime dateCreation;
     private Integer score;
     private LocalDateTime derniereCo;
-    private LocalDateTime dernierePonteOeufs;
+    private Integer jourActuel = 1;
+    private Integer achatsCollectiviteRestants = 12;
     private Integer nbVaches = 1;
     private Integer nbPoules = 3;
     private Integer nbLapins = 2;

@@ -1,13 +1,15 @@
 package com.farm.tinyfarm.service;
 
+import com.farm.tinyfarm.model.Animal;
 import com.farm.tinyfarm.model.Ferme;
 import com.farm.tinyfarm.model.Remise;
+import com.farm.tinyfarm.model.TypeAnimal;
 import com.farm.tinyfarm.outils.Utilitaires;
+import com.farm.tinyfarm.repository.AnimalRepository;
 import com.farm.tinyfarm.repository.FermeRepository;
 import com.farm.tinyfarm.repository.RemiseRepository;
 import jakarta.transaction.Transactional;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
@@ -19,15 +21,23 @@ import org.springframework.stereotype.Service;
 @Service
 public class FermeService {
     public static final int GAME_DAY_DURATION_SECONDS = 60;
+    public static final int DAILY_COMMUNITY_PURCHASE_LIMIT = 12;
 
     private final FermeRepository fermeRepository;
     private final RemiseRepository remiseRepository;
+    private final AnimalRepository animalRepository;
 
-    public FermeService(FermeRepository fermeRepository, RemiseRepository remiseRepository) {
+    public FermeService(
+        FermeRepository fermeRepository,
+        RemiseRepository remiseRepository,
+        AnimalRepository animalRepository
+    ) {
         this.fermeRepository = fermeRepository;
         this.remiseRepository = remiseRepository;
+        this.animalRepository = animalRepository;
     }
 
+    @Transactional
     public Ferme create(Ferme ferme) {
         Utilitaires.validationNom(ferme.getNom());
         ferme.setScore(0);
@@ -35,7 +45,8 @@ public class FermeService {
         ferme.setHibernation(false);
         ferme.setDateCreation(LocalDateTime.now());
         ferme.setDerniereCo(LocalDateTime.now());
-        ferme.setDernierePonteOeufs(LocalDateTime.now());
+        ferme.setJourActuel(1);
+        ferme.setAchatsCollectiviteRestants(DAILY_COMMUNITY_PURCHASE_LIMIT);
         ferme.setNbVaches(1);
         ferme.setNbPoules(3);
         ferme.setNbLapins(2);
@@ -55,7 +66,9 @@ public class FermeService {
             remiseRepository.save(remise);
         }
 
-        return savedFerme;
+        synchroniserAnimaux(savedFerme);
+        synchroniserCompteursDepuisAnimaux(savedFerme);
+        return fermeRepository.save(savedFerme);
     }
 
     public void deleteById(Integer id) {
@@ -71,8 +84,7 @@ public class FermeService {
             throw new IllegalArgumentException("Le montant d'ecus a ajouter doit etre positif");
         }
 
-        int montantTotal = ferme.getSoldeEcus() + montant;
-        ferme.setSoldeEcus(montantTotal);
+        ferme.setSoldeEcus(ferme.getSoldeEcus() + montant);
     }
 
     @Transactional
@@ -84,8 +96,7 @@ public class FermeService {
             throw new IllegalArgumentException("Le montant d'ecus a retirer doit etre positif");
         }
 
-        int montantTotal = ferme.getSoldeEcus() - montant;
-        ferme.setSoldeEcus(montantTotal);
+        ferme.setSoldeEcus(ferme.getSoldeEcus() - montant);
     }
 
     @Transactional
@@ -97,44 +108,40 @@ public class FermeService {
             throw new IllegalArgumentException("Le score a ajouter doit etre positif");
         }
 
-        int montantTotal = ferme.getScore() + montant;
-        ferme.setScore(montantTotal);
+        ferme.setScore(ferme.getScore() + montant);
     }
 
     @Transactional
     public Ferme acheterAnimal(Integer idFerme, String typeAnimal) {
         Ferme ferme = fermeRepository.findById(idFerme)
             .orElseThrow(() -> new RuntimeException("Impossible d'acheter un animal: la ferme n'existe pas"));
+        normalizeDailyState(ferme);
+        synchroniserAnimaux(ferme);
 
         if (typeAnimal == null || typeAnimal.isBlank()) {
             throw new IllegalArgumentException("Type d'animal invalide");
         }
 
-        String normalizedType = typeAnimal.trim().toLowerCase();
-        int prix;
+        TypeAnimal animalType = switch (typeAnimal.trim().toLowerCase()) {
+            case "vache" -> TypeAnimal.VACHE;
+            case "poule" -> TypeAnimal.POULE;
+            case "lapin" -> TypeAnimal.LAPIN;
+            default -> throw new IllegalArgumentException("Type d'animal inconnu");
+        };
 
-        switch (normalizedType) {
-            case "vache":
-                prix = 50;
-                ferme.setNbVaches((ferme.getNbVaches() == null ? 0 : ferme.getNbVaches()) + 1);
-                break;
-            case "poule":
-                prix = 10;
-                ferme.setNbPoules((ferme.getNbPoules() == null ? 0 : ferme.getNbPoules()) + 1);
-                break;
-            case "lapin":
-                prix = 10;
-                ferme.setNbLapins((ferme.getNbLapins() == null ? 0 : ferme.getNbLapins()) + 1);
-                break;
-            default:
-                throw new IllegalArgumentException("Type d'animal inconnu");
-        }
+        int prix = switch (animalType) {
+            case VACHE -> 50;
+            case POULE, LAPIN -> 10;
+        };
 
         if (ferme.getSoldeEcus() < prix) {
             throw new IllegalArgumentException("Solde insuffisant");
         }
 
+        consommerAchatCollectivite(ferme);
         ferme.setSoldeEcus(ferme.getSoldeEcus() - prix);
+        animalRepository.save(creerAnimalPourFerme(ferme, animalType));
+        synchroniserCompteursDepuisAnimaux(ferme);
         return fermeRepository.save(ferme);
     }
 
@@ -167,42 +174,264 @@ public class FermeService {
         fermeRepository.save(ferme);
     }
 
+    @Transactional
     public Ferme getById(Integer id) {
-        return fermeRepository.findById(id)
+        Ferme ferme = fermeRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Ferme introuvable"));
+        boolean changed = normalizeDailyState(ferme);
+        changed = synchroniserAnimaux(ferme) || changed;
+        changed = synchroniserCompteursDepuisAnimaux(ferme) || changed;
+        return changed ? fermeRepository.save(ferme) : ferme;
     }
 
     @Transactional
-    public Ferme mettreAJourTempsEtPonte(Integer idFerme) {
-        Ferme ferme = getById(idFerme);
+    public Ferme passerJour(Integer idFerme) {
+        Ferme ferme = fermeRepository.findById(idFerme)
+            .orElseThrow(() -> new RuntimeException("Ferme introuvable"));
+        normalizeDailyState(ferme);
+        synchroniserAnimaux(ferme);
+
         Remise remise = remiseRepository.findById(idFerme).orElseGet(() -> {
             Remise nouvelleRemise = new Remise();
             nouvelleRemise.setFerme(ferme);
             return remiseRepository.save(nouvelleRemise);
         });
 
-        LocalDateTime maintenant = LocalDateTime.now();
-        if (ferme.getDernierePonteOeufs() == null) {
-            ferme.setDernierePonteOeufs(maintenant);
-            return fermeRepository.save(ferme);
+        List<Animal> animaux = animalRepository.findByFerme_IdFermeOrderByIdAnimalAsc(idFerme);
+        int nbPoules = (int) animaux.stream().filter(animal -> animal.getTypeAnimal() == TypeAnimal.POULE).count();
+        int nbVaches = (int) animaux.stream().filter(animal -> animal.getTypeAnimal() == TypeAnimal.VACHE).count();
+
+        if (nbPoules > 0) {
+            remise.setStockOeuf(remise.getStockOeuf() + nbPoules);
+        }
+        if (nbVaches > 0) {
+            remise.setStockLait(remise.getStockLait() + nbVaches);
         }
 
-        long secondesEcoulees = Duration.between(ferme.getDernierePonteOeufs(), maintenant).getSeconds();
-        long joursEcoules = secondesEcoulees / GAME_DAY_DURATION_SECONDS;
+        appliquerEtatsQuotidiensAnimaux(animaux);
+        ferme.setJourActuel(ferme.getJourActuel() + 1);
+        ferme.setAchatsCollectiviteRestants(DAILY_COMMUNITY_PURCHASE_LIMIT);
 
-        if (joursEcoules <= 0) {
-            return ferme;
-        }
-
-        int nbPoules = ferme.getNbPoules() == null ? 0 : ferme.getNbPoules();
-        int oeufsAjoutes = Math.toIntExact(joursEcoules * nbPoules);
-        remise.setStockOeuf(remise.getStockOeuf() + oeufsAjoutes);
-        ferme.setDernierePonteOeufs(
-            ferme.getDernierePonteOeufs().plusSeconds(joursEcoules * GAME_DAY_DURATION_SECONDS)
-        );
-
+        animalRepository.saveAll(animaux);
+        synchroniserCompteursDepuisAnimaux(ferme, animaux);
         remiseRepository.save(remise);
         return fermeRepository.save(ferme);
+    }
+
+    @Transactional
+    public void consommerAchatCollectivite(Integer idFerme) {
+        Ferme ferme = fermeRepository.findById(idFerme)
+            .orElseThrow(() -> new RuntimeException("Ferme introuvable"));
+        consommerAchatCollectivite(ferme);
+        fermeRepository.save(ferme);
+    }
+
+    public List<Animal> getAnimaux(Integer idFerme) {
+        Ferme ferme = getById(idFerme);
+        synchroniserAnimaux(ferme);
+        return animalRepository.findByFerme_IdFermeOrderByIdAnimalAsc(idFerme);
+    }
+
+    public Animal getAnimalDeFerme(Integer idFerme, Integer idAnimal) {
+        Animal animal = animalRepository.findById(idAnimal)
+            .orElseThrow(() -> new RuntimeException("Animal introuvable"));
+        if (animal.getFerme() == null || !idFerme.equals(animal.getFerme().getIdFerme())) {
+            throw new IllegalArgumentException("Cet animal n'appartient pas a cette ferme");
+        }
+        return animal;
+    }
+
+    @Transactional
+    public Ferme sauvegarderApresActionsAnimaux(Integer idFerme, List<Animal> animaux) {
+        Ferme ferme = fermeRepository.findById(idFerme)
+            .orElseThrow(() -> new RuntimeException("Ferme introuvable"));
+        animalRepository.saveAll(animaux);
+        synchroniserCompteursDepuisAnimaux(ferme);
+        return fermeRepository.save(ferme);
+    }
+
+    private void consommerAchatCollectivite(Ferme ferme) {
+        normalizeDailyState(ferme);
+        if (ferme.getAchatsCollectiviteRestants() <= 0) {
+            throw new IllegalArgumentException("Quota d'achats de la collectivite atteint pour aujourd'hui");
+        }
+        ferme.setAchatsCollectiviteRestants(ferme.getAchatsCollectiviteRestants() - 1);
+    }
+
+    private boolean normalizeDailyState(Ferme ferme) {
+        boolean changed = false;
+
+        if (ferme.getJourActuel() == null || ferme.getJourActuel() < 1) {
+            ferme.setJourActuel(1);
+            changed = true;
+        }
+
+        Integer achatsRestants = ferme.getAchatsCollectiviteRestants();
+        if (achatsRestants == null || achatsRestants < 0 || achatsRestants > DAILY_COMMUNITY_PURCHASE_LIMIT) {
+            ferme.setAchatsCollectiviteRestants(DAILY_COMMUNITY_PURCHASE_LIMIT);
+            changed = true;
+        }
+
+        return changed;
+    }
+
+    private boolean synchroniserAnimaux(Ferme ferme) {
+        boolean changed = false;
+        changed = synchroniserAnimauxType(ferme, TypeAnimal.VACHE, ferme.getNbVaches()) || changed;
+        changed = synchroniserAnimauxType(ferme, TypeAnimal.POULE, ferme.getNbPoules()) || changed;
+        changed = synchroniserAnimauxType(ferme, TypeAnimal.LAPIN, ferme.getNbLapins()) || changed;
+        return changed;
+    }
+
+    private boolean synchroniserAnimauxType(Ferme ferme, TypeAnimal typeAnimal, Integer expectedCount) {
+        List<Animal> animaux = animalRepository.findByFerme_IdFermeAndTypeAnimalOrderByIdAnimalAsc(
+            ferme.getIdFerme(),
+            typeAnimal
+        );
+        int cible = Math.max(0, expectedCount == null ? 0 : expectedCount);
+        boolean changed = false;
+
+        while (animaux.size() < cible) {
+            Animal animal = creerAnimalPourFerme(ferme, typeAnimal);
+            animalRepository.save(animal);
+            animaux.add(animal);
+            changed = true;
+        }
+
+        if (animaux.size() > cible) {
+            animalRepository.deleteAll(animaux.subList(cible, animaux.size()));
+            changed = true;
+        }
+
+        return changed;
+    }
+
+    private Animal creerAnimalPourFerme(Ferme ferme, TypeAnimal typeAnimal) {
+        long existingCount = animalRepository.countByFerme_IdFermeAndTypeAnimal(ferme.getIdFerme(), typeAnimal);
+        Animal animal = new Animal();
+        animal.setFerme(ferme);
+        animal.setTypeAnimal(typeAnimal);
+        animal.setNom(buildAnimalName(typeAnimal, (int) existingCount + 1));
+        animal.setPoids(defaultWeight(typeAnimal));
+        animal.setJaugeSante(100);
+        animal.setJaugeFaim(100);
+        animal.setJaugeHydratation(100);
+        animal.setJaugeProprete(100);
+        animal.setEstMalade(false);
+        animal.setAMange(false);
+        animal.setAEteTraite(false);
+        return animal;
+    }
+
+    private String buildAnimalName(TypeAnimal typeAnimal, int index) {
+        return switch (typeAnimal) {
+            case VACHE -> "Vache " + index;
+            case POULE -> "Poule " + index;
+            case LAPIN -> "Lapin " + index;
+        };
+    }
+
+    private float defaultWeight(TypeAnimal typeAnimal) {
+        return switch (typeAnimal) {
+            case VACHE -> 500f;
+            case POULE -> 2f;
+            case LAPIN -> 2f;
+        };
+    }
+
+    private void appliquerEtatsQuotidiensAnimaux(List<Animal> animaux) {
+        for (Animal animal : animaux) {
+            boolean etaitAffame = animal.getJaugeFaim() < 100;
+            boolean etaitAssoiffe = animal.getJaugeHydratation() < 100;
+
+            if (etaitAffame) {
+                animal.setEstMalade(true);
+                animal.setJaugeSante(0);
+            }
+
+            if (etaitAssoiffe) {
+                animal.setJaugeProprete(0);
+            }
+
+            animal.setJaugeFaim(0);
+            animal.setJaugeHydratation(0);
+        }
+    }
+
+    private boolean synchroniserCompteursDepuisAnimaux(Ferme ferme) {
+        return synchroniserCompteursDepuisAnimaux(
+            ferme,
+            animalRepository.findByFerme_IdFermeOrderByIdAnimalAsc(ferme.getIdFerme())
+        );
+    }
+
+    private boolean synchroniserCompteursDepuisAnimaux(Ferme ferme, List<Animal> animaux) {
+        int nbVaches = 0;
+        int nbPoules = 0;
+        int nbLapins = 0;
+        int nbVachesAffamees = 0;
+        int nbPouleAffamees = 0;
+        int nbLapinsAffames = 0;
+        int nbVachesAssoiffees = 0;
+        int nbPouleAssoiffees = 0;
+        int nbLapinsAssoiffes = 0;
+        int nbLapinsMalades = 0;
+
+        for (Animal animal : animaux) {
+            switch (animal.getTypeAnimal()) {
+                case VACHE -> {
+                    nbVaches++;
+                    if (animal.getJaugeFaim() < 100) {
+                        nbVachesAffamees++;
+                    }
+                    if (animal.getJaugeHydratation() < 100) {
+                        nbVachesAssoiffees++;
+                    }
+                }
+                case POULE -> {
+                    nbPoules++;
+                    if (animal.getJaugeFaim() < 100) {
+                        nbPouleAffamees++;
+                    }
+                    if (animal.getJaugeHydratation() < 100) {
+                        nbPouleAssoiffees++;
+                    }
+                }
+                case LAPIN -> {
+                    nbLapins++;
+                    if (animal.getJaugeFaim() < 100) {
+                        nbLapinsAffames++;
+                    }
+                    if (animal.getJaugeHydratation() < 100) {
+                        nbLapinsAssoiffes++;
+                    }
+                    if (animal.estMalade()) {
+                        nbLapinsMalades++;
+                    }
+                }
+            }
+        }
+
+        boolean changed = false;
+        changed = setIfDifferent(ferme.getNbVaches(), nbVaches, ferme::setNbVaches) || changed;
+        changed = setIfDifferent(ferme.getNbPoules(), nbPoules, ferme::setNbPoules) || changed;
+        changed = setIfDifferent(ferme.getNbLapins(), nbLapins, ferme::setNbLapins) || changed;
+        changed = setIfDifferent(ferme.getNbVachesAffamees(), nbVachesAffamees, ferme::setNbVachesAffamees) || changed;
+        changed = setIfDifferent(ferme.getNbPouleAffamees(), nbPouleAffamees, ferme::setNbPouleAffamees) || changed;
+        changed = setIfDifferent(ferme.getNbLapinsAffames(), nbLapinsAffames, ferme::setNbLapinsAffames) || changed;
+        changed = setIfDifferent(ferme.getNbVachesAssoiffees(), nbVachesAssoiffees, ferme::setNbVachesAssoiffees) || changed;
+        changed = setIfDifferent(ferme.getNbPouleAssoiffees(), nbPouleAssoiffees, ferme::setNbPouleAssoiffees) || changed;
+        changed = setIfDifferent(ferme.getNbLapinsAssoiffes(), nbLapinsAssoiffes, ferme::setNbLapinsAssoiffes) || changed;
+        changed = setIfDifferent(ferme.getNbLapinsMalades(), nbLapinsMalades, ferme::setNbLapinsMalades) || changed;
+        return changed;
+    }
+
+    private boolean setIfDifferent(Integer currentValue, int expectedValue, java.util.function.IntConsumer setter) {
+        if ((currentValue == null ? 0 : currentValue) != expectedValue) {
+            setter.accept(expectedValue);
+            return true;
+        }
+        return false;
     }
 
     public List<Map<String, Object>> getClassementData() {

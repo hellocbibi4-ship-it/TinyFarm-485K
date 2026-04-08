@@ -21,10 +21,12 @@ public class RemiseService {
 
     private final RemiseRepository remiseRepository;
     private final FermeRepository fermeRepository;
+    private final FermeService fermeService;
 
-    public RemiseService(RemiseRepository remiseRepository, FermeRepository fermeRepository) {
+    public RemiseService(RemiseRepository remiseRepository, FermeRepository fermeRepository, FermeService fermeService) {
         this.remiseRepository = remiseRepository;
         this.fermeRepository = fermeRepository;
+        this.fermeService = fermeService;
     }
 
     public Remise createRemise(Integer fermeId) {
@@ -146,6 +148,7 @@ public class RemiseService {
             throw new IllegalArgumentException("Solde insuffisant");
         }
 
+        fermeService.consommerAchatCollectivite(idFerme);
         ferme.setSoldeEcus(ferme.getSoldeEcus() - cout);
         ajouterStock(idFerme, typeStock, 1);
         fermeRepository.save(ferme);

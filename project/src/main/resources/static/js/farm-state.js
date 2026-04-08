@@ -121,7 +121,8 @@
     const parsedWeight = Number.parseFloat(rawAnimal?.weight)
 
     return {
-      id: `base-${typeKey}-${index + 1}`,
+      id: rawAnimal?.id || `base-${typeKey}-${index + 1}`,
+      idAnimal: Number.parseInt(rawAnimal?.idAnimal, 10) || null,
       name: rawAnimal?.name || `${catalogEntry.label} ${index + 1}`,
       type: typeKey,
       typeKey,
@@ -129,6 +130,13 @@
       homeLabel: catalogEntry.home,
       img: rawAnimal?.img || catalogEntry.img,
       weight: Number.isFinite(parsedWeight) ? parsedWeight : catalogEntry.defaultWeight,
+      age: Number.parseInt(rawAnimal?.age, 10) || 0,
+      stage: rawAnimal?.stage || null,
+      isSick: Boolean(rawAnimal?.isSick),
+      health: Number.parseInt(rawAnimal?.health, 10) || 100,
+      hunger: Number.parseInt(rawAnimal?.hunger, 10) || 100,
+      hydration: Number.parseInt(rawAnimal?.hydration, 10) || 100,
+      cleanliness: Number.parseInt(rawAnimal?.cleanliness, 10) || 100,
       isPurchased: false
     }
   }

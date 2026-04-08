@@ -50,6 +50,8 @@ const stockTableBody = document.getElementById("stock-table-body")
 const stockFeedback = document.getElementById("stock-feedback")
 const collectiviteList = document.getElementById("collectivite-list")
 const collectiviteFeedback = document.getElementById("collectivite-feedback")
+const collectiviteCounter = document.getElementById("collectivite-counter")
+const passDayButton = document.getElementById("pass-day-button")
 const careInventoryCounters = Array.from(document.querySelectorAll("[data-care-count]")).reduce(
   (accumulator, element) => {
     accumulator[element.dataset.careCount] = element
@@ -137,7 +139,8 @@ let careInventoryState = createDefaultCareInventory()
 let currentAnimalAction = {
   farmId: null,
   animalType: null,
-  animalName: null
+  animalName: null,
+  animalId: null
 }
 
 const ANIMATED_ANIMAL_CONFIG = {
@@ -217,6 +220,18 @@ function renderCommunityFromData(data) {
     : fallbackCommunityItems
 
   renderCollectivitePanel(items)
+  renderCommunityPurchaseCounter(data)
+}
+
+function renderCommunityPurchaseCounter(data = null) {
+  if (!collectiviteCounter) {
+    return
+  }
+
+  const maxPerDay = Math.max(1, Number.parseInt(data?.communityPurchases?.maxPerDay, 10) || 12)
+  const remaining = Math.max(0, Number.parseInt(data?.communityPurchases?.remaining, 10) || maxPerDay)
+
+  collectiviteCounter.textContent = `${remaining}/${maxPerDay}`
 }
 
 function createAnimatedSprite(typeKey) {
@@ -847,6 +862,7 @@ function applyFarmData(data) {
   mettreAJourInterface()
   renderFarmDataStatus(data)
   mettreAJourDisponibiliteBoutons()
+  updateClock()
 }
 
 function renderFarmDataStatus(data) {
@@ -1112,24 +1128,16 @@ function openActionModal({
   modal.setAttribute("aria-hidden", "false")
 }
 
-function deriveAnimalStatus(animal) {
-  if (animal?.status) {
-    return animal.status
+function deriveAnimalHealthState(animal) {
+  if (animal?.isSick) {
+    return "Malade"
   }
 
-  if (Number(animal?.health) < 60) {
-    return "Fragile"
-  }
+  return "Saine"
+}
 
-  if (Number(animal?.hunger) < 60) {
-    return "Affame"
-  }
-
-  if (Number(animal?.hydration) < 60) {
-    return "Detrempe"
-  }
-
-  return animal?.stage ? String(animal.stage) : "En bonne sante"
+function deriveCleanlinessState(animal) {
+  return Number(animal?.cleanliness) < 60 ? "Sale" : "Propre"
 }
 
 function isCattleOrChicken(type) {
@@ -1150,6 +1158,19 @@ function deriveHydrationState(animalDetails, animalStats) {
   }
 
   return Number(animalDetails.hydration) < 60 ? "Assoiffé" : "Hydraté"
+}
+
+function getCareTargetLabel(type, animalName = "") {
+  switch (String(type || "").toLowerCase()) {
+    case "poule":
+      return animalName || "la poule"
+    case "vache":
+      return animalName || "la vache"
+    case "lapin":
+      return "tout le clapier"
+    default:
+      return "la ferme"
+  }
 }
 
 async function openAnimalModal(animal) {
@@ -1178,13 +1199,13 @@ async function openAnimalModal(animal) {
   }
 
   const hungerValue = isCattleOrChicken(animal.type)
-    ? deriveHungerState(animalDetails, animalStats)
+    ? deriveHungerState(animalDetails, null)
     : animalStats
     ? `${animalStats.hungry}/${animalStats.total} affames`
     : `${animalDetails.hunger ?? 100}%`
 
   const thirstValue = isCattleOrChicken(animal.type)
-    ? deriveHydrationState(animalDetails, animalStats)
+    ? deriveHydrationState(animalDetails, null)
     : animalStats
     ? `${animalStats.thirsty}/${animalStats.total} assoffes`
     : `${animalDetails.hydration ?? 100}%`
@@ -1193,18 +1214,19 @@ async function openAnimalModal(animal) {
     name: animalDetails.name || animal.name,
     typeLabel: animalDetails.typeLabel || animal.type,
     homeLabel: animalDetails.homeLabel || animal.homeLabel || "Ferme",
-    statusValue: deriveAnimalStatus(animalDetails),
-    healthValue: `${animalDetails.health ?? 100}%`,
+    statusValue: deriveCleanlinessState(animalDetails),
+    healthValue: deriveAnimalHealthState(animalDetails),
     hungerValue,
     hydrationValue: thirstValue,
     weightLabel: "Poids :",
     weightValue: formatWeight(animalDetails.weight),
-    targetLabel: animalDetails.name || animal.name
+    targetLabel: getCareTargetLabel(animal.type, animalDetails.name || animal.name)
   })
 
   currentAnimalAction.animalType = animal.type
   currentAnimalAction.farmId = currentFarmId
   currentAnimalAction.animalName = animalDetails.name || animal.name
+  currentAnimalAction.animalId = Number.parseInt(animalDetails.idAnimal, 10) || null
 }
 
 async function openClapierModal() {
@@ -1234,13 +1256,14 @@ async function openClapierModal() {
     console.warn("Impossible de charger les donnees du clapier :", error)
   }
 
-  const rabbitStatusValue = rabbitHealth.sickLapins === 0
-    ? "Aucun lapin malade"
-    : `${rabbitHealth.sickLapins}/${rabbitHealth.totalLapins} sont malades`
+  const dirtyRabbits = rabbits.filter((rabbit) => Number(rabbit.cleanliness) < 60).length
+  const rabbitStatusValue = dirtyRabbits === 0
+    ? "Propres"
+    : `${dirtyRabbits}/${rabbitHealth.totalLapins} sont sales`
 
   const rabbitHealthValue = rabbitHealth.sickLapins === 0
-    ? "Tous sains"
-    : `${Math.max(0, rabbitHealth.totalLapins - rabbitHealth.sickLapins)}/${rabbitHealth.totalLapins} sains`
+    ? "Sains"
+    : "Malades"
 
   const rabbitHungerValue = rabbitHealth.hungryLapins === 0
     ? "Personne n'a faim"
@@ -1266,6 +1289,7 @@ async function openClapierModal() {
   currentAnimalAction.animalType = "lapin"
   currentAnimalAction.farmId = currentFarmId
   currentAnimalAction.animalName = "clapier"
+  currentAnimalAction.animalId = null
 }
 
 async function openPoulaillerListModal() {
@@ -1284,7 +1308,6 @@ async function openPoulaillerListModal() {
   }
 
   poulaillerListBody.innerHTML = ""
-
   for (const chicken of chickens) {
     let animalDetails = chicken
 
@@ -1294,8 +1317,8 @@ async function openPoulaillerListModal() {
       console.warn("Impossible de charger les donnees detaillees de la poule :", error)
     }
 
-    const statusValue = deriveAnimalStatus(animalDetails)
-    const healthValue = `${animalDetails.health ?? 100}%`
+    const statusValue = deriveCleanlinessState(animalDetails)
+    const healthValue = deriveAnimalHealthState(animalDetails)
     const hungerValue = deriveHungerState(animalDetails, null)
     const hydrationValue = deriveHydrationState(animalDetails, null)
 
@@ -1431,6 +1454,7 @@ async function initializeCollectivitePanel() {
 
   if (!currentFarmId) {
     renderCollectivitePanel(fallbackCommunityItems)
+    renderCommunityPurchaseCounter()
     return
   }
 
@@ -1440,6 +1464,7 @@ async function initializeCollectivitePanel() {
   } catch (error) {
     console.error("Erreur lors du chargement de la collectivite :", error)
     renderCollectivitePanel(fallbackCommunityItems)
+    renderCommunityPurchaseCounter()
     setCollectiviteFeedback("Collectivité chargée avec les données de secours.")
   }
 }
@@ -1490,6 +1515,11 @@ function updateClock() {
   const clock = document.getElementById("clock")
 
   if (!clock) {
+    return
+  }
+
+  if (farmClockState && currentFarmId) {
+    clock.textContent = `Jour ${farmClockState.day}`
     return
   }
 
@@ -1598,6 +1628,22 @@ async function acheterOffreMarche(offerId, quantity) {
   return response.json()
 }
 
+async function passerJourFerme() {
+  if (!currentFarmId) {
+    throw new Error("Connecte-toi pour passer au jour suivant.")
+  }
+
+  const response = await fetch(`/api/fermes/${encodeURIComponent(currentFarmId)}/passer-jour`, {
+    method: "POST"
+  })
+
+  if (!response.ok) {
+    throw new Error((await response.text()) || "Impossible de passer au jour suivant.")
+  }
+
+  return response.json()
+}
+
 function createFreshUiState(data) {
   const cashValue = Number(data?.cash)
 
@@ -1685,8 +1731,10 @@ function showLoginScreen() {
   marketSaleState.quantity = 1
   marketSaleState.unitPrice = 1
   loadCareInventoryState()
+  renderCommunityPurchaseCounter()
   renderStockTable(buildStockRows())
   renderMarketPanels()
+  updateClock()
   loginScreen.classList.remove("hidden")
   farmScreen.classList.add("hidden")
 }
@@ -1800,8 +1848,11 @@ actionButtons.forEach((button) => {
         return
       }
 
+      const querySuffix = currentAnimalAction.animalId
+        ? `?animalId=${encodeURIComponent(currentAnimalAction.animalId)}`
+        : ""
       const response = await fetch(
-        `/api/fermes/${encodeURIComponent(currentFarmId)}/animaux/${encodeURIComponent(currentAnimalAction.animalType)}/${apiAction}`,
+        `/api/fermes/${encodeURIComponent(currentFarmId)}/animaux/${encodeURIComponent(currentAnimalAction.animalType)}/${apiAction}${querySuffix}`,
         { method: "POST" }
       )
 
@@ -1960,6 +2011,30 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       setCollectiviteFeedback(`${selectedItem.label} sélectionné.`)
+    })
+  }
+
+  if (passDayButton) {
+    passDayButton.addEventListener("click", async () => {
+      if (passDayButton.disabled) {
+        return
+      }
+
+      try {
+        passDayButton.disabled = true
+        const farmData = await passerJourFerme()
+        applyFarmData(farmData)
+        renderStockTable(buildStockRows(farmData))
+        setStockFeedback()
+        setCollectiviteFeedback("Le jour suivant a ete applique.")
+        afficherMessage("Jour suivant applique.", "succes")
+      } catch (error) {
+        console.error("Erreur lors du passage au jour suivant :", error)
+        setCollectiviteFeedback(error.message || "Impossible de passer au jour suivant.")
+        afficherMessage("Impossible de passer au jour suivant.", "erreur")
+      } finally {
+        passDayButton.disabled = false
+      }
     })
   }
 

@@ -22,17 +22,17 @@ WHERE id_utilisateur = (
     SELECT id_utilisateur FROM utilisateur WHERE github_username = 'b'
 );
 
-MERGE INTO remise (ferme_id_ferme, stock_nourriture, stock_eau, stock_savon, stock_seringue, stock_paille)
+MERGE INTO remise (ferme_id_ferme, stock_oeuf, stock_nourriture, stock_eau, stock_savon, stock_seringue, stock_paille)
 KEY (ferme_id_ferme)
-SELECT id_ferme, 0, 0, 0, 0, 0
+SELECT id_ferme, 0, 0, 0, 0, 0, 0
 FROM ferme
 WHERE id_utilisateur = (
     SELECT id_utilisateur FROM utilisateur WHERE github_username = 'a'
 );
 
-MERGE INTO remise (ferme_id_ferme, stock_nourriture, stock_eau, stock_savon, stock_seringue, stock_paille)
+MERGE INTO remise (ferme_id_ferme, stock_oeuf, stock_nourriture, stock_eau, stock_savon, stock_seringue, stock_paille)
 KEY (ferme_id_ferme)
-SELECT id_ferme, 0, 0, 0, 0, 0
+SELECT id_ferme, 0, 0, 0, 0, 0, 0
 FROM ferme
 WHERE id_utilisateur = (
     SELECT id_utilisateur FROM utilisateur WHERE github_username = 'b'

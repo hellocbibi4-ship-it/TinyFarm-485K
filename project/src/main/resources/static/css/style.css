@@ -475,6 +475,40 @@ img {
     z-index: 210;
 }
 
+.pass-day-button {
+    position: absolute;
+    left: clamp(20px, 2vw, 34px);
+    bottom: clamp(20px, 3vh, 34px);
+    min-width: 220px;
+    min-height: 64px;
+    padding: 14px 26px;
+    border: none;
+    border-radius: 20px;
+    background: linear-gradient(180deg, #f4d77d 0%, #d8a43b 100%);
+    box-shadow: 0 14px 24px rgba(67, 36, 8, 0.22);
+    color: #4f2d12;
+    font-family: "ADLaM Display", cursive;
+    font-size: clamp(1rem, 0.7vw + 0.72rem, 1.28rem);
+    cursor: pointer;
+    z-index: 220;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+
+.pass-day-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 18px 28px rgba(67, 36, 8, 0.28);
+}
+
+.pass-day-button:active {
+    transform: translateY(1px);
+}
+
+.pass-day-button:disabled {
+    cursor: wait;
+    filter: grayscale(0.2);
+    opacity: 0.82;
+}
+
 /* ============================================================
    PANEL STOCK
    ============================================================ */
@@ -711,6 +745,41 @@ img {
     font-size: clamp(2rem, 1.22vw + 1rem, 3rem);
     text-align: center;
     text-shadow: 0 3px 0 rgba(84, 39, 13, 0.34);
+}
+
+.collectivite-panel-inner > .collectivite-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: row-reverse;
+    gap: 16px;
+    width: min(100%, 407px);
+    margin: 0 auto clamp(16px, 1.8vh, 24px);
+    transform: translateX(18px);
+}
+
+.collectivite-panel-inner > .collectivite-header .collectivite-title {
+    margin: 0;
+}
+
+.collectivite-panel-inner > .collectivite-header > .collectivite-header {
+    display: flex;
+    align-items: center;
+    margin: 0;
+}
+
+.collectivite-counter {
+    position: static;
+    flex: 0 0 auto;
+    margin: 0;
+    padding: 8px 16px;
+    border-radius: 999px;
+    background: rgba(78, 38, 14, 0.78);
+    color: #fff2d2;
+    font-family: "Acme", sans-serif;
+    font-size: clamp(1rem, 0.55vw + 0.75rem, 1.35rem);
+    line-height: 1;
+    box-shadow: 0 8px 18px rgba(33, 15, 4, 0.2);
 }
 
 .collectivite-list {
