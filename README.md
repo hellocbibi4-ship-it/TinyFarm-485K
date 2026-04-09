@@ -1,46 +1,125 @@
 # TinyFarm Project - L2 Informatique
-Welcome to the **TinyFarm** project repository. This project is part of the L2 Computer Science curriculum (XLG4IU050 - Client-side Web Development) at Nantes University.
 
-## 🐄 Project Overview
-TinyFarm is a web-based farming simulation game. Players start with a loan of **1,500 écus** and must manage their farm (cows, chickens, rabbits) to produce goods and eventually repay their debt.
+Bienvenue sur le depot **TinyFarm**.
+Ce projet est realise dans le cadre du cours **XLG4IU050 - Developpement web cote client**
+a l'Universite de Nantes.
 
-## 👥 Team Members (Group 485K)
+## 🐄 A propos du projet
+
+**TinyFarm** est un jeu de gestion de ferme en ligne.
+Le joueur commence avec un emprunt de **1 500 ecus** et doit faire evoluer sa ferme
+en elevant des vaches, des poules et des lapins, puis en produisant et vendant
+des ressources pour rembourser sa dette.
+
+Aujourd'hui, le depot contient :
+
+- une **application Spring Boot** dans `project/`
+- une ancienne **maquette front** dans `screens/`
+- des **tests Java** et des **tests Python**
+- une configuration **Codespaces / Dev Container** pour faciliter le travail d'equipe
+
+## 👥 Equipe 485K
 
 ### 🧑‍💼 Management
-- **SOUDANT Raphaël** — Lead Project
-- **ARMANET André** — Coordinator
+
+- **SOUDANT Raphael** - Lead Project
+- **ARMANET Andre** - Coordinator
 
 ### 🎨 UX Design et Frontend
+
 - DOUANAMOU Alexandre
 - TAGODOE Koami
 - SOW Bineta
 
 ### 💻 Frontend
-- **DIXNEUF Arthur** — Lead Frontend
+
+- **DIXNEUF Arthur** - Lead Frontend
 - DIOMANDE Bemisolo
 - ALTUNDAG Mehmet
 - OPREA Robert
 - ELYAKHUNOV Ramzes
 
 ### 🖥️ Backend
-- **DIATTA Thomas** — Lead Backend
+
+- **DIATTA Thomas** - Lead Backend
 - HANOU Aristippe
 - KHALDI Rami
-- PENALVA Théo
+- PENALVA Theo
 - ABUBAKER MOHAMED Mohamed
 - PARRACHO Henri
 
-## 📂 Project Structure
-- `/screens`: Static HTML/CSS/JSON mock-up of the game interface (Deadline: Jan 30).
-- `/docs`: Technical documentation and database schemas.
-- `/src`: (Coming soon) Source code for the web application.
+## 📂 Organisation du depot
 
-## 🚀 Quick Start (Mock-up)
-To view the current progress of the farm interface:
-1. Navigate to the `screens/` directory.
-2. Read the dedicated `README.md` inside that folder for specific instructions.
+- `project/` : application principale, backend + front integre
+- `screens/` : prototype front historique conserve comme reference visuelle
+- `docs/` : documents de projet et ressources utiles
+- `.devcontainer/` : environnement partage pour Codespaces / VS Code
+- `requirements-test.txt` : dependances Python pour les tests `pytest`
+- `pytest.ini` : configuration de detection des tests Python
 
-## 🛠️ Tech Stack
-- **Frontend:** HTML5, CSS3, JavaScript.
-- **Data:** JSON (Mock-up phase).
-- **Environment:** GitHub Codespaces.
+## 🚀 Lancer le projet
+
+Depuis la racine du depot :
+
+### Application Spring Boot
+
+Sous Windows :
+
+```powershell
+cd project
+.\mvnw.cmd spring-boot:run
+```
+
+Sous Linux / macOS :
+
+```bash
+cd project
+./mvnw spring-boot:run
+```
+
+Une fois lancee :
+
+```text
+http://localhost:8080
+```
+
+## 🧪 Lancer les tests
+
+### Tests Java
+
+```powershell
+cd project
+.\mvnw.cmd test
+```
+
+### Tests Python
+
+Depuis la racine du depot :
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\pip install -r requirements-test.txt
+.\.venv\Scripts\pytest
+```
+
+## 🛠️ Stack technique
+
+- **Backend** : Java, Spring Boot, Spring MVC, Spring Security, Spring Data JPA
+- **Frontend** : HTML5, CSS3, JavaScript
+- **Base de donnees** : PostgreSQL, H2
+- **Tests** : JUnit, Mockito, Pytest, Requests
+- **Outils** : Maven Wrapper, GitHub Codespaces, Dev Containers
+
+## 📚 Documentation utile
+
+- `README.md` : vue d'ensemble du depot
+- `project/ARCHITECTURE.md` : architecture et organisation du dossier principal
+- `screens/README.md` : notes sur l'ancienne maquette front
+- `docs/spring-starters-reference.md` : reference Spring Initializr conservee
+  comme aide projet
+
+## ✨ Notes importantes
+
+- `project/` est le dossier principal a modifier pour travailler sur la vraie application
+- `screens/` reste utile pour la reference visuelle, mais ce n'est plus l'application principale
+- `project/target/` est genere par Maven et ne doit pas etre modifie a la main
