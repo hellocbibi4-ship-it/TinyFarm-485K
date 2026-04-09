@@ -53,7 +53,7 @@ img {
 
 #Classement {
     position: relative;
-    z-index: 10;
+    z-index: 9;
     opacity: 0;
     transform: translateX(-100%);
     transition: transform 0.2s ease, opacity 0.2s ease;
@@ -675,7 +675,7 @@ img {
 
 .collectivite-panel {
     position: absolute;
-    top: 8.6%;
+    top: 11.2%;
     right: -18px;
     bottom: 1.8%;
     width: clamp(350px, 26vw, 505px);
@@ -792,7 +792,7 @@ img {
 .collectivite-list {
     display: grid;
     grid-template-columns: 1fr;
-    gap: clamp(10px, 1.1vh, 16px);
+    gap: clamp(3%, 1.1vh, 16px);
     width: min(100%, 407px);
     margin: 0 auto;
     align-content: start;
@@ -802,7 +802,7 @@ img {
     display: grid;
     grid-template-columns: var(--collectivite-icon-width, clamp(44px, 14%, 62px)) minmax(0, 1fr) auto;
     align-items: center;
-    gap: clamp(10px, 0.8vw, 14px);
+    gap: clamp(20px, 0.8vw, 14px);
     width: 100%;
     aspect-ratio: 481 / 88;
     padding: clamp(9px, 0.9vh, 12px) clamp(24px, 1.75vw, 30px) clamp(9px, 0.9vh, 12px) clamp(18px, 1.45vw, 22px);
@@ -1591,7 +1591,7 @@ img {
 
 .care-inventory {
     position: absolute;
-    top: clamp(86px, 12.5vh, 138px);
+    top: 15%;
     left: 50%;
     transform: translate(-50%, -8.3333%);
     display: grid;
@@ -1979,6 +1979,7 @@ img {
     background: linear-gradient(180deg, #fff4de 0%, #f4ddb6 100%);
     color: #2d1a0d;
     box-shadow: 0 22px 34px rgba(0, 0, 0, 0.34);
+    z-index: 9999;
 }
 
 .modal-body {
@@ -2126,7 +2127,7 @@ img {
     }
 
     .care-inventory {
-        top: clamp(78px, 10.5vh, 118px);
+        top: clamp(5%, 10.5vh, 118px);
         left: 50%;
         transform: translate(-50%, -8.3333%);
         width: min(470px, 50vw);
