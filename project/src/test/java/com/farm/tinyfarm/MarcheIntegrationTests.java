@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -23,6 +24,15 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 @SpringBootTest
+@TestPropertySource(properties = {
+    "spring.datasource.url=jdbc:h2:mem:tinyfarm-marche-tests;DB_CLOSE_DELAY=-1;MODE=LEGACY",
+    "spring.datasource.driver-class-name=org.h2.Driver",
+    "spring.datasource.username=sa",
+    "spring.datasource.password=",
+    "spring.jpa.hibernate.ddl-auto=create-drop",
+    "spring.sql.init.mode=never",
+    "tinyfarm.dev.seed-local-users=false"
+})
 class MarcheIntegrationTests {
 
     private MockMvc mockMvc;
@@ -223,6 +233,250 @@ class MarcheIntegrationTests {
     }
 
     @Test
+    void sickOrDirtyChickensDoNotLayEggs() throws Exception {
+        int farmId = createFarm("eggs");
+
+        mockMvc.perform(post("/api/fermes/{id}/passer-jour", farmId))
+            .andExpect(status().isOk());
+
+        MvcResult secondDayResult = mockMvc.perform(post("/api/fermes/{id}/passer-jour", farmId))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        JsonNode secondDayBody = objectMapper.readTree(secondDayResult.getResponse().getContentAsString());
+        assertStockQuantity(secondDayBody, "Oeufs", 6);
+
+        MvcResult thirdDayResult = mockMvc.perform(post("/api/fermes/{id}/passer-jour", farmId))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        JsonNode thirdDayBody = objectMapper.readTree(thirdDayResult.getResponse().getContentAsString());
+        assertStockQuantity(thirdDayBody, "Oeufs", 6);
+    }
+
+    @Test
+    void chickensDieAfterFourConsecutiveSickDays() throws Exception {
+        int farmId = createFarm("death");
+
+        for (int day = 0; day < 5; day++) {
+            mockMvc.perform(post("/api/fermes/{id}/passer-jour", farmId))
+                .andExpect(status().isOk());
+        }
+
+        mockMvc.perform(get("/api/fermes/{id}/animaux/poules/status", farmId))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.total").value(0));
+
+        MvcResult result = mockMvc.perform(get("/api/fermes/{id}/front-data", farmId))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        JsonNode body = objectMapper.readTree(result.getResponse().getContentAsString());
+        assertStockQuantity(body, "Oeufs", 6);
+    }
+
+    @Test
+    void sickOrDirtyCowDoesNotProduceMilk() throws Exception {
+        int farmId = createFarm("milk");
+
+        mockMvc.perform(post("/api/fermes/{id}/passer-jour", farmId))
+            .andExpect(status().isOk());
+
+        MvcResult secondDayResult = mockMvc.perform(post("/api/fermes/{id}/passer-jour", farmId))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        JsonNode secondDayBody = objectMapper.readTree(secondDayResult.getResponse().getContentAsString());
+        assertStockQuantity(secondDayBody, "Lait", 2);
+
+        MvcResult thirdDayResult = mockMvc.perform(post("/api/fermes/{id}/passer-jour", farmId))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        JsonNode thirdDayBody = objectMapper.readTree(thirdDayResult.getResponse().getContentAsString());
+        assertStockQuantity(thirdDayBody, "Lait", 2);
+    }
+
+    @Test
+    void cowsDieAfterFourConsecutiveSickDays() throws Exception {
+        int farmId = createFarm("cowdeath");
+
+        for (int day = 0; day < 5; day++) {
+            mockMvc.perform(post("/api/fermes/{id}/passer-jour", farmId))
+                .andExpect(status().isOk());
+        }
+
+        mockMvc.perform(get("/api/fermes/{id}/animaux/vaches/status", farmId))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.total").value(0));
+
+        MvcResult result = mockMvc.perform(get("/api/fermes/{id}/front-data", farmId))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        JsonNode body = objectMapper.readTree(result.getResponse().getContentAsString());
+        assertStockQuantity(body, "Lait", 2);
+    }
+
+    @Test
+    void neglectedDirtyAndSickRabbitHutchKillsPartOfTheRabbits() throws Exception {
+        int farmId = createFarm("rabbits");
+
+        mockMvc.perform(post("/api/fermes/{id}/acheter-animal", farmId)
+                .param("type", "lapin"))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/fermes/{id}/acheter-animal", farmId)
+                .param("type", "lapin"))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/fermes/{id}/passer-jour", farmId))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/fermes/{id}/passer-jour", farmId))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/fermes/{id}/passer-jour", farmId))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/fermes/{id}/animaux/lapins/status", farmId))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.total").value(2))
+            .andExpect(jsonPath("$.hungry").value(2))
+            .andExpect(jsonPath("$.thirsty").value(2));
+    }
+
+    @Test
+    void caringForRabbitHutchPreventsDeathsOnNextDay() throws Exception {
+        int farmId = createFarm("rabbitcare");
+
+        mockMvc.perform(post("/api/fermes/{id}/acheter-animal", farmId)
+                .param("type", "lapin"))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/fermes/{id}/acheter-animal", farmId)
+                .param("type", "lapin"))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/fermes/{id}/passer-jour", farmId))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/fermes/{id}/passer-jour", farmId))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/fermes/{id}/acheter-objet-entretien", farmId)
+                .param("type", "SAVON"))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/fermes/{id}/acheter-objet-entretien", farmId)
+                .param("type", "SERINGUE"))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/fermes/{id}/animaux/lapins/clean", farmId))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/fermes/{id}/animaux/lapins/heal", farmId))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/fermes/{id}/passer-jour", farmId))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/fermes/{id}/animaux/lapins/status", farmId))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.total").value(4));
+    }
+
+    @Test
+    void deadAnimalsDoNotRespawnOnRepeatedFrontDataLoads() throws Exception {
+        int farmId = createFarm("norespawn");
+
+        for (int day = 0; day < 5; day++) {
+            mockMvc.perform(post("/api/fermes/{id}/passer-jour", farmId))
+                .andExpect(status().isOk());
+        }
+
+        MvcResult firstLoad = mockMvc.perform(get("/api/fermes/{id}/front-data", farmId))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        JsonNode firstBody = objectMapper.readTree(firstLoad.getResponse().getContentAsString());
+        assertIntegerField(firstBody.path("rabbitHealth"), "totalLapins", 0);
+        assertAnimalsCount(firstBody, "poule", 0);
+        assertAnimalsCount(firstBody, "vache", 0);
+        assertAnimalsCount(firstBody, "lapin", 0);
+
+        MvcResult secondLoad = mockMvc.perform(get("/api/fermes/{id}/front-data", farmId))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        JsonNode secondBody = objectMapper.readTree(secondLoad.getResponse().getContentAsString());
+        assertIntegerField(secondBody.path("rabbitHealth"), "totalLapins", 0);
+        assertAnimalsCount(secondBody, "poule", 0);
+        assertAnimalsCount(secondBody, "vache", 0);
+        assertAnimalsCount(secondBody, "lapin", 0);
+    }
+
+    @Test
+    void farmCannotBuySecondCowButCanBuyOneAfterLosingIt() throws Exception {
+        int farmId = createFarm("singlecow");
+
+        mockMvc.perform(post("/api/fermes/{id}/acheter-animal", farmId)
+                .param("type", "vache"))
+            .andExpect(status().isBadRequest());
+
+        for (int day = 0; day < 5; day++) {
+            mockMvc.perform(post("/api/fermes/{id}/passer-jour", farmId))
+                .andExpect(status().isOk());
+        }
+
+        mockMvc.perform(get("/api/fermes/{id}/animaux/vaches/status", farmId))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.total").value(0));
+
+        mockMvc.perform(post("/api/fermes/{id}/acheter-animal", farmId)
+                .param("type", "vache"))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/fermes/{id}/animaux/vaches/status", farmId))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.total").value(1));
+    }
+
+    @Test
+    void cowsAndChickensReceiveRandomStyleNames() throws Exception {
+        int farmId = createFarm("names");
+
+        MvcResult result = mockMvc.perform(get("/api/fermes/{id}/front-data", farmId))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        JsonNode animals = objectMapper.readTree(result.getResponse().getContentAsString()).path("animals");
+        boolean foundNamedCow = false;
+        boolean foundNamedChicken = false;
+
+        for (JsonNode animal : animals) {
+            String type = animal.path("type").asText();
+            String name = animal.path("name").asText();
+
+            if ("vache".equals(type) && !name.startsWith("Vache ")) {
+                foundNamedCow = true;
+            }
+
+            if ("poule".equals(type) && !name.startsWith("Poule ")) {
+                foundNamedChicken = true;
+            }
+        }
+
+        if (!foundNamedCow) {
+            throw new AssertionError("La vache n'a pas recu de prenom aleatoire");
+        }
+
+        if (!foundNamedChicken) {
+            throw new AssertionError("Les poules n'ont pas recu de prenom aleatoire");
+        }
+    }
+
+    @Test
     void caringActionsTreatChickensIndividuallyAndRabbitHutchAsGroup() throws Exception {
         int farmId = createFarm("care");
 
@@ -335,6 +589,36 @@ class MarcheIntegrationTests {
         assertIntegerField(body.path("careInventory"), "water-bucket", 0);
         assertIntegerField(body.path("careInventory"), "syringe", 0);
         assertIntegerField(body.path("careInventory"), "soap", 0);
+        assertIntegerField(body, "cash", 1460);
+    }
+
+    @Test
+    void communityMarketBuysEggsMilkAndRabbitsAtFixedPrices() throws Exception {
+        int farmId = createFarm("collectsell");
+        remiseService.ajouterStock(farmId, TypeStock.OEUF, 2);
+        remiseService.ajouterStock(farmId, TypeStock.LAIT, 1);
+
+        mockMvc.perform(post("/api/fermes/{id}/collectivite/vente", farmId)
+                .param("produit", "OEUF")
+                .param("quantite", "2"))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/fermes/{id}/collectivite/vente", farmId)
+                .param("produit", "LAIT")
+                .param("quantite", "1"))
+            .andExpect(status().isOk());
+
+        MvcResult result = mockMvc.perform(post("/api/fermes/{id}/collectivite/vente", farmId)
+                .param("produit", "LAPIN")
+                .param("quantite", "1"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        JsonNode body = objectMapper.readTree(result.getResponse().getContentAsString());
+        assertIntegerField(body, "cash", 1543);
+        assertStockQuantity(body, "Oeufs", 0);
+        assertStockQuantity(body, "Lait", 0);
+        assertAnimalsCount(body, "lapin", 1);
     }
 
     private int createFarm(String prefix) throws Exception {
@@ -468,5 +752,18 @@ class MarcheIntegrationTests {
         }
 
         throw new AssertionError("Animal de type " + type + " introuvable");
+    }
+
+    private void assertAnimalsCount(JsonNode body, String type, int expectedCount) {
+        int count = 0;
+        for (JsonNode animal : body.path("animals")) {
+            if (type.equals(animal.path("type").asText())) {
+                count++;
+            }
+        }
+
+        if (count != expectedCount) {
+            throw new AssertionError("Nombre d'animaux inattendu pour " + type + " : " + count);
+        }
     }
 }

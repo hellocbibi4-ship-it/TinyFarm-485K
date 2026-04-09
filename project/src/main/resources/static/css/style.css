@@ -751,11 +751,10 @@ img {
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-direction: row-reverse;
     gap: 16px;
     width: min(100%, 407px);
     margin: 0 auto clamp(16px, 1.8vh, 24px);
-    transform: translateX(18px);
+    transform: translateX(12px);
 }
 
 .collectivite-panel-inner > .collectivite-header .collectivite-title {
@@ -765,6 +764,14 @@ img {
 .collectivite-panel-inner > .collectivite-header > .collectivite-header {
     display: flex;
     align-items: center;
+    margin: 0;
+}
+
+.collectivite-panel-inner > .collectivite-header > .collectivite-header .collectivite-counter {
+    margin-right: 16px;
+}
+
+.collectivite-panel-inner > .collectivite-header > .collectivite-header + .collectivite-title {
     margin: 0;
 }
 
@@ -935,10 +942,10 @@ img {
 
 .settings-btn {
     position: absolute;
-    top: 6px;
-    right: 20px;
-    width: 60px;
-    height: 60px;
+    top: 10px;
+    right: 16px;
+    width: 44px;
+    height: 44px;
     background: url('../assets/roue.png') center / contain no-repeat;
     border: none;
     cursor: pointer;
@@ -948,18 +955,18 @@ img {
 
 .settings-btn.open {
     transform: rotate(-180deg);
-    right: 240px;
+    right: 176px;
 }
 
 .settings-panel {
     position: absolute;
     top: 0;
     right: 0;
-    width: 200px;
-    max-height: 90px;
+    width: 148px;
+    max-height: 82px;
     background: #123d5b;
     border-radius: 0 0 12px 12px;
-    padding: 6px 12px;
+    padding: 4px 10px;
     overflow: hidden;
     transform: translateX(100%);
     transition: transform 0.3s ease;
@@ -976,15 +983,15 @@ img {
 .settings-content p {
     margin: 3px 0;
     font-family: "Acme", sans-serif;
-    font-size: 1.4rem;
+    font-size: 1.05rem;
     cursor: pointer;
 }
 
 .language-btn {
     cursor: pointer;
     font-family: "Acme", sans-serif;
-    font-size: 1.2rem;
-    margin: 5px 0;
+    font-size: 1rem;
+    margin: 3px 0;
 }
 
 .language-panel {
@@ -1004,14 +1011,28 @@ img {
     align-items: center;
     gap: 8px;
     cursor: pointer;
-    margin: 5px 0;
-    font-size: 1rem;
+    margin: 4px 0;
+    font-size: 0.88rem;
 }
 
 .lang-option img {
     width: 20px;
     height: 15px;
     object-fit: cover;
+}
+
+.logout-btn {
+    display: block;
+    width: 100%;
+    margin: 4px 0 0;
+    padding: 4px 0;
+    border: none;
+    background: transparent;
+    color: inherit;
+    font-family: "Acme", sans-serif;
+    font-size: 1rem;
+    text-align: left;
+    cursor: pointer;
 }
 
 /* ============================================================
@@ -1101,14 +1122,14 @@ img {
 }
 
 .popup-marche-onglet {
-    min-width: 148px;
-    height: 48px;
+    min-width: 124px;
+    height: 42px;
     border: none;
     border-radius: 14px 14px 0 0;
     background: rgba(99, 62, 22, 0.2);
     color: #5b3210;
     font-family: "Acme", sans-serif;
-    font-size: 1.12rem;
+    font-size: 1rem;
     cursor: pointer;
 }
 
@@ -1215,13 +1236,13 @@ img {
 }
 
 .popup-marche-action {
-    min-width: 92px;
-    min-height: 38px;
+    min-width: 82px;
+    min-height: 34px;
     border: none;
     border-radius: 10px;
     color: #fff8e7;
     font-family: "Acme", sans-serif;
-    font-size: 0.98rem;
+    font-size: 0.9rem;
     cursor: pointer;
     transition: transform 0.15s ease, filter 0.15s ease, opacity 0.15s ease;
 }
@@ -1279,10 +1300,62 @@ img {
     align-items: center;
     justify-content: center;
     width: 100%;
-    min-height: 52px;
+    min-height: 46px;
     margin-top: 8px;
-    font-size: 1.12rem;
+    font-size: 1rem;
     box-shadow: 0 10px 20px rgba(56, 83, 176, 0.22);
+}
+
+.popup-marche-panneau[data-marche-panel="collectivite"] .popup-marche-vente-form {
+    display: none;
+}
+
+.popup-marche-collectivite-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.carte-animal--collectivite {
+    padding-bottom: 14px;
+}
+
+.zone-image--collectivite {
+    min-height: 94px;
+    display: grid;
+    place-items: center;
+}
+
+.market-product-badge {
+    display: inline-grid;
+    place-items: center;
+    width: 100px;
+    height: 100px;
+    border-radius: 24px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(245,228,186,0.92) 100%);
+    color: #6a3b16;
+    font-family: "ADLaM Display", cursive;
+    font-size: 1rem;
+    letter-spacing: 0.04em;
+    box-shadow: inset 0 -4px 0 rgba(117, 72, 28, 0.12), 0 10px 20px rgba(57, 33, 12, 0.12);
+}
+
+.market-product-badge--lapin {
+    background: linear-gradient(180deg, #fffaf1 0%, #f1dfc7 100%);
+}
+
+.market-product-badge--oeuf {
+    background: linear-gradient(180deg, #fffdf5 0%, #f5e5b8 100%);
+}
+
+.market-product-badge--lait {
+    background: linear-gradient(180deg, #fbfdff 0%, #dfeef8 100%);
+}
+
+.popup-marche-stock-chip {
+    margin: 0;
+    color: #6b471f;
+    font-family: "Acme", sans-serif;
+    font-size: 0.95rem;
 }
 
 .entete-bois {
@@ -1420,8 +1493,8 @@ img {
     border-radius: 8px;
     color: #f6ffe8;
     font-family: "Acme", sans-serif;
-    font-size: 1.85rem;
-    padding: 8px 14px;
+    font-size: 1.35rem;
+    padding: 7px 12px;
     cursor: pointer;
     transition: transform 0.15s ease, filter 0.15s ease, background-color 0.15s ease;
 }
@@ -1435,8 +1508,14 @@ img {
 }
 
 .btn-fermer {
-    min-width: 180px;
+    min-width: 148px;
     background-color: var(--bleu-bouton);
+}
+
+.btn-acheter--collectivite {
+    width: 100%;
+    font-size: 1.05rem;
+    padding: 8px 10px;
 }
 
 .btn-fermer:hover {
@@ -1952,18 +2031,20 @@ img {
 .modal-actions {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
+    gap: 10px;
     margin-top: 18px;
 }
 
 .action-btn {
-    min-height: 46px;
+    min-height: 52px;
     border: none;
     border-radius: 12px;
     background: linear-gradient(180deg, #65bf39 0%, #3c9023 100%);
     color: #fff8e7;
     font-family: "Acme", sans-serif;
-    font-size: 1.2rem;
+    font-size: 1rem;
+    line-height: 1.15;
+    padding: 8px 10px;
     cursor: pointer;
     transition: transform 0.15s ease, filter 0.15s ease;
 }

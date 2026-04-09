@@ -56,6 +56,8 @@ public class FermeController {
 
     @GetMapping("/{id}/front-data")
     public ResponseEntity<Map<String, Object>> getFrontData(@PathVariable Integer id) {
+        // Endpoint principal du front : l'interface se reconstruit presque
+        // entierement a partir de cet unique payload agrege.
         Ferme ferme = fermeService.getById(id);
         return ResponseEntity.ok(buildFrontData(ferme));
     }
@@ -102,6 +104,16 @@ public class FermeController {
         return ResponseEntity.ok(buildFrontData(fermeService.getById(id)));
     }
 
+    @PostMapping("/{id}/collectivite/vente")
+    public ResponseEntity<Map<String, Object>> vendreACollectivite(
+        @PathVariable Integer id,
+        @RequestParam String produit,
+        @RequestParam Integer quantite
+    ) {
+        Ferme fermeMAJ = fermeService.vendreStockACollectivite(id, produit, quantite);
+        return ResponseEntity.ok(buildFrontData(fermeMAJ));
+    }
+
     @PostMapping("/{id}/marche/offres")
     public ResponseEntity<Map<String, Object>> creerOffreMarche(
         @PathVariable Integer id,
@@ -131,6 +143,7 @@ public class FermeController {
 
     @GetMapping("/{id}/animaux/clapier")
     public ResponseEntity<Map<String, Integer>> getClapierStatus(@PathVariable Integer id) {
+        // Le clapier expose des stats de groupe au lieu de details animal par animal.
         Ferme ferme = fermeService.getById(id);
         Map<String, Integer> response = new HashMap<>();
         response.put("totalLapins", ferme.getNbLapins() == null ? 0 : ferme.getNbLapins());
@@ -180,17 +193,20 @@ public class FermeController {
     ) {
         String normalized = type.toLowerCase().trim();
 
+        // Les lapins sont soignes en groupe, contrairement aux poules/vaches.
         if ("lapin".equals(normalized) || "lapins".equals(normalized)) {
             List<Animal> lapins = animauxParType(id, TypeAnimal.LAPIN);
             if (lapins.isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of("error", "Aucun lapin dans le clapier"));
             }
+            fermeService.payerActionAnimale(id, normalized, "feed");
             remiseService.retirerStock(id, TypeStock.NOURRITURE, 1);
             lapins.forEach(animal -> animal.setJaugeFaim(100));
             return ResponseEntity.ok(buildFrontData(fermeService.sauvegarderApresActionsAnimaux(id, lapins)));
         }
 
         Animal animal = requireIndividualAnimal(id, normalized, animalId);
+        fermeService.payerActionAnimale(id, normalized, "feed");
         remiseService.retirerStock(id, "vache".equals(normalized) || "vaches".equals(normalized) ? TypeStock.PAILLE : TypeStock.NOURRITURE, 1);
         animal.setJaugeFaim(100);
         return ResponseEntity.ok(buildFrontData(fermeService.sauvegarderApresActionsAnimaux(id, List.of(animal))));
@@ -209,12 +225,14 @@ public class FermeController {
             if (lapins.isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of("error", "Aucun lapin dans le clapier"));
             }
+            fermeService.payerActionAnimale(id, normalized, "water");
             remiseService.retirerStock(id, TypeStock.EAU, 1);
             lapins.forEach(animal -> animal.setJaugeHydratation(100));
             return ResponseEntity.ok(buildFrontData(fermeService.sauvegarderApresActionsAnimaux(id, lapins)));
         }
 
         Animal animal = requireIndividualAnimal(id, normalized, animalId);
+        fermeService.payerActionAnimale(id, normalized, "water");
         remiseService.retirerStock(id, TypeStock.EAU, 1);
         animal.setJaugeHydratation(100);
         return ResponseEntity.ok(buildFrontData(fermeService.sauvegarderApresActionsAnimaux(id, List.of(animal))));
@@ -233,18 +251,22 @@ public class FermeController {
             if (lapins.isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of("error", "Aucun lapin dans le clapier"));
             }
+            fermeService.payerActionAnimale(id, normalized, "heal");
             remiseService.retirerStock(id, TypeStock.SERINGUE, 1);
             lapins.forEach(animal -> {
                 animal.setJaugeSante(100);
                 animal.setEstMalade(false);
+                animal.setJoursMaladeConsecutifs(0);
             });
             return ResponseEntity.ok(buildFrontData(fermeService.sauvegarderApresActionsAnimaux(id, lapins)));
         }
 
         Animal animal = requireIndividualAnimal(id, normalized, animalId);
+        fermeService.payerActionAnimale(id, normalized, "heal");
         remiseService.retirerStock(id, TypeStock.SERINGUE, 1);
         animal.setJaugeSante(100);
         animal.setEstMalade(false);
+        animal.setJoursMaladeConsecutifs(0);
         return ResponseEntity.ok(buildFrontData(fermeService.sauvegarderApresActionsAnimaux(id, List.of(animal))));
     }
 
@@ -261,12 +283,14 @@ public class FermeController {
             if (lapins.isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of("error", "Aucun lapin dans le clapier"));
             }
+            fermeService.payerActionAnimale(id, normalized, "clean");
             remiseService.retirerStock(id, TypeStock.SAVON, 1);
             lapins.forEach(animal -> animal.setJaugeProprete(100));
             return ResponseEntity.ok(buildFrontData(fermeService.sauvegarderApresActionsAnimaux(id, lapins)));
         }
 
         Animal animal = requireIndividualAnimal(id, normalized, animalId);
+        fermeService.payerActionAnimale(id, normalized, "clean");
         remiseService.retirerStock(id, TypeStock.SAVON, 1);
         animal.setJaugeProprete(100);
         return ResponseEntity.ok(buildFrontData(fermeService.sauvegarderApresActionsAnimaux(id, List.of(animal))));
@@ -316,6 +340,8 @@ public class FermeController {
     }
 
     private Map<String, Object> createAnimalData(Animal sourceAnimal) {
+        // On transforme ici l'entite JPA en structure simple, stable
+        // et orientee UI pour limiter la logique de mapping dans le front.
         Map<String, Object> animal = new HashMap<>();
         animal.put("id", "animal-" + sourceAnimal.getIdAnimal());
         animal.put("idAnimal", sourceAnimal.getIdAnimal());
@@ -368,6 +394,8 @@ public class FermeController {
     }
 
     private Map<String, Object> buildFrontData(Ferme ferme) {
+        // Ce payload regroupe en une seule reponse tout ce dont le front
+        // a besoin apres une action utilisateur.
         Remise remise = remiseService.getById(ferme.getIdFerme());
         Map<String, Object> response = new HashMap<>();
         response.put("farmId", ferme.getIdFerme());
@@ -439,8 +467,8 @@ public class FermeController {
         items.add(createCommunityItem("syringe", "Seringue", remiseService.getCout(TypeStock.SERINGUE)));
         items.add(createCommunityItem("water-bucket", "Seau d'eau", remiseService.getCout(TypeStock.EAU)));
         items.add(createCommunityItem("soap", "Savon", remiseService.getCout(TypeStock.SAVON)));
-        items.add(createShortcutItem("buy-animals", "Achat d'animaux"));
         items.add(createShortcutItem("farmers-market", "Marche des producteurs"));
+        items.add(createShortcutItem("buy-animals", "Achat d'animaux"));
         return items;
     }
 

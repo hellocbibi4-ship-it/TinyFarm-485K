@@ -12,9 +12,11 @@ import jakarta.transaction.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.springframework.stereotype.Service;
 
@@ -22,6 +24,19 @@ import org.springframework.stereotype.Service;
 public class FermeService {
     public static final int GAME_DAY_DURATION_SECONDS = 60;
     public static final int DAILY_COMMUNITY_PURCHASE_LIMIT = 12;
+    public static final int COMMUNITY_BUYBACK_EGG_PRICE = 8;
+    public static final int COMMUNITY_BUYBACK_MILK_PRICE = 2;
+    public static final int COMMUNITY_BUYBACK_RABBIT_PRICE = 25;
+    // Petites listes de prenoms pour eviter les animaux tous nommes
+    // "Poule 1" ou "Vache 1" dans l'interface.
+    private static final List<String> COW_NAMES = List.of(
+        "Marguerite", "Rosalie", "Belle", "Capucine", "Noisette",
+        "Luna", "Biscotte", "Cannelle", "Bijou", "Praline"
+    );
+    private static final List<String> CHICKEN_NAMES = List.of(
+        "Cocotte", "Plume", "Pistache", "Nugget", "Pompon",
+        "Biscuit", "Pepette", "Mimosa", "Choupette", "Perline"
+    );
 
     private final FermeRepository fermeRepository;
     private final RemiseRepository remiseRepository;
@@ -39,6 +54,8 @@ public class FermeService {
 
     @Transactional
     public Ferme create(Ferme ferme) {
+        // Une nouvelle ferme repart avec un etat jouable immediat :
+        // animaux de base, solde initial et quota journalier plein.
         Utilitaires.validationNom(ferme.getNom());
         ferme.setScore(0);
         ferme.setSoldeEcus(1500);
@@ -116,7 +133,6 @@ public class FermeService {
         Ferme ferme = fermeRepository.findById(idFerme)
             .orElseThrow(() -> new RuntimeException("Impossible d'acheter un animal: la ferme n'existe pas"));
         normalizeDailyState(ferme);
-        synchroniserAnimaux(ferme);
 
         if (typeAnimal == null || typeAnimal.isBlank()) {
             throw new IllegalArgumentException("Type d'animal invalide");
@@ -133,6 +149,12 @@ public class FermeService {
             case VACHE -> 50;
             case POULE, LAPIN -> 10;
         };
+
+        // La vache est volontairement unique dans une ferme.
+        if (animalType == TypeAnimal.VACHE
+            && animalRepository.countByFerme_IdFermeAndTypeAnimal(idFerme, TypeAnimal.VACHE) > 0) {
+            throw new IllegalArgumentException("Une ferme ne peut posseder qu'une seule vache");
+        }
 
         if (ferme.getSoldeEcus() < prix) {
             throw new IllegalArgumentException("Solde insuffisant");
@@ -179,7 +201,6 @@ public class FermeService {
         Ferme ferme = fermeRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Ferme introuvable"));
         boolean changed = normalizeDailyState(ferme);
-        changed = synchroniserAnimaux(ferme) || changed;
         changed = synchroniserCompteursDepuisAnimaux(ferme) || changed;
         return changed ? fermeRepository.save(ferme) : ferme;
     }
@@ -189,7 +210,6 @@ public class FermeService {
         Ferme ferme = fermeRepository.findById(idFerme)
             .orElseThrow(() -> new RuntimeException("Ferme introuvable"));
         normalizeDailyState(ferme);
-        synchroniserAnimaux(ferme);
 
         Remise remise = remiseRepository.findById(idFerme).orElseGet(() -> {
             Remise nouvelleRemise = new Remise();
@@ -198,8 +218,16 @@ public class FermeService {
         });
 
         List<Animal> animaux = animalRepository.findByFerme_IdFermeOrderByIdAnimalAsc(idFerme);
-        int nbPoules = (int) animaux.stream().filter(animal -> animal.getTypeAnimal() == TypeAnimal.POULE).count();
-        int nbVaches = (int) animaux.stream().filter(animal -> animal.getTypeAnimal() == TypeAnimal.VACHE).count();
+        // La production est calculee avant la degradation du nouveau jour :
+        // un animal sale ou malade ne produit deja plus.
+        int nbPoules = (int) animaux.stream()
+            .filter(animal -> animal.getTypeAnimal() == TypeAnimal.POULE)
+            .filter(this::peutPondre)
+            .count();
+        int nbVaches = (int) animaux.stream()
+            .filter(animal -> animal.getTypeAnimal() == TypeAnimal.VACHE)
+            .filter(this::peutProduireLait)
+            .count();
 
         if (nbPoules > 0) {
             remise.setStockOeuf(remise.getStockOeuf() + nbPoules);
@@ -208,10 +236,13 @@ public class FermeService {
             remise.setStockLait(remise.getStockLait() + nbVaches);
         }
 
-        appliquerEtatsQuotidiensAnimaux(animaux);
+        List<Animal> animauxMorts = appliquerEtatsQuotidiensAnimaux(animaux);
         ferme.setJourActuel(ferme.getJourActuel() + 1);
         ferme.setAchatsCollectiviteRestants(DAILY_COMMUNITY_PURCHASE_LIMIT);
 
+        if (!animauxMorts.isEmpty()) {
+            animalRepository.deleteAll(animauxMorts);
+        }
         animalRepository.saveAll(animaux);
         synchroniserCompteursDepuisAnimaux(ferme, animaux);
         remiseRepository.save(remise);
@@ -228,8 +259,53 @@ public class FermeService {
 
     public List<Animal> getAnimaux(Integer idFerme) {
         Ferme ferme = getById(idFerme);
-        synchroniserAnimaux(ferme);
         return animalRepository.findByFerme_IdFermeOrderByIdAnimalAsc(idFerme);
+    }
+
+    @Transactional
+    public Ferme vendreStockACollectivite(Integer idFerme, String produit, Integer quantite) {
+        Ferme ferme = fermeRepository.findById(idFerme)
+            .orElseThrow(() -> new RuntimeException("Ferme introuvable"));
+
+        if (quantite == null || quantite <= 0) {
+            throw new IllegalArgumentException("La quantite doit etre superieure a 0");
+        }
+
+        String produitNormalise = produit == null ? "" : produit.trim().toUpperCase();
+        int prixUnitaire = getCommunityBuybackPrice(produitNormalise);
+        Remise remise = remiseRepository.findById(idFerme).orElseGet(() -> {
+            Remise nouvelleRemise = new Remise();
+            nouvelleRemise.setFerme(ferme);
+            return remiseRepository.save(nouvelleRemise);
+        });
+
+        // La collectivite rachete a prix fixe et sans creer d'offre persistante.
+        switch (produitNormalise) {
+            case "OEUF", "OEUFS" -> remise.setStockOeuf(retirerDepuisRemise(remise.getStockOeuf(), quantite, "oeufs"));
+            case "LAIT" -> remise.setStockLait(retirerDepuisRemise(remise.getStockLait(), quantite, "lait"));
+            case "LAPIN", "LAPINS" -> retirerLapinsVivants(idFerme, quantite);
+            default -> throw new IllegalArgumentException("Produit non pris en charge par la collectivite");
+        }
+
+        ferme.setSoldeEcus((ferme.getSoldeEcus() == null ? 0 : ferme.getSoldeEcus()) + (prixUnitaire * quantite));
+        synchroniserCompteursDepuisAnimaux(ferme);
+        return fermeRepository.save(ferme);
+    }
+
+    @Transactional
+    public void payerActionAnimale(Integer idFerme, String typeAnimal, String action) {
+        Ferme ferme = fermeRepository.findById(idFerme)
+            .orElseThrow(() -> new RuntimeException("Ferme introuvable"));
+
+        // Les soins coutent des ecus en plus de l'objet consomme.
+        int cout = getAnimalActionCost(typeAnimal, action);
+        int solde = ferme.getSoldeEcus() == null ? 0 : ferme.getSoldeEcus();
+        if (solde < cout) {
+            throw new IllegalArgumentException("Solde insuffisant pour cette action");
+        }
+
+        ferme.setSoldeEcus(solde - cout);
+        fermeRepository.save(ferme);
     }
 
     public Animal getAnimalDeFerme(Integer idFerme, Integer idAnimal) {
@@ -259,6 +335,8 @@ public class FermeService {
     }
 
     private boolean normalizeDailyState(Ferme ferme) {
+        // Ce garde-fou corrige les anciennes fermes ou les bases locales
+        // qui n'ont pas encore les champs journaliers propres.
         boolean changed = false;
 
         if (ferme.getJourActuel() == null || ferme.getJourActuel() < 1) {
@@ -307,6 +385,8 @@ public class FermeService {
     }
 
     private Animal creerAnimalPourFerme(Ferme ferme, TypeAnimal typeAnimal) {
+        // Tous les animaux naissent dans un etat neutre et complet :
+        // pas malades, nourris, propres et hydratés.
         long existingCount = animalRepository.countByFerme_IdFermeAndTypeAnimal(ferme.getIdFerme(), typeAnimal);
         Animal animal = new Animal();
         animal.setFerme(ferme);
@@ -317,6 +397,7 @@ public class FermeService {
         animal.setJaugeFaim(100);
         animal.setJaugeHydratation(100);
         animal.setJaugeProprete(100);
+        animal.setJoursMaladeConsecutifs(0);
         animal.setEstMalade(false);
         animal.setAMange(false);
         animal.setAEteTraite(false);
@@ -325,10 +406,21 @@ public class FermeService {
 
     private String buildAnimalName(TypeAnimal typeAnimal, int index) {
         return switch (typeAnimal) {
-            case VACHE -> "Vache " + index;
-            case POULE -> "Poule " + index;
+            case VACHE -> buildRandomAnimalName(COW_NAMES, "Vache", index);
+            case POULE -> buildRandomAnimalName(CHICKEN_NAMES, "Poule", index);
             case LAPIN -> "Lapin " + index;
         };
+    }
+
+    private String buildRandomAnimalName(List<String> candidates, String fallbackLabel, int index) {
+        if (candidates.isEmpty()) {
+            return fallbackLabel + " " + index;
+        }
+
+        // On garde l'index en suffixe pour rester lisible meme si deux
+        // animaux tirent le meme prenom aleatoire.
+        String baseName = candidates.get(ThreadLocalRandom.current().nextInt(candidates.size()));
+        return baseName + " " + index;
     }
 
     private float defaultWeight(TypeAnimal typeAnimal) {
@@ -339,23 +431,99 @@ public class FermeService {
         };
     }
 
-    private void appliquerEtatsQuotidiensAnimaux(List<Animal> animaux) {
+    private boolean peutPondre(Animal animal) {
+        return !animal.estMalade() && animal.getJaugeProprete() >= 100;
+    }
+
+    private boolean peutProduireLait(Animal animal) {
+        return !animal.estMalade() && animal.getJaugeProprete() >= 100;
+    }
+
+    private List<Animal> appliquerEtatsQuotidiensAnimaux(List<Animal> animaux) {
+        // Le clapier a une logique de mortalite de groupe distincte,
+        // appliquee avant la degradation individuelle du nouveau jour.
+        List<Animal> animauxMorts = gererMortaliteClapier(animaux);
+
+        if (!animauxMorts.isEmpty()) {
+            animaux.removeAll(animauxMorts);
+        }
+
         for (Animal animal : animaux) {
             boolean etaitAffame = animal.getJaugeFaim() < 100;
             boolean etaitAssoiffe = animal.getJaugeHydratation() < 100;
+            boolean etaitMalade = animal.estMalade();
+
+            if (etaitMalade) {
+                animal.setJoursMaladeConsecutifs(animal.getJoursMaladeConsecutifs() + 1);
+            } else {
+                animal.setJoursMaladeConsecutifs(0);
+            }
 
             if (etaitAffame) {
+                // Regle choisie pour le projet : ne pas nourrir un animal
+                // deja affame le rend malade le jour suivant.
                 animal.setEstMalade(true);
                 animal.setJaugeSante(0);
+                if (!etaitMalade) {
+                    animal.setJoursMaladeConsecutifs(1);
+                }
             }
 
             if (etaitAssoiffe) {
+                // Regle choisie pour le projet : ne pas abreuver un animal
+                // deja assoiffe le rend sale le jour suivant.
                 animal.setJaugeProprete(0);
             }
 
             animal.setJaugeFaim(0);
             animal.setJaugeHydratation(0);
+
+            if ((animal.getTypeAnimal() == TypeAnimal.POULE || animal.getTypeAnimal() == TypeAnimal.VACHE)
+                && animal.getJoursMaladeConsecutifs() >= 4) {
+                animauxMorts.add(animal);
+            }
         }
+
+        animaux.removeAll(animauxMorts);
+        return animauxMorts;
+    }
+
+    private List<Animal> gererMortaliteClapier(List<Animal> animaux) {
+        // Le clapier est traite comme un ensemble : on retire une partie
+        // des lapins si l'etat sale et/ou malade a ete laisse trainer.
+        List<Animal> animauxMorts = new ArrayList<>();
+        List<Animal> lapinsVivants = animaux.stream()
+            .filter(animal -> animal.getTypeAnimal() == TypeAnimal.LAPIN)
+            .toList();
+
+        if (lapinsVivants.isEmpty()) {
+            return animauxMorts;
+        }
+
+        List<Animal> lapinsSales = lapinsVivants.stream()
+            .filter(animal -> animal.getJaugeProprete() < 100)
+            .limit(calculerPertesClapier(lapinsVivants.size()))
+            .toList();
+        animauxMorts.addAll(lapinsSales);
+
+        List<Animal> lapinsRestants = lapinsVivants.stream()
+            .filter(animal -> !animauxMorts.contains(animal))
+            .toList();
+
+        List<Animal> lapinsMalades = lapinsRestants.stream()
+            .filter(Animal::estMalade)
+            .limit(calculerPertesClapier(lapinsRestants.size()))
+            .toList();
+        animauxMorts.addAll(lapinsMalades);
+
+        return animauxMorts;
+    }
+
+    private int calculerPertesClapier(int population) {
+        if (population <= 0) {
+            return 0;
+        }
+        return (int) Math.ceil(population * 0.25d);
     }
 
     private boolean synchroniserCompteursDepuisAnimaux(Ferme ferme) {
@@ -366,6 +534,8 @@ public class FermeService {
     }
 
     private boolean synchroniserCompteursDepuisAnimaux(Ferme ferme, List<Animal> animaux) {
+        // Les compteurs historiques sur Ferme servent encore au front ;
+        // on les reconstruit donc depuis la liste d'animaux canonique.
         int nbVaches = 0;
         int nbPoules = 0;
         int nbLapins = 0;
@@ -424,6 +594,62 @@ public class FermeService {
         changed = setIfDifferent(ferme.getNbLapinsAssoiffes(), nbLapinsAssoiffes, ferme::setNbLapinsAssoiffes) || changed;
         changed = setIfDifferent(ferme.getNbLapinsMalades(), nbLapinsMalades, ferme::setNbLapinsMalades) || changed;
         return changed;
+    }
+
+    private int retirerDepuisRemise(Integer stockActuel, int quantite, String libelle) {
+        int stock = stockActuel == null ? 0 : stockActuel;
+        if (stock < quantite) {
+            throw new IllegalArgumentException("Stock insuffisant pour " + libelle);
+        }
+        return stock - quantite;
+    }
+
+    private void retirerLapinsVivants(Integer idFerme, int quantite) {
+        List<Animal> lapins = animalRepository.findByFerme_IdFermeAndTypeAnimalOrderByIdAnimalAsc(idFerme, TypeAnimal.LAPIN);
+        if (lapins.size() < quantite) {
+            throw new IllegalArgumentException("Stock insuffisant pour lapins");
+        }
+
+        animalRepository.deleteAll(lapins.subList(0, quantite));
+    }
+
+    private int getCommunityBuybackPrice(String produitNormalise) {
+        return switch (produitNormalise) {
+            case "OEUF", "OEUFS" -> COMMUNITY_BUYBACK_EGG_PRICE;
+            case "LAIT" -> COMMUNITY_BUYBACK_MILK_PRICE;
+            case "LAPIN", "LAPINS" -> COMMUNITY_BUYBACK_RABBIT_PRICE;
+            default -> throw new IllegalArgumentException("Produit non pris en charge par la collectivite");
+        };
+    }
+
+    private int getAnimalActionCost(String typeAnimal, String action) {
+        String normalizedType = typeAnimal == null ? "" : typeAnimal.trim().toLowerCase();
+        String normalizedAction = action == null ? "" : action.trim().toLowerCase();
+
+        return switch (normalizedType) {
+            case "poule", "poules" -> switch (normalizedAction) {
+                case "feed" -> 3;
+                case "water" -> 1;
+                case "clean" -> 3;
+                case "heal" -> 6;
+                default -> throw new IllegalArgumentException("Action animale inconnue");
+            };
+            case "lapin", "lapins" -> switch (normalizedAction) {
+                case "feed" -> 5;
+                case "water" -> 2;
+                case "clean" -> 3;
+                case "heal" -> 6;
+                default -> throw new IllegalArgumentException("Action animale inconnue");
+            };
+            case "vache", "vaches" -> switch (normalizedAction) {
+                case "feed" -> 5;
+                case "water" -> 2;
+                case "clean" -> 3;
+                case "heal" -> 6;
+                default -> throw new IllegalArgumentException("Action animale inconnue");
+            };
+            default -> throw new IllegalArgumentException("Type d'animal inconnu");
+        };
     }
 
     private boolean setIfDifferent(Integer currentValue, int expectedValue, java.util.function.IntConsumer setter) {

@@ -37,12 +37,6 @@
 
         <button id="login-btn" class="login-btn" type="button" aria-label="Entrer dans la ferme"></button>
 
-        <div class="login-shortcut-panel">
-            <p class="login-shortcut-text">Connexion rapide :</p>
-            <button id="login-shortcut-a" class="auth-submit auth-submit--demo" type="button">Connexion A</button>
-            <button id="login-shortcut-b" class="auth-submit auth-submit--demo" type="button">Connexion B</button>
-        </div>
-
         <div id="login-modal" class="auth-modal hidden" aria-hidden="true">
             <div class="auth-modal-backdrop" data-close-login-modal></div>
             <div class="auth-modal-card" role="dialog" aria-modal="true" aria-labelledby="login-modal-title">
@@ -58,13 +52,9 @@
                     <input id="login-password" class="auth-input" name="password" type="password" autocomplete="current-password" required>
 
                     <p id="login-feedback" class="auth-feedback" aria-live="polite"></p>
-                    <p class="auth-note">Identifiants de démo : <strong>a / a1</strong> ou <strong>b / b2</strong></p>
+                    <p class="auth-note">Utilise ton username et ton password pour te connecter.</p>
 
                     <button id="login-submit" class="auth-submit" type="submit">Accepter</button>
-                    <div class="demo-login-row">
-                        <button id="demo-login-a" class="auth-submit auth-submit--demo" type="button">Connexion A</button>
-                        <button id="demo-login-b" class="auth-submit auth-submit--demo" type="button">Connexion B</button>
-                    </div>
                 </form>
             </div>
         </div>
@@ -125,7 +115,6 @@
             <p id="farm-owner-name" class="farm-owner-value">-</p>
             <p class="farm-owner-label farm-owner-label--money">Argent :</p>
             <p id="farm-owner-balance" class="farm-owner-value">0</p>
-            <p id="farm-data-status" class="farm-data-status">Aucune donnée de ferme chargée.</p>
         </aside>
 
         <div class="farm-canvas" aria-label="Zones de la ferme">
@@ -336,6 +325,16 @@
                 >
                     Vente
                 </button>
+                <button
+                    id="marche-tab-collectivite"
+                    class="popup-marche-onglet"
+                    type="button"
+                    role="tab"
+                    aria-selected="false"
+                    data-marche-tab="collectivite"
+                >
+                    Collectivite
+                </button>
             </div>
 
             <div class="popup-marche-contenu">
@@ -378,6 +377,32 @@
 
                         <button id="marche-vente-submit" class="popup-marche-action popup-marche-action--sell" type="button">
                             Mettre en vente
+                        </button>
+                    </div>
+                </section>
+                <section class="popup-marche-panneau" data-marche-panel="collectivite">
+                    <p class="popup-marche-texte">Vends directement Ã  la collectivitÃ© au prix fixe.</p>
+                    <p id="marche-collectivite-feedback" class="popup-marche-feedback" aria-live="polite"></p>
+                    <section id="marche-collectivite-grid" class="grille-animaux popup-marche-collectivite-grid" aria-label="Produits repris par la collectivite"></section>
+                    <div class="popup-marche-vente-form">
+                        <label class="popup-marche-form-label" for="marche-collectivite-produit">Produit</label>
+                        <select id="marche-collectivite-produit" class="popup-marche-select"></select>
+
+                        <p class="popup-marche-stock-line">
+                            Stock disponible :
+                            <span id="marche-collectivite-stock">0</span>
+                        </p>
+
+                        <p class="popup-marche-stock-line">
+                            Prix fixe :
+                            <span id="marche-collectivite-prix">-</span>
+                        </p>
+
+                        <label class="popup-marche-form-label" for="marche-collectivite-quantite">QuantitÃ©</label>
+                        <input id="marche-collectivite-quantite" class="popup-marche-number" type="number" min="1" value="1">
+
+                        <button id="marche-collectivite-submit" class="popup-marche-action popup-marche-action--sell" type="button">
+                            Vendre Ã  la collectivitÃ©
                         </button>
                     </div>
                 </section>
@@ -429,7 +454,7 @@
                         English
                     </div>
                 </div>
-                <p class="logout-btn">Deconnexion</p>
+                <button class="logout-btn" type="button">Deconnexion</button>
             </div>
         </div>
     </section>
@@ -459,7 +484,10 @@
         </div>
     </div>
 
-    <script src="js/farm-state.js?v=4"></script>
-    <script src="js/script.js?v=4"></script>
+    <script src="js/farm-state.js?v=5"></script>
+    <script src="js/app-shell.js?v=5"></script>
+    <script src="js/app-api.js?v=5"></script>
+    <script src="js/app-ui.js?v=5"></script>
+    <script src="js/script.js?v=5"></script>
 </body>
 </html>
