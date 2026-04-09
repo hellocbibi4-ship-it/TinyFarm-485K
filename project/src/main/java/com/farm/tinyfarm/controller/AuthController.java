@@ -44,4 +44,26 @@ public class AuthController {
             "farmId", utilisateur.get().getFerme().getIdFerme()
         ));
     }
+
+    @PostMapping("/login-git")
+    public ResponseEntity<?> loginGit(@RequestBody Map<String, String> payload) {
+        String username = Optional.ofNullable(payload.get("login")).orElse("").trim();
+       
+
+        if (username.isBlank()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("error", "erreur de username "));
+        }
+
+        Optional<Utilisateur> utilisateur = utilisateurRepository.findByGithubUsername(username);
+
+        if (utilisateur.isEmpty() || utilisateur.get().getFerme() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("error", "erreur de username "));
+        }
+
+        return ResponseEntity.ok(Map.of(
+            "farmId", utilisateur.get().getFerme().getIdFerme()
+        ));
+    }
 }

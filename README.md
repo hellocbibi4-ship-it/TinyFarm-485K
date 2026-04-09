@@ -82,7 +82,15 @@ Une fois lancee :
 ```text
 http://localhost:8080
 ```
+## Utiliser la connection Github : 
+[Cree une clé un token ici](https://github.com/settings/personal-access-tokens)
 
+[Cree une application ici](https://github.com/settings/apps)
+
+Remplacer les infos dans le .env puis avant de lancer faire 
+```
+Source .env
+```
 ## 🧪 Lancer les tests
 
 ### Tests Java

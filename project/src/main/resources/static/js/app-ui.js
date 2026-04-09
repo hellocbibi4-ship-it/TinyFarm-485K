@@ -1357,7 +1357,7 @@
     if (!dom.loginScreen || !dom.farmScreen) {
       return
     }
-
+      
     closeLoginModal()
     dom.loginScreen.classList.add("hidden")
     dom.farmScreen.classList.remove("hidden")

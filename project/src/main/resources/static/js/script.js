@@ -33,6 +33,28 @@
       ui.setLoginFeedback("erreur de username ou de password", "is-error")
     }
   }
+  async function loginWithGit(username) {
+    // Toute la session front repart de cette connexion locale.
+    if (!username) {
+      ui.setLoginFeedback("Renseigne un username et un password.", "is-error")
+      return
+    }
+
+    ui.setLoginFeedback()
+
+    try {
+      const payload = await api.loginGit(username)
+      state.currentFarmId = payload.farmId
+      state.currentUsername = username.name
+
+      const farmData = await api.fetchFarmDataById(state.currentFarmId)
+      ui.setLoginFeedback("Connexion acceptee.", "is-success")
+      ui.showFarmScreen(farmData)
+    } catch (error) {
+      console.error("Erreur de connexion :", error)
+      ui.setLoginFeedback("erreur de connexion git", "is-error")
+    }
+  }
 
   async function traiterAchat(typeAnimal) {
     // Les achats d'animaux passent toujours par le backend pour garder
@@ -142,8 +164,11 @@
   function bindStaticEvents() {
     // Ces evenements existent avant meme que l'ecran ferme soit visible.
     if (dom.loginBtn) {
-      dom.loginBtn.addEventListener("click", ui.openLoginModal)
+      dom.loginBtn.addEventListener("click", () => {
+    window.location.href = "/oauth2/authorization/github"
+  })
     }
+    //dom.loginBtn.addEventListener("click", ui.openLoginModal)}
 
     if (dom.clsBtn && dom.classementScreen) {
       dom.clsBtn.addEventListener("click", () => {
@@ -562,6 +587,21 @@
 
   bindStaticEvents()
   ui.classement()
-
+  window.addEventListener("DOMContentLoaded", async () => {
+    try {
+        const res = await fetch("/api/me");
+        if (res.ok) {
+            const user = await res.json();
+            await loginWithGit(user)
+        }
+        else{
+          ui.showLoginScreen()
+        }
+    } catch (e) {
+        console.error("Impossible de joindre le serveur :", e);
+        ui.showLoginScreen()
+    }
+    ui.classement;
+  });
   document.addEventListener("DOMContentLoaded", bindDomContentLoadedEvents)
 })(window)

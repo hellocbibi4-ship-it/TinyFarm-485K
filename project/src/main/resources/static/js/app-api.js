@@ -114,6 +114,21 @@
 
     return response.json()
   }
+  async function loginGit(user) {
+  const response = await fetch("/api/auth/login-git", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ login: user.login }) 
+  })
+
+  if (!response.ok) {
+    throw new Error("erreur de username")
+  }
+
+  return response.json()
+}
 
   async function acheterAnimal(typeAnimal) {
     if (!shell.state.currentFarmId) {
@@ -209,6 +224,7 @@
     fetchClapierStatus,
     fetchRankingData,
     loginLocal,
+    loginGit,
     acheterAnimal,
     acheterObjetEntretien,
     vendreACollectivite,
