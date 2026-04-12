@@ -1246,9 +1246,7 @@
 
     try {
       const data = await api.fetchRankingData()
-      const ranking = Array.isArray(data?.ranking)
-        ? data.ranking.filter((player) => ["a", "b"].includes(String(player?.name || "").toLowerCase()))
-        : []
+      const ranking = Array.isArray(data?.ranking) ? data.ranking : []
 
       dom.tbody.innerHTML = ""
 
@@ -1326,17 +1324,13 @@
 
   function openLoginModal() {
     if (!dom.loginModal) {
-      showFarmScreen()
+      showLoginScreen()
       return
     }
 
     setLoginFeedback()
     dom.loginModal.classList.remove("hidden")
     dom.loginModal.setAttribute("aria-hidden", "false")
-
-    window.setTimeout(() => {
-      dom.loginUsernameInput?.focus()
-    }, 0)
   }
 
   function closeLoginModal() {
@@ -1348,9 +1342,6 @@
     dom.loginModal.setAttribute("aria-hidden", "true")
     setLoginFeedback()
 
-    if (dom.loginForm) {
-      dom.loginForm.reset()
-    }
   }
 
   function showFarmScreen(prefetchedFarmData = null) {

@@ -5,13 +5,14 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+import java.util.List;
 
 @Repository
 public interface UtilisateurRepository extends JpaRepository<Utilisateur, Integer> {
     
     // SELECT * FROM utilisateur WHERE github_username = ?
     Optional<Utilisateur> findByGithubUsername(String githubUsername);
-
-    Optional<Utilisateur> findByGithubUsernameAndPassword(String githubUsername, String password);
+    List<Utilisateur> findAllByGithubUsernameStartingWith(String prefix);
+    void deleteByGithubUsername(String githubUsername);
 
 }

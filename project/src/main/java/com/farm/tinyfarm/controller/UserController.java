@@ -48,7 +48,9 @@ public class UserController {
 
         userOpt.ifPresent(u -> {
             response.put("role", u.getRole());
+            response.put("hasFarm", u.getFerme() != null);
             if (u.getFerme() != null) {
+                response.put("farmId",   u.getFerme().getIdFerme());
                 response.put("farmName", u.getFerme().getNom());
                 response.put("solde",    u.getFerme().getSoldeEcus());
                 response.put("score",    u.getFerme().getScore());

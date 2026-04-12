@@ -49,6 +49,12 @@ public class SecurityConfig {
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
                         .defaultSuccessUrl("/", true) 
                 )
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/")
+                        .invalidateHttpSession(true)
+                        .deleteCookies("JSESSIONID")
+                )
                 .exceptionHandling(exceptions -> exceptions
                     .authenticationEntryPoint((request, response, authException) -> {
                         if (request.getRequestURI().startsWith("/api/")) {

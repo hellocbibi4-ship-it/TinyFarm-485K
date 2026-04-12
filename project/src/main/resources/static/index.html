@@ -41,21 +41,10 @@
             <div class="auth-modal-backdrop" data-close-login-modal></div>
             <div class="auth-modal-card" role="dialog" aria-modal="true" aria-labelledby="login-modal-title">
                 <button type="button" class="auth-modal-close" data-close-login-modal aria-label="Fermer">X</button>
-                <h2 id="login-modal-title">Connexion GitHub</h2>
-                <p class="auth-modal-text">Entre un username et un password pour acceder au jeu.</p>
-
-                <form id="login-form" class="auth-form">
-                    <label class="auth-label" for="login-username">Username</label>
-                    <input id="login-username" class="auth-input" name="username" type="text" autocomplete="username" required>
-
-                    <label class="auth-label" for="login-password">Password</label>
-                    <input id="login-password" class="auth-input" name="password" type="password" autocomplete="current-password" required>
-
-                    <p id="login-feedback" class="auth-feedback" aria-live="polite"></p>
-                    <p class="auth-note">Utilise ton username et ton password pour te connecter.</p>
-
-                    <button id="login-submit" class="auth-submit" type="submit">Accepter</button>
-                </form>
+                <h2 id="login-modal-title">Connexion GitHub indisponible</h2>
+                <p class="auth-modal-text">TinyFarm utilise maintenant uniquement des fermes liees a un compte GitHub.</p>
+                <p id="login-feedback" class="auth-feedback" aria-live="polite"></p>
+                <p class="auth-note">Configure l'application OAuth GitHub sur la machine de demo puis reconnecte-toi avec le bouton principal.</p>
             </div>
         </div>
 
@@ -441,8 +430,11 @@
         <div id="clock" aria-live="polite"></div>
 
         <button class="side-btn right settings-btn" type="button" aria-label="Ouvrir les reglages"></button>
-        <div class="settings-panel">
-            <div class="settings-content">
+        <div class="settings-panel" aria-hidden="true">
+            <div class="settings-panel-backdrop" data-close-settings></div>
+            <div class="settings-content" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+                <button type="button" class="auth-modal-close settings-close-btn" data-close-settings aria-label="Fermer">X</button>
+                <h2 id="settings-title" class="settings-title">Parametres</h2>
                 <div class="language-btn">Langues &#9656;</div>
                 <div class="language-panel">
                     <div class="lang-option" data-lang="fr">
@@ -454,6 +446,7 @@
                         English
                     </div>
                 </div>
+                <button id="reset-farm-btn" class="settings-action-btn" type="button">Reinitialiser ma ferme</button>
                 <button class="logout-btn" type="button">Deconnexion</button>
             </div>
         </div>

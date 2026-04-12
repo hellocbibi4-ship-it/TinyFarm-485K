@@ -7,6 +7,7 @@ import com.farm.tinyfarm.model.TypeAnimal;
 import com.farm.tinyfarm.outils.Utilitaires;
 import com.farm.tinyfarm.repository.AnimalRepository;
 import com.farm.tinyfarm.repository.FermeRepository;
+import com.farm.tinyfarm.repository.MarcheRepository;
 import com.farm.tinyfarm.repository.RemiseRepository;
 import jakarta.transaction.Transactional;
 
@@ -41,15 +42,18 @@ public class FermeService {
     private final FermeRepository fermeRepository;
     private final RemiseRepository remiseRepository;
     private final AnimalRepository animalRepository;
+    private final MarcheRepository marcheRepository;
 
     public FermeService(
         FermeRepository fermeRepository,
         RemiseRepository remiseRepository,
-        AnimalRepository animalRepository
+        AnimalRepository animalRepository,
+        MarcheRepository marcheRepository
     ) {
         this.fermeRepository = fermeRepository;
         this.remiseRepository = remiseRepository;
         this.animalRepository = animalRepository;
+        this.marcheRepository = marcheRepository;
     }
 
     @Transactional
@@ -65,8 +69,8 @@ public class FermeService {
         ferme.setJourActuel(1);
         ferme.setAchatsCollectiviteRestants(DAILY_COMMUNITY_PURCHASE_LIMIT);
         ferme.setNbVaches(1);
-        ferme.setNbPoules(3);
-        ferme.setNbLapins(2);
+        ferme.setNbPoules(4);
+        ferme.setNbLapins(8);
         ferme.setNbLapinsMalades(0);
         ferme.setNbVachesAffamees(0);
         ferme.setNbVachesAssoiffees(0);
@@ -88,8 +92,79 @@ public class FermeService {
         return fermeRepository.save(savedFerme);
     }
 
+    @Transactional
     public void deleteById(Integer id) {
-        fermeRepository.deleteById(id);
+        deleteFarmWithDependencies(id);
+    }
+
+    @Transactional
+    public Ferme resetToDefaults(Integer idFerme) {
+        // Contrairement a une suppression/recreation complete, ce reset agit
+        // "en place" sur la ferme courante pour rester fiable cote front.
+        Ferme ferme = fermeRepository.findById(idFerme)
+            .orElseThrow(() -> new RuntimeException("Ferme introuvable"));
+
+        marcheRepository.deleteByFerme_IdFerme(idFerme);
+        animalRepository.deleteByFerme_IdFerme(idFerme);
+
+        Remise remise = remiseRepository.findById(idFerme).orElseGet(() -> {
+            Remise nouvelleRemise = new Remise();
+            nouvelleRemise.setFerme(ferme);
+            return remiseRepository.save(nouvelleRemise);
+        });
+
+        ferme.setScore(0);
+        ferme.setSoldeEcus(1500);
+        ferme.setHibernation(false);
+        ferme.setDateCreation(LocalDateTime.now());
+        ferme.setDerniereCo(LocalDateTime.now());
+        ferme.setJourActuel(1);
+        ferme.setAchatsCollectiviteRestants(DAILY_COMMUNITY_PURCHASE_LIMIT);
+        ferme.setNbVaches(1);
+        ferme.setNbPoules(4);
+        ferme.setNbLapins(8);
+        ferme.setNbLapinsMalades(0);
+        ferme.setNbVachesAffamees(0);
+        ferme.setNbVachesAssoiffees(0);
+        ferme.setNbPouleAffamees(0);
+        ferme.setNbPouleAssoiffees(0);
+        ferme.setNbLapinsAffames(0);
+        ferme.setNbLapinsAssoiffes(0);
+
+        remise.setStockOeuf(0);
+        remise.setStockLait(0);
+        remise.setStockLapin(0);
+        remise.setStockNourriture(0);
+        remise.setStockEau(0);
+        remise.setStockSavon(0);
+        remise.setStockSeringue(0);
+        remise.setStockPaille(0);
+        remiseRepository.save(remise);
+
+        // Les compteurs metier sur Ferme sont remis avant de recréer
+        // exactement 4 poules, 1 vache et 8 lapins via synchronisation.
+        synchroniserAnimaux(ferme);
+        synchroniserCompteursDepuisAnimaux(ferme);
+        return fermeRepository.save(ferme);
+    }
+
+    @Transactional
+    public void deleteFarmWithDependencies(Integer idFerme) {
+        if (idFerme == null || !fermeRepository.existsById(idFerme)) {
+            return;
+        }
+
+        // Une recreation de ferme doit vraiment repartir de zero,
+        // y compris pour le marche et les dependances directes.
+        marcheRepository.deleteByFerme_IdFerme(idFerme);
+        animalRepository.deleteByFerme_IdFerme(idFerme);
+
+        if (remiseRepository.existsById(idFerme)) {
+            remiseRepository.deleteById(idFerme);
+        }
+
+        fermeRepository.deleteById(idFerme);
+        fermeRepository.flush();
     }
 
     @Transactional
@@ -662,15 +737,29 @@ public class FermeService {
 
     public List<Map<String, Object>> getClassementData() {
         return fermeRepository.findAll().stream()
+            .filter(ferme -> {
+                if (ferme.getUtilisateur() == null || ferme.getUtilisateur().getGithubUsername() == null) {
+                    return false;
+                }
+
+                String farmName = ferme.getNom() == null ? "" : ferme.getNom().toLowerCase();
+                String username = ferme.getUtilisateur().getGithubUsername().toLowerCase().trim();
+
+                if (username.isBlank()) {
+                    return false;
+                }
+
+                // Garde-fou front : on masque les anciennes donnees de test
+                // du marche qui ont pu creer des fermes temporaires seller-*.
+                return !farmName.startsWith("seller-") && !username.startsWith("seller-");
+            })
             .sorted(
                 Comparator.comparing((Ferme ferme) -> ferme.getSoldeEcus() == null ? 0 : ferme.getSoldeEcus())
                     .reversed()
                     .thenComparing(ferme -> ferme.getNom() == null ? "" : ferme.getNom())
             )
             .map(ferme -> Map.<String, Object>of(
-                "name", ferme.getUtilisateur() != null && ferme.getUtilisateur().getGithubUsername() != null
-                    ? ferme.getUtilisateur().getGithubUsername()
-                    : (ferme.getNom() == null ? "-" : ferme.getNom()),
+                "name", ferme.getUtilisateur().getGithubUsername(),
                 "money", ferme.getSoldeEcus() == null ? 0 : ferme.getSoldeEcus(),
                 "poules", ferme.getNbPoules() == null ? 0 : ferme.getNbPoules(),
                 "vaches", ferme.getNbVaches() == null ? 0 : ferme.getNbVaches(),

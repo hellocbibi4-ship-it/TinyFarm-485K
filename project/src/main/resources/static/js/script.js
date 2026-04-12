@@ -11,48 +11,71 @@
 
   console.log("TinyFarm script loaded")
 
-  async function loginWithCredentials(username, password) {
-    // Toute la session front repart de cette connexion locale.
-    if (!username || !password) {
-      ui.setLoginFeedback("Renseigne un username et un password.", "is-error")
-      return
-    }
-
-    ui.setLoginFeedback()
-
-    try {
-      const payload = await api.loginLocal(username, password)
-      state.currentFarmId = payload.farmId
-      state.currentUsername = username
-
-      const farmData = await api.fetchFarmDataById(state.currentFarmId)
-      ui.setLoginFeedback("Connexion acceptee.", "is-success")
-      ui.showFarmScreen(farmData)
-    } catch (error) {
-      console.error("Erreur de connexion :", error)
-      ui.setLoginFeedback("erreur de username ou de password", "is-error")
-    }
-  }
   async function loginWithGit(username) {
-    // Toute la session front repart de cette connexion locale.
-    if (!username) {
-      ui.setLoginFeedback("Renseigne un username et un password.", "is-error")
+    // La session GitHub existe deja cote serveur ; on ouvre directement
+    // la ferme existante ou on en cree une nouvelle si besoin.
+    if (!username?.login) {
+      ui.setLoginFeedback("Connexion GitHub invalide.", "is-error")
       return
     }
 
     ui.setLoginFeedback()
 
     try {
-      const payload = await api.loginGit(username)
-      state.currentFarmId = payload.farmId
-      state.currentUsername = username.name
+      const farmId = Number.parseInt(username.farmId, 10)
 
-      const farmData = await api.fetchFarmDataById(state.currentFarmId)
-      ui.setLoginFeedback("Connexion acceptee.", "is-success")
+      if (!farmId) {
+        const payload = await api.createGithubFarm()
+        state.currentFarmId = Number.parseInt(payload.farmId, 10)
+        state.currentUsername = username.login
+
+        const farmData = await api.fetchFarmDataById(state.currentFarmId)
+        ui.setLoginFeedback("Nouvelle ferme creee.", "is-success")
+        ui.showFarmScreen(farmData)
+        return
+      }
+
+      const payload = await api.useGithubFarm()
+      const existingFarmId = Number.parseInt(payload?.farmId, 10)
+
+      if (!existingFarmId) {
+        throw new Error("Aucune ferme existante n'a ete trouvee.")
+      }
+
+      state.currentFarmId = existingFarmId
+      state.currentUsername = username.login
+
+      const farmData = await api.fetchFarmDataById(existingFarmId)
       ui.showFarmScreen(farmData)
     } catch (error) {
       console.error("Erreur de connexion :", error)
       ui.setLoginFeedback("erreur de connexion git", "is-error")
+    }
+  }
+
+  async function resetCurrentGithubFarm() {
+    try {
+      if (!window.confirm("Reinitialiser la ferme actuelle ? Cette action recree une ferme par defaut.")) {
+        return
+      }
+
+      // Le reset passe par un endpoint dedie : on ne detourne plus
+      // la logique de creation de ferme pour eviter les effets de bord.
+      const payload = await api.resetGithubFarm()
+      const farmId = Number.parseInt(payload?.farmId, 10)
+
+      if (!farmId) {
+        throw new Error("La ferme n'a pas pu etre reinitialisee.")
+      }
+
+      state.currentFarmId = farmId
+
+      const farmData = await api.fetchFarmDataById(farmId)
+      ui.showFarmScreen(farmData)
+      ui.afficherMessage("La ferme a ete reinitialisee.", "succes")
+    } catch (error) {
+      console.error("Erreur lors de la reinitialisation de la ferme :", error)
+      ui.afficherMessage(error.message || "Impossible de reinitialiser la ferme.", "erreur")
     }
   }
 
@@ -164,9 +187,22 @@
   function bindStaticEvents() {
     // Ces evenements existent avant meme que l'ecran ferme soit visible.
     if (dom.loginBtn) {
-      dom.loginBtn.addEventListener("click", () => {
-    window.location.href = "/oauth2/authorization/github"
-  })
+      dom.loginBtn.addEventListener("click", async () => {
+        try {
+          const oauthStatus = await api.fetchOAuthStatus()
+          if (!oauthStatus?.githubConfigured) {
+            ui.openLoginModal()
+            ui.setLoginFeedback("OAuth GitHub non configure sur cette instance. La connexion locale n'est plus disponible.", "is-error")
+            return
+          }
+
+          window.location.href = oauthStatus.authorizationUrl || "/oauth2/authorization/github"
+        } catch (error) {
+          console.error("Impossible de verifier OAuth GitHub :", error)
+          ui.openLoginModal()
+          ui.setLoginFeedback("Impossible de verifier la configuration GitHub.", "is-error")
+        }
+      })
     }
     //dom.loginBtn.addEventListener("click", ui.openLoginModal)}
 
@@ -189,34 +225,19 @@
       button.addEventListener("click", ui.closeLoginModal)
     })
 
+    if (dom.resetFarmButton) {
+      dom.resetFarmButton.addEventListener("click", async (event) => {
+        event.preventDefault()
+        event.stopPropagation()
+        await resetCurrentGithubFarm()
+      })
+    }
+
     dom.actionButtons.forEach((button) => {
       button.addEventListener("click", async () => {
         await handleAnimalAction(button.dataset.action)
       })
     })
-
-    if (dom.loginForm) {
-      dom.loginForm.addEventListener("submit", async (event) => {
-        event.preventDefault()
-
-        const username = dom.loginUsernameInput?.value.trim() || ""
-        const password = dom.loginPasswordInput?.value.trim() || ""
-        await loginWithCredentials(username, password)
-      })
-    }
-
-    if (dom.demoLoginAButton) {
-      dom.demoLoginAButton.addEventListener("click", () => loginWithCredentials("a", "a1"))
-    }
-    if (dom.demoLoginBButton) {
-      dom.demoLoginBButton.addEventListener("click", () => loginWithCredentials("b", "b2"))
-    }
-    if (dom.loginShortcutAButton) {
-      dom.loginShortcutAButton.addEventListener("click", () => loginWithCredentials("a", "a1"))
-    }
-    if (dom.loginShortcutBButton) {
-      dom.loginShortcutBButton.addEventListener("click", () => loginWithCredentials("b", "b2"))
-    }
 
     window.addEventListener("focus", () => {
       ui.initializeFarmState()
@@ -233,6 +254,7 @@
     // Cette partie branche surtout l'interface du jeu une fois le DOM pret.
     const settingsButtons = document.querySelectorAll(".settings-btn")
     const settingsPanels = document.querySelectorAll(".settings-panel")
+    const closeSettingsTargets = document.querySelectorAll("[data-close-settings]")
 
     settingsButtons.forEach((button, index) => {
       button.addEventListener("click", (event) => {
@@ -250,6 +272,14 @@
       })
     })
 
+    closeSettingsTargets.forEach((target) => {
+      target.addEventListener("click", (event) => {
+        event.preventDefault()
+        settingsButtons.forEach((currentButton) => currentButton.classList.remove("open"))
+        settingsPanels.forEach((panel) => panel.classList.remove("open"))
+      })
+    })
+
     document.querySelectorAll(".language-btn").forEach((button) => {
       button.addEventListener("click", (event) => {
         event.stopPropagation()
@@ -258,9 +288,18 @@
     })
 
     document.querySelectorAll(".logout-btn").forEach((button) => {
-      button.addEventListener("click", (event) => {
+      button.addEventListener("click", async (event) => {
         event.preventDefault()
         event.stopPropagation()
+
+        try {
+          // On invalide la session Spring avant de revenir a l'ecran login,
+          // sinon un nouveau clic GitHub reutiliserait la meme session.
+          await api.logoutSession()
+        } catch (error) {
+          console.error("Erreur lors de la deconnexion :", error)
+        }
+
         ui.closeActionModal()
         ui.fermerPopup({ announce: false })
         ui.setStockPanelOpen(false)
@@ -567,6 +606,8 @@
         ui.closeLoginModal()
         ui.setStockPanelOpen(false)
         ui.closeAllModals()
+        settingsButtons.forEach((currentButton) => currentButton.classList.remove("open"))
+        settingsPanels.forEach((panel) => panel.classList.remove("open"))
       }
     })
 

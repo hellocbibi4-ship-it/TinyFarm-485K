@@ -955,29 +955,47 @@ img {
 
 .settings-btn.open {
     transform: rotate(-180deg);
-    right: 176px;
 }
 
 .settings-panel {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 148px;
-    max-height: 82px;
-    background: #123d5b;
-    border-radius: 0 0 12px 12px;
-    padding: 4px 10px;
-    overflow: hidden;
-    transform: translateX(100%);
-    transition: transform 0.3s ease;
+    position: fixed;
+    inset: 0;
+    z-index: 320;
+    display: none;
 }
 
 .settings-panel.open {
-    transform: translateX(0);
+    display: block;
+}
+
+.settings-panel-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(20, 10, 4, 0.58);
+    backdrop-filter: blur(5px);
 }
 
 .settings-content {
-    padding: 5px 0;
+    position: relative;
+    width: min(380px, calc(100vw - 32px));
+    margin: 16vh auto 0;
+    padding: 26px 22px 20px;
+    border-radius: 22px;
+    border: 3px solid rgba(105, 57, 16, 0.45);
+    background: linear-gradient(180deg, #fff5df 0%, #f3dfb7 100%);
+    box-shadow: 0 24px 45px rgba(35, 18, 7, 0.32);
+    color: var(--texte-fonce);
+}
+
+.settings-title {
+    margin: 0 0 14px;
+    font-family: "ADLaM Display", cursive;
+    font-size: clamp(1.7rem, 1.2rem + 1vw, 2.2rem);
+}
+
+.settings-close-btn {
+    top: 12px;
+    right: 12px;
 }
 
 .settings-content p {
@@ -991,11 +1009,12 @@ img {
     cursor: pointer;
     font-family: "Acme", sans-serif;
     font-size: 1rem;
-    margin: 3px 0;
+    margin: 6px 0;
+    color: #5a3516;
 }
 
 .language-panel {
-    margin-top: 2px;
+    margin-top: 6px;
     padding-left: 10px;
     max-height: 0;
     overflow: hidden;
@@ -1024,11 +1043,32 @@ img {
 .logout-btn {
     display: block;
     width: 100%;
-    margin: 4px 0 0;
-    padding: 4px 0;
+    margin: 12px 0 0;
+    padding: 10px 14px;
     border: none;
-    background: transparent;
-    color: inherit;
+    border-radius: 14px;
+    background: rgba(132, 46, 34, 0.12);
+    color: #7f2018;
+    font-family: "Acme", sans-serif;
+    font-size: 1rem;
+    text-align: left;
+    cursor: pointer;
+}
+
+.logout-btn:hover,
+.settings-action-btn:hover {
+    filter: brightness(0.98);
+}
+
+.settings-action-btn {
+    display: block;
+    width: 100%;
+    margin: 14px 0 0;
+    padding: 10px 14px;
+    border: none;
+    border-radius: 14px;
+    background: rgba(36, 110, 62, 0.12);
+    color: #215f35;
     font-family: "Acme", sans-serif;
     font-size: 1rem;
     text-align: left;

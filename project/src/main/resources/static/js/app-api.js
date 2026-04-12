@@ -82,53 +82,48 @@
   }
 
   async function fetchRankingData() {
-    if (shell.state.currentFarmId) {
-      return fetchActiveFarmData()
-    }
-
-    const candidateFarmIds = [1, 2]
-
-    for (const farmId of candidateFarmIds) {
-      try {
-        return await fetchFarmDataById(farmId)
-      } catch (error) {
-        // On tente simplement la ferme suivante.
-      }
-    }
-
-    throw new Error("Impossible de charger le classement.")
+    return fetchJsonOrThrow("/api/fermes/classement", undefined, "Impossible de charger le classement.")
   }
 
-  async function loginLocal(username, password) {
-    const response = await fetch("/api/auth/login-local", {
+  async function fetchOAuthStatus() {
+    return fetchJsonOrThrow("/api/auth/oauth-status", undefined, "Impossible de verifier la configuration OAuth.")
+  }
+
+  async function logoutSession() {
+    const response = await fetch("/logout", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ username, password })
+      credentials: "same-origin"
     })
 
     if (!response.ok) {
-      throw new Error("erreur de username ou de password")
+      throw new Error("Impossible de deconnecter la session.")
     }
-
-    return response.json()
-  }
-  async function loginGit(user) {
-  const response = await fetch("/api/auth/login-git", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ login: user.login }) 
-  })
-
-  if (!response.ok) {
-    throw new Error("erreur de username")
   }
 
-  return response.json()
-}
+  async function useGithubFarm() {
+    return fetchJsonOrThrow(
+      "/api/auth/github/farm/use",
+      { method: "POST" },
+      "Impossible de recuperer la ferme GitHub."
+    )
+  }
+
+  async function createGithubFarm() {
+    return fetchJsonOrThrow(
+      "/api/auth/github/farm/new",
+      { method: "POST" },
+      "Impossible de creer la ferme GitHub."
+    )
+  }
+
+  async function resetGithubFarm() {
+    // Reset manuel de la ferme courante du compte GitHub connecte.
+    return fetchJsonOrThrow(
+      "/api/auth/github/farm/reset",
+      { method: "POST" },
+      "Impossible de reinitialiser la ferme GitHub."
+    )
+  }
 
   async function acheterAnimal(typeAnimal) {
     if (!shell.state.currentFarmId) {
@@ -223,8 +218,11 @@
     fetchAnimalTypeStatus,
     fetchClapierStatus,
     fetchRankingData,
-    loginLocal,
-    loginGit,
+    fetchOAuthStatus,
+    logoutSession,
+    useGithubFarm,
+    createGithubFarm,
+    resetGithubFarm,
     acheterAnimal,
     acheterObjetEntretien,
     vendreACollectivite,

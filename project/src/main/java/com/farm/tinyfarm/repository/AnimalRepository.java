@@ -13,4 +13,5 @@ public interface AnimalRepository extends JpaRepository<Animal, Integer>{
     List<Animal> findByFerme_IdFermeOrderByIdAnimalAsc(Integer fermeId);
     List<Animal> findByFerme_IdFermeAndTypeAnimalOrderByIdAnimalAsc(Integer fermeId, TypeAnimal typeAnimal);
     long countByFerme_IdFermeAndTypeAnimal(Integer fermeId, TypeAnimal typeAnimal);
+    void deleteByFerme_IdFerme(Integer fermeId);
 }//Class

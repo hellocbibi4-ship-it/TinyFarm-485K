@@ -54,6 +54,13 @@ public class FermeController {
         return new ResponseEntity<>(nouvelleFerme, HttpStatus.CREATED);
     }
 
+    @GetMapping("/classement")
+    public ResponseEntity<Map<String, Object>> getClassement() {
+        Map<String, Object> response = new HashMap<>();
+        response.put("ranking", fermeService.getClassementData());
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/{id}/front-data")
     public ResponseEntity<Map<String, Object>> getFrontData(@PathVariable Integer id) {
         // Endpoint principal du front : l'interface se reconstruit presque

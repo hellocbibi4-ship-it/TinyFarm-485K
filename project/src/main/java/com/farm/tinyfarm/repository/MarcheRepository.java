@@ -12,4 +12,5 @@ import com.farm.tinyfarm.model.Marche;
 public interface MarcheRepository extends JpaRepository<Marche, Integer> {
     List<Marche> findAllByOrderByPrixUnitaireAscIdOffreAsc();
     Optional<Marche> findByFerme_IdFermeAndProduitAndPrixUnitaire(Integer fermeId, String produit, Integer prixUnitaire);
+    void deleteByFerme_IdFerme(Integer fermeId);
 }
