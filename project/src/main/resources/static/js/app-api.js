@@ -85,6 +85,10 @@
     return fetchJsonOrThrow("/api/fermes/classement", undefined, "Impossible de charger le classement.")
   }
 
+  async function fetchUpdatedRankingData() {
+    return fetchJsonOrThrow("/api/fermes/classement/update", undefined, "Impossible de mettre a jour le classement.")
+  }
+
   async function fetchOAuthStatus() {
     return fetchJsonOrThrow("/api/auth/oauth-status", undefined, "Impossible de verifier la configuration OAuth.")
   }
@@ -218,6 +222,7 @@
     fetchAnimalTypeStatus,
     fetchClapierStatus,
     fetchRankingData,
+    fetchUpdatedRankingData,
     fetchOAuthStatus,
     logoutSession,
     useGithubFarm,

@@ -1239,13 +1239,13 @@
     }
   }
 
-  async function classement() {
+  async function classement(useUpdate = false) {
     if (!dom.tbody) {
       return
     }
 
     try {
-      const data = await api.fetchRankingData()
+      const data = useUpdate ? await api.fetchUpdatedRankingData() : await api.fetchRankingData()
       const ranking = Array.isArray(data?.ranking) ? data.ranking : []
 
       dom.tbody.innerHTML = ""
@@ -1264,10 +1264,10 @@
           <tr>
             <td>${index + 1}</td>
             <td>${player.name}</td>
+            <td>${player.score}</td>
             <td>${player.money}</td>
-            <td>${player.poules}</td>
-            <td>${player.vaches}</td>
-            <td>${player.lapins}</td>
+            <td>${player.ventes}</td>
+            <td>${player.achats}</td>
           </tr>
         `
       })

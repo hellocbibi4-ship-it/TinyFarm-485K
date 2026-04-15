@@ -60,6 +60,12 @@ public class FermeController {
         response.put("ranking", fermeService.getClassementData());
         return ResponseEntity.ok(response);
     }
+    @GetMapping("/classement/update")
+    public ResponseEntity<Map<String, Object>> updateClassement() {
+        Map<String, Object> response = new HashMap<>();
+        response.put("ranking", fermeService.updateClassementData());
+        return ResponseEntity.ok(response);
+    }
 
     @GetMapping("/{id}/front-data")
     public ResponseEntity<Map<String, Object>> getFrontData(@PathVariable Integer id) {

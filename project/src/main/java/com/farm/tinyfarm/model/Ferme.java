@@ -27,7 +27,6 @@ public class Ferme{
     private Utilisateur utilisateur;
 
     private String nom;
-    private Integer soldeEcus;
     private Boolean hibernation;
     private LocalDateTime dateCreation;
     private Integer score;
@@ -44,6 +43,19 @@ public class Ferme{
     private Integer nbPouleAssoiffees = 0;
     private Integer nbLapinsAffames = 0;
     private Integer nbLapinsAssoiffes = 0;
+    private Double VOeuf = 0.0;
+    private Double VLapCop = 0.0;
+    private Double VPouleCop = 0.0;
+    private Double VLact = 0.0;
+    private Double VLaine = 0.0;
+    private Double PChamps = 0.0;
+    private Double PPot = 0.0;
+    private Double PFood = 0.0;
+    private Double BElev = 0.0;
+    private Double VElev = 0.0;
+    private Double BBlack = 0.0;
+    private Double VBLack = 0.0;
+    private Integer soldeEcus;
     @OneToOne(mappedBy = "ferme", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore
     private Remise remise;
