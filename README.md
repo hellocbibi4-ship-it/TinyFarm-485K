@@ -87,7 +87,7 @@ Dans GitHub :
 `Settings` -> `Developer settings` -> `OAuth Apps` -> `New OAuth App`
 
 Configurer les champs ainsi :
-
+⚠️ Sur Codespaces copier l'adresse locale sur le port 8080 et remplacer le "http://localhost:8080" ⚠️
 - `Application name` : `TinyFarm Local`
 - `Homepage URL` : `http://localhost:8080`
 - `Authorization callback URL` : `http://localhost:8080/login/oauth2/code/github`
@@ -134,6 +134,13 @@ Sous Windows :
 ```powershell
 cd project
 .\mvnw.cmd spring-boot:run
+```
+
+Sous Codespaces : 
+
+```bash
+cd project
+mvnw spring-boot:run
 ```
 
 Sous Linux / macOS :
