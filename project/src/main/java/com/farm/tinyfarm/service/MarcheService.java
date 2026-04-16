@@ -129,8 +129,17 @@ public class MarcheService {
         TypeStock typeStock = remiseService.fromProduitMarche(marche.getProduit());
         acheteur.setSoldeEcus(acheteur.getSoldeEcus() - montantTotal);
 
+        // Incrémenter BElev pour l'acheteur (achats sur le marché)
+        acheteur.setBElev((acheteur.getBElev() != null ? acheteur.getBElev() : 0) + quantite);
+
         Ferme vendeur = marche.getFerme();
         vendeur.setSoldeEcus(vendeur.getSoldeEcus() + montantTotal);
+
+        // Incrémenter VElev pour le vendeur (ventes sur le marché)
+        vendeur.setVElev((vendeur.getVElev() != null ? vendeur.getVElev() : 0) + quantite);
+
+        fermeRepository.save(acheteur);
+        fermeRepository.save(vendeur);
 
         if (typeStock == TypeStock.LAPIN) {
             int lapinsAcheteur = acheteur.getNbLapins() == null ? 0 : acheteur.getNbLapins();

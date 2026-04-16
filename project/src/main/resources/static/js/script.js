@@ -207,12 +207,23 @@
     //dom.loginBtn.addEventListener("click", ui.openLoginModal)}
 
     if (dom.clsBtn && dom.classementScreen) {
+      let classementInterval
       dom.clsBtn.addEventListener("click", () => {
         dom.classementScreen.classList.toggle("show")
         dom.clsBtn.classList.toggle("trophy2")
 
         if (dom.classementScreen.classList.contains("show")) {
           ui.classement()
+          classementInterval = setInterval(() => {
+            if (dom.classementScreen.classList.contains("show")) {
+              ui.classement(true)
+            }
+          }, 1000) // Update every 1 second
+        } else {
+          if (classementInterval) {
+            clearInterval(classementInterval)
+            classementInterval = null
+          }
         }
       })
     }

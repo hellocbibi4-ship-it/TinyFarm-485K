@@ -378,9 +378,18 @@ public class FermeService {
 
         // La collectivite rachete a prix fixe et sans creer d'offre persistante.
         switch (produitNormalise) {
-            case "OEUF", "OEUFS" -> remise.setStockOeuf(retirerDepuisRemise(remise.getStockOeuf(), quantite, "oeufs"));
-            case "LAIT" -> remise.setStockLait(retirerDepuisRemise(remise.getStockLait(), quantite, "lait"));
-            case "LAPIN", "LAPINS" -> retirerLapinsVivants(idFerme, quantite);
+            case "OEUF", "OEUFS" -> {
+                remise.setStockOeuf(retirerDepuisRemise(remise.getStockOeuf(), quantite, "oeufs"));
+                ferme.setVOeuf((ferme.getVOeuf() != null ? ferme.getVOeuf() : 0) + quantite);
+            }
+            case "LAIT" -> {
+                remise.setStockLait(retirerDepuisRemise(remise.getStockLait(), quantite, "lait"));
+                ferme.setVLact((ferme.getVLact() != null ? ferme.getVLact() : 0) + quantite);
+            }
+            case "LAPIN", "LAPINS" -> {
+                retirerLapinsVivants(idFerme, quantite);
+                ferme.setVLapCop((ferme.getVLapCop() != null ? ferme.getVLapCop() : 0) + quantite);
+            }
             default -> throw new IllegalArgumentException("Produit non pris en charge par la collectivite");
         }
 
@@ -1101,10 +1110,101 @@ public class FermeService {
             .map(ferme -> Map.<String, Object>of(
                 "name", ferme.getUtilisateur().getGithubUsername(),
                 "money", ferme.getSoldeEcus() == null ? 0 : ferme.getSoldeEcus(),
-                "poules", ferme.getNbPoules() == null ? 0 : ferme.getNbPoules(),
-                "vaches", ferme.getNbVaches() == null ? 0 : ferme.getNbVaches(),
-                "lapins", ferme.getNbLapins() == null ? 0 : ferme.getNbLapins()
+                "score",ferme.getScore() == null ? 0 : ferme.getScore(),
+                "ventes", (ferme.getVOeuf() != null ? ferme.getVOeuf() : 0) +
+                          (ferme.getVLact() != null ? ferme.getVLact() : 0) +
+                          (ferme.getVLaine() != null ? ferme.getVLaine() : 0),
+                "achats", (ferme.getBBlack() != null ? ferme.getBBlack() : 0) +
+                          (ferme.getVBLack() != null ? ferme.getVBLack() : 0)
             ))
             .toList();
     }
+     public List<Map<String, Object>> updateClassementData() {
+        Map<String, Object> coeffs = Map.ofEntries(
+            Map.entry("money", 30.0),
+            Map.entry("Oeuf", 15.0),
+            Map.entry("VLapCop", 30.0),
+            Map.entry("VPouleCop", 25.0),
+            Map.entry("VLact", 20.0),
+            Map.entry("VLaine", 20.0),
+            Map.entry("PChamps", 15.0),
+            Map.entry("PPot", 15.0),
+            Map.entry("PFood", 5.0),
+            Map.entry("BElev", 10.0),
+            Map.entry("VElev", 15.0),
+            Map.entry("BBlack", -5.0),
+            Map.entry("VBLack", -8.0)
+        );
+        List<Ferme> fermes = fermeRepository.findAll().stream()
+            .filter(ferme -> {
+                if (ferme.getUtilisateur() == null || ferme.getUtilisateur().getGithubUsername() == null) {
+                    return false;
+                }
+
+                String farmName = ferme.getNom() == null ? "" : ferme.getNom().toLowerCase();
+                String username = ferme.getUtilisateur().getGithubUsername().toLowerCase().trim();
+
+                if (username.isBlank()) {
+                    return false;
+                }
+
+                // Garde-fou front : on masque les anciennes donnees de test
+                // du marche qui ont pu creer des fermes temporaires seller-*.
+                return !farmName.startsWith("seller-") && !username.startsWith("seller-");
+            })
+            .toList();
+
+        int totalPlayers = fermes.size();
+
+        // Calculate totals
+        Map<String, Double> totals = Map.of(
+            "money", fermes.stream().mapToDouble(f -> f.getSoldeEcus() != null ? f.getSoldeEcus() : 0).sum(),
+            "Oeuf", fermes.stream().mapToDouble(f -> f.getVOeuf() != null ? f.getVOeuf() : 0).sum(),
+            "VLapCop", fermes.stream().mapToDouble(f -> f.getVLapCop() != null ? f.getVLapCop() : 0).sum(),
+            "VPouleCop", fermes.stream().mapToDouble(f -> f.getVPouleCop() != null ? f.getVPouleCop() : 0).sum(),
+            "VLact", fermes.stream().mapToDouble(f -> f.getVLact() != null ? f.getVLact() : 0).sum(),
+            "PChamps", fermes.stream().mapToDouble(f -> f.getPChamps() != null ? f.getPChamps() : 0).sum(),
+            "PPot", fermes.stream().mapToDouble(f -> f.getPPot() != null ? f.getPPot() : 0).sum(),
+            "PFood", fermes.stream().mapToDouble(f -> f.getPFood() != null ? f.getPFood() : 0).sum(),
+            "BBlack", fermes.stream().mapToDouble(f -> f.getBBlack() != null ? f.getBBlack() : 0).sum(),
+            "VBLack", fermes.stream().mapToDouble(f -> f.getVBLack() != null ? f.getVBLack() : 0).sum()
+        );
+
+        fermes.forEach(ferme -> {
+            double newScore = 0.0;
+            // For excluded fields: value * coef
+            newScore += (ferme.getSoldeEcus() != null ? ferme.getSoldeEcus() : 0) * ((Double) coeffs.getOrDefault("money", 1.0));
+            newScore += (ferme.getVLaine() != null ? ferme.getVLaine() : 0) * ((Double) coeffs.getOrDefault("VLaine", 1.0));
+            newScore += (ferme.getBElev() != null ? ferme.getBElev() : 0) * ((Double) coeffs.getOrDefault("BElev", 1.0));
+            newScore += (ferme.getVElev() != null ? ferme.getVElev() : 0) * ((Double) coeffs.getOrDefault("VElev", 1.0));
+
+            // For other fields: coef * totalPlayers * (value / total) if total != 0
+            String[] includedFields = {"Oeuf", "VLapCop", "VPouleCop", "VLact", "PChamps", "PPot", "PFood", "BBlack", "VBLack"};
+            for (String field : includedFields) {
+                double value = 0.0;
+                switch (field) {
+                    case "Oeuf": value = ferme.getVOeuf() != null ? ferme.getVOeuf() : 0; break;
+                    case "VLapCop": value = ferme.getVLapCop() != null ? ferme.getVLapCop() : 0; break;
+                    case "VPouleCop": value = ferme.getVPouleCop() != null ? ferme.getVPouleCop() : 0; break;
+                    case "VLact": value = ferme.getVLact() != null ? ferme.getVLact() : 0; break;
+                    case "PChamps": value = ferme.getPChamps() != null ? ferme.getPChamps() : 0; break;
+                    case "PPot": value = ferme.getPPot() != null ? ferme.getPPot() : 0; break;
+                    case "PFood": value = ferme.getPFood() != null ? ferme.getPFood() : 0; break;
+                    case "BBlack": value = ferme.getBBlack() != null ? ferme.getBBlack() : 0; break;
+                    case "VBLack": value = ferme.getVBLack() != null ? ferme.getVBLack() : 0; break;
+                }
+                double total = totals.get(field);
+                double coef = (Double) coeffs.getOrDefault(field, 1.0);
+                if (total != 0) {
+                    newScore += coef * totalPlayers * (value / total);
+                }
+            }
+            ferme.setScore((int) Math.round(newScore));
+        });
+        fermeRepository.saveAll(fermes);
+
+       return getClassementData();
+
+    }
+
 }

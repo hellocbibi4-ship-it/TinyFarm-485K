@@ -21,10 +21,10 @@
                 <tr>
                     <th>Rang</th>
                     <th>Nom</th>
+                    <th>Score</th>
                     <th>Argent</th>
-                    <th>Poules</th>
-                    <th>Vaches</th>
-                    <th>Lapins</th>
+                    <th>Ventes</th>
+                    <th>Achats</th>
                 </tr>
             </thead>
             <tbody id="classement-body"></tbody>
@@ -322,7 +322,7 @@
                     aria-selected="false"
                     data-marche-tab="collectivite"
                 >
-                    Marche noir
+                    Marché noir
                 </button>
             </div>
 
@@ -370,7 +370,7 @@
                     </div>
                 </section>
                 <section class="popup-marche-panneau" data-marche-panel="collectivite">
-                    <p class="popup-marche-texte">Vends directement Ã  la collectivitÃ© au prix fixe.</p>
+                    <p class="popup-marche-texte">Achète au marché noir.</p>
                     <p id="marche-collectivite-feedback" class="popup-marche-feedback" aria-live="polite"></p>
                     <section id="marche-collectivite-grid" class="grille-animaux popup-marche-collectivite-grid" aria-label="Produits repris par le marche noir"></section>
                     <div class="popup-marche-vente-form" hidden>
@@ -387,11 +387,11 @@
                             <span id="marche-collectivite-prix">-</span>
                         </p>
 
-                        <label class="popup-marche-form-label" for="marche-collectivite-quantite">QuantitÃ©</label>
+                        <label class="popup-marche-form-label" for="marche-collectivite-quantite">Quantité</label>
                         <input id="marche-collectivite-quantite" class="popup-marche-number" type="number" min="1" value="1">
 
                         <button id="marche-collectivite-submit" class="popup-marche-action popup-marche-action--sell" type="button">
-                            Vendre Ã  la collectivitÃ©
+                            Acheter au marché noir
                         </button>
                     </div>
                 </section>
