@@ -420,7 +420,33 @@
         }
       })
     }
+    let lastRunDay = localStorage.getItem("lastRunDay");
 
+setInterval(async () => {
+  const now = new Date();
+  const today = now.toDateString();
+
+  if (lastRunDay !== today) {
+    lastRunDay = today;
+    localStorage.setItem("lastRunDay", today);
+
+    try {
+      console.log("Nouveau jour détecté");
+
+      const farmData = await api.passerJourFerme();
+
+      ui.applyFarmData(farmData);
+      ui.renderStockTable(ui.buildStockRows(farmData));
+      ui.setStockFeedback();
+      ui.setCollectiviteFeedback("Le jour suivant a ete applique.");
+      ui.afficherMessage("Jour suivant applique.", "succes");
+
+    } catch (error) {
+      console.error("Erreur :", error);
+    }
+  }
+}, 60000);
+    
     if (dom.elementsInterface.boutonFermer) {
       dom.elementsInterface.boutonFermer.addEventListener("click", () => ui.fermerPopup())
     }
