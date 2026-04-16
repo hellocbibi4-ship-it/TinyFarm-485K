@@ -175,4 +175,32 @@ public class SchemaMigrationConfig {
             jdbcTemplate.execute("ALTER TABLE animal_migration RENAME TO animal");
         };
     }
+
+    @Bean
+    @Order(2)
+    CommandLineRunner addAnimalFastingCounterColumn(JdbcTemplate jdbcTemplate) {
+        return args -> {
+            Integer animalTableCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'ANIMAL'",
+                Integer.class
+            );
+
+            if (animalTableCount == null || animalTableCount == 0) {
+                return;
+            }
+
+            Integer fastingColumnCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'ANIMAL' AND COLUMN_NAME = 'JOURS_JEUNE_CONSECUTIFS'",
+                Integer.class
+            );
+
+            if (fastingColumnCount != null && fastingColumnCount > 0) {
+                return;
+            }
+
+            jdbcTemplate.execute(
+                "ALTER TABLE animal ADD COLUMN jours_jeune_consecutifs INTEGER DEFAULT 0 NOT NULL"
+            );
+        };
+    }
 }

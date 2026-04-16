@@ -115,6 +115,8 @@
     modalHealth: document.getElementById("animal-health"),
     modalHunger: document.getElementById("animal-hunger"),
     modalHydration: document.getElementById("animal-hydration"),
+    modalSex: document.getElementById("animal-sex"),
+    modalRole: document.getElementById("animal-role"),
     modalWeightLabel: document.getElementById("animal-weight-label"),
     modalWeight: document.getElementById("animal-weight"),
     closeTargets: document.querySelectorAll("[data-close-modal]"),

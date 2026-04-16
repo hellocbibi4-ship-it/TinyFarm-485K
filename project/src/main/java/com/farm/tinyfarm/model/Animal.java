@@ -39,6 +39,7 @@ public class Animal{
         private int jaugeProprete = 100;
         private int jaugeHydratation = 100;
         private int joursMaladeConsecutifs = 0;
+        private int joursJeuneConsecutifs = 0;
         
         private boolean estMalade = false;
         private boolean aMange = false;

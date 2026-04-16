@@ -19,15 +19,18 @@ public class MarcheService {
     private final FermeRepository fermeRepository;
     private final MarcheRepository marcheRepository;
     private final RemiseService remiseService;
+    private final FermeService fermeService;
 
     public MarcheService(
         FermeRepository fermeRepository,
         MarcheRepository marcheRepository,
-        RemiseService remiseService
+        RemiseService remiseService,
+        FermeService fermeService
     ) {
         this.fermeRepository = fermeRepository;
         this.marcheRepository = marcheRepository;
         this.remiseService = remiseService;
+        this.fermeService = fermeService;
     }
 
     @Transactional
@@ -45,13 +48,13 @@ public class MarcheService {
 
         TypeStock typeStock = remiseService.fromProduitMarche(produit);
         if (typeStock == TypeStock.LAPIN) {
-            int lapinsDisponibles = ferme.getNbLapins() == null ? 0 : ferme.getNbLapins();
+            int lapinsDisponibles = fermeService.countLapinsVendables(fermeId);
 
             if (lapinsDisponibles < quantite) {
-                throw new IllegalArgumentException("Stock insuffisant pour lapins");
+                throw new IllegalArgumentException("Stock insuffisant pour lapins adultes");
             }
 
-            ferme.setNbLapins(lapinsDisponibles - quantite);
+            fermeService.retirerLapinsVivants(fermeId, quantite);
         } else {
             remiseService.retirerStock(fermeId, typeStock, quantite);
         }

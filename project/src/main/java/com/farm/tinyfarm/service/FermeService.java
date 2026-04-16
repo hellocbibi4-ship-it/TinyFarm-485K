@@ -4,6 +4,9 @@ import com.farm.tinyfarm.model.Animal;
 import com.farm.tinyfarm.model.Ferme;
 import com.farm.tinyfarm.model.Remise;
 import com.farm.tinyfarm.model.TypeAnimal;
+import com.farm.tinyfarm.model.TypeRole;
+import com.farm.tinyfarm.model.TypeSexe;
+import com.farm.tinyfarm.model.TypeStade;
 import com.farm.tinyfarm.outils.Utilitaires;
 import com.farm.tinyfarm.repository.AnimalRepository;
 import com.farm.tinyfarm.repository.FermeRepository;
@@ -28,6 +31,16 @@ public class FermeService {
     public static final int COMMUNITY_BUYBACK_EGG_PRICE = 8;
     public static final int COMMUNITY_BUYBACK_MILK_PRICE = 2;
     public static final int COMMUNITY_BUYBACK_RABBIT_PRICE = 25;
+    public static final int MAX_RABBIT_POPULATION = 50;
+    private static final float COW_DEFAULT_WEIGHT = 1f;
+    private static final float COW_DAILY_GRASS_WEIGHT_GAIN = 5f;
+    private static final float COW_FEED_WEIGHT_GAIN = 3f;
+    private static final float COW_WATER_WEIGHT_GAIN = 1f;
+    private static final float CHICKEN_DEFAULT_WEIGHT = 2f;
+    private static final float CHICKEN_MIN_ADULT_WEIGHT = 2.5f;
+    private static final float CHICKEN_MAX_WEIGHT = 3.5f;
+    private static final float CHICKEN_FEED_WEIGHT_GAIN = 0.5f;
+    private static final float CHICKEN_WATER_WEIGHT_GAIN = 0.15f;
     // Petites listes de prenoms pour eviter les animaux tous nommes
     // "Poule 1" ou "Vache 1" dans l'interface.
     private static final List<String> COW_NAMES = List.of(
@@ -231,6 +244,11 @@ public class FermeService {
             throw new IllegalArgumentException("Une ferme ne peut posseder qu'une seule vache");
         }
 
+        if (animalType == TypeAnimal.LAPIN
+            && animalRepository.countByFerme_IdFermeAndTypeAnimal(idFerme, TypeAnimal.LAPIN) >= MAX_RABBIT_POPULATION) {
+            throw new IllegalArgumentException("Le clapier a atteint sa capacite maximale de 50 lapins");
+        }
+
         if (ferme.getSoldeEcus() < prix) {
             throw new IllegalArgumentException("Solde insuffisant");
         }
@@ -295,21 +313,24 @@ public class FermeService {
         List<Animal> animaux = animalRepository.findByFerme_IdFermeOrderByIdAnimalAsc(idFerme);
         // La production est calculee avant la degradation du nouveau jour :
         // un animal sale ou malade ne produit deja plus.
-        int nbPoules = (int) animaux.stream()
-            .filter(animal -> animal.getTypeAnimal() == TypeAnimal.POULE)
-            .filter(this::peutPondre)
-            .count();
+        int nbOeufsProduits = calculerProductionOeufs(animaux);
         int nbVaches = (int) animaux.stream()
             .filter(animal -> animal.getTypeAnimal() == TypeAnimal.VACHE)
             .filter(this::peutProduireLait)
             .count();
 
-        if (nbPoules > 0) {
-            remise.setStockOeuf(remise.getStockOeuf() + nbPoules);
+        if (nbOeufsProduits > 0) {
+            remise.setStockOeuf(remise.getStockOeuf() + nbOeufsProduits);
         }
         if (nbVaches > 0) {
             remise.setStockLait(remise.getStockLait() + nbVaches);
         }
+
+        // Regle simplifiee choisie ici : chaque nouveau jour, la vache
+        // broute automatiquement et gagne 5 kg.
+        animaux.stream()
+            .filter(animal -> animal.getTypeAnimal() == TypeAnimal.VACHE)
+            .forEach(animal -> animal.setPoids(Math.max(0f, animal.getPoids() + COW_DAILY_GRASS_WEIGHT_GAIN)));
 
         List<Animal> animauxMorts = appliquerEtatsQuotidiensAnimaux(animaux);
         ferme.setJourActuel(ferme.getJourActuel() + 1);
@@ -318,6 +339,7 @@ public class FermeService {
         if (!animauxMorts.isEmpty()) {
             animalRepository.deleteAll(animauxMorts);
         }
+        ajouterNaissancesLapins(ferme, animaux);
         animalRepository.saveAll(animaux);
         synchroniserCompteursDepuisAnimaux(ferme, animaux);
         remiseRepository.save(remise);
@@ -364,6 +386,7 @@ public class FermeService {
 
         ferme.setSoldeEcus((ferme.getSoldeEcus() == null ? 0 : ferme.getSoldeEcus()) + (prixUnitaire * quantite));
         synchroniserCompteursDepuisAnimaux(ferme);
+        remiseRepository.save(remise);
         return fermeRepository.save(ferme);
     }
 
@@ -459,24 +482,35 @@ public class FermeService {
         return changed;
     }
 
-    private Animal creerAnimalPourFerme(Ferme ferme, TypeAnimal typeAnimal) {
+    private Animal creerAnimalPourFerme(Ferme ferme, TypeAnimal typeAnimal, int displayIndex) {
         // Tous les animaux naissent dans un etat neutre et complet :
-        // pas malades, nourris, propres et hydratés.
-        long existingCount = animalRepository.countByFerme_IdFermeAndTypeAnimal(ferme.getIdFerme(), typeAnimal);
+        // pas malades, nourris, propres et hydratÃ©s.
         Animal animal = new Animal();
         animal.setFerme(ferme);
         animal.setTypeAnimal(typeAnimal);
-        animal.setNom(buildAnimalName(typeAnimal, (int) existingCount + 1));
+        animal.setNom(buildAnimalName(typeAnimal, displayIndex));
         animal.setPoids(defaultWeight(typeAnimal));
+        animal.setAge(1);
+        animal.setStade(TypeStade.ENFANT);
+        animal.setSexe(defaultSexe(typeAnimal));
+        animal.setRole(defaultRole(typeAnimal));
         animal.setJaugeSante(100);
         animal.setJaugeFaim(100);
         animal.setJaugeHydratation(100);
         animal.setJaugeProprete(100);
         animal.setJoursMaladeConsecutifs(0);
+        animal.setJoursJeuneConsecutifs(0);
         animal.setEstMalade(false);
         animal.setAMange(false);
         animal.setAEteTraite(false);
         return animal;
+    }
+
+    private Animal creerAnimalPourFerme(Ferme ferme, TypeAnimal typeAnimal) {
+        // Tous les animaux naissent dans un etat neutre et complet :
+        // pas malades, nourris, propres et hydratés.
+        long existingCount = animalRepository.countByFerme_IdFermeAndTypeAnimal(ferme.getIdFerme(), typeAnimal);
+        return creerAnimalPourFerme(ferme, typeAnimal, (int) existingCount + 1);
     }
 
     private String buildAnimalName(TypeAnimal typeAnimal, int index) {
@@ -500,18 +534,80 @@ public class FermeService {
 
     private float defaultWeight(TypeAnimal typeAnimal) {
         return switch (typeAnimal) {
-            case VACHE -> 500f;
-            case POULE -> 2f;
+            case VACHE -> COW_DEFAULT_WEIGHT;
+            case POULE -> CHICKEN_DEFAULT_WEIGHT;
             case LAPIN -> 2f;
         };
     }
 
+    private TypeSexe defaultSexe(TypeAnimal typeAnimal) {
+        return switch (typeAnimal) {
+            case VACHE -> TypeSexe.FEMELLE;
+            case POULE, LAPIN -> TypeSexe.INCONNU;
+        };
+    }
+
+    private TypeRole defaultRole(TypeAnimal typeAnimal) {
+        return switch (typeAnimal) {
+            case VACHE, LAPIN -> TypeRole.ELEVAGE;
+            case POULE -> TypeRole.ELEVAGE;
+        };
+    }
+
+    public void appliquerEffetsNourrirAnimal(Animal animal) {
+        if (animal == null) {
+            return;
+        }
+
+        if (animal.getTypeAnimal() == TypeAnimal.POULE) {
+            // Regle du sujet pour les volailles : manger fait grossir
+            // et casse la serie de jours de jeune.
+            animal.setPoids(bornerPoidsPoule(animal.getPoids() + CHICKEN_FEED_WEIGHT_GAIN));
+            animal.setJoursJeuneConsecutifs(0);
+            mettreAJourSexeEtRolePoule(animal);
+            return;
+        }
+
+        if (animal.getTypeAnimal() == TypeAnimal.VACHE) {
+            // Nourrir la vache avec une botte de paille lui ajoute 3 kg.
+            animal.setPoids(Math.max(0f, animal.getPoids() + COW_FEED_WEIGHT_GAIN));
+        }
+    }
+
+    public void appliquerEffetsAbreuverAnimal(Animal animal) {
+        if (animal == null) {
+            return;
+        }
+
+        if (animal.getTypeAnimal() == TypeAnimal.POULE) {
+            // L'eau fait aussi gagner un peu de poids a la poule.
+            animal.setPoids(bornerPoidsPoule(animal.getPoids() + CHICKEN_WATER_WEIGHT_GAIN));
+            mettreAJourSexeEtRolePoule(animal);
+            return;
+        }
+
+        if (animal.getTypeAnimal() == TypeAnimal.VACHE) {
+            animal.setPoids(Math.max(0f, animal.getPoids() + COW_WATER_WEIGHT_GAIN));
+        }
+    }
+
     private boolean peutPondre(Animal animal) {
-        return !animal.estMalade() && animal.getJaugeProprete() >= 100;
+        return animal.getTypeAnimal() == TypeAnimal.POULE
+            && TypeStade.ADULTE.equals(animal.getStade())
+            && TypeSexe.FEMELLE.equals(animal.getSexe())
+            && TypeRole.PONDEUSE.equals(animal.getRole())
+            && animal.getPoids() >= CHICKEN_MIN_ADULT_WEIGHT
+            && animal.getPoids() <= CHICKEN_MAX_WEIGHT
+            && !animal.estMalade()
+            && animal.getJaugeProprete() >= 100;
     }
 
     private boolean peutProduireLait(Animal animal) {
-        return !animal.estMalade() && animal.getJaugeProprete() >= 100;
+        return animal.getTypeAnimal() == TypeAnimal.VACHE
+            && TypeStade.ADULTE.equals(animal.getStade())
+            && animal.getRole() != TypeRole.ELEVAGE
+            && !animal.estMalade()
+            && animal.getJaugeProprete() >= 100;
     }
 
     private List<Animal> appliquerEtatsQuotidiensAnimaux(List<Animal> animaux) {
@@ -527,6 +623,9 @@ public class FermeService {
             boolean etaitAffame = animal.getJaugeFaim() < 100;
             boolean etaitAssoiffe = animal.getJaugeHydratation() < 100;
             boolean etaitMalade = animal.estMalade();
+            boolean etaitNourriEtAbreuve = !etaitAffame && !etaitAssoiffe;
+
+            faireVieillirAnimal(animal, etaitNourriEtAbreuve);
 
             if (etaitMalade) {
                 animal.setJoursMaladeConsecutifs(animal.getJoursMaladeConsecutifs() + 1);
@@ -542,6 +641,9 @@ public class FermeService {
                 if (!etaitMalade) {
                     animal.setJoursMaladeConsecutifs(1);
                 }
+                incrementerJeuneEtAppliquerPertePoids(animal, animauxMorts);
+            } else {
+                animal.setJoursJeuneConsecutifs(0);
             }
 
             if (etaitAssoiffe) {
@@ -599,6 +701,227 @@ public class FermeService {
             return 0;
         }
         return (int) Math.ceil(population * 0.25d);
+    }
+
+    private void faireVieillirAnimal(Animal animal, boolean etaitNourriEtAbreuve) {
+        animal.setAge(Math.max(1, animal.getAge() + 1));
+
+        switch (animal.getTypeAnimal()) {
+            case POULE -> {
+                if (animal.getAge() >= 5) {
+                    animal.setStade(TypeStade.ADULTE);
+                }
+                mettreAJourSexeEtRolePoule(animal);
+            }
+            case VACHE -> {
+                if (animal.getAge() >= 10 && animal.getPoids() > 80f) {
+                    animal.setStade(TypeStade.ADULTE);
+                }
+                mettreAJourRoleVache(animal);
+            }
+            case LAPIN -> {
+                faireEvoluerLapin(animal, etaitNourriEtAbreuve);
+                mettreAJourSexeLapin(animal);
+                mettreAJourRoleLapin(animal);
+            }
+        }
+    }
+
+    private void mettreAJourSexeEtRolePoule(Animal animal) {
+        if (!TypeStade.ADULTE.equals(animal.getStade())) {
+            animal.setRole(TypeRole.ELEVAGE);
+            return;
+        }
+
+        if (animal.getSexe() == null || animal.getSexe() == TypeSexe.INCONNU) {
+            animal.setSexe(generateRandomSexe());
+        }
+
+        boolean poidsReproductif = animal.getPoids() >= CHICKEN_MIN_ADULT_WEIGHT && animal.getPoids() <= CHICKEN_MAX_WEIGHT;
+        if (!poidsReproductif) {
+            animal.setRole(TypeRole.ELEVAGE);
+            return;
+        }
+
+        if (animal.getSexe() == TypeSexe.MALE) {
+            animal.setRole(TypeRole.REPRODUCTEUR);
+            return;
+        }
+
+        animal.setRole(TypeRole.PONDEUSE);
+    }
+
+    private void faireEvoluerLapin(Animal animal, boolean etaitNourriEtAbreuve) {
+        if (!etaitNourriEtAbreuve) {
+            return;
+        }
+
+        TypeStade stadeActuel = animal.getStade() == null ? TypeStade.ENFANT : animal.getStade();
+
+        if (stadeActuel == TypeStade.ENFANT) {
+            animal.setStade(TypeStade.GROS_LAPEREAU);
+            return;
+        }
+
+        if (stadeActuel == TypeStade.GROS_LAPEREAU) {
+            animal.setStade(TypeStade.ADULTE);
+        }
+    }
+
+    private void mettreAJourSexeLapin(Animal animal) {
+        if (animal.getTypeAnimal() != TypeAnimal.LAPIN || !TypeStade.ADULTE.equals(animal.getStade())) {
+            return;
+        }
+
+        if (animal.getSexe() == null || animal.getSexe() == TypeSexe.INCONNU) {
+            animal.setSexe(generateRandomSexe());
+        }
+    }
+
+    private void mettreAJourRoleLapin(Animal animal) {
+        if (animal.getTypeAnimal() != TypeAnimal.LAPIN) {
+            return;
+        }
+
+        if (TypeStade.ADULTE.equals(animal.getStade())) {
+            animal.setRole(null);
+            return;
+        }
+
+        animal.setRole(TypeRole.ELEVAGE);
+    }
+
+    private void mettreAJourRoleVache(Animal animal) {
+        if (animal.getTypeAnimal() != TypeAnimal.VACHE) {
+            return;
+        }
+
+        if (TypeStade.ADULTE.equals(animal.getStade())) {
+            animal.setRole(null);
+            return;
+        }
+
+        animal.setRole(TypeRole.ELEVAGE);
+    }
+
+    private TypeSexe generateRandomSexe() {
+        return ThreadLocalRandom.current().nextBoolean() ? TypeSexe.MALE : TypeSexe.FEMELLE;
+    }
+
+    private int calculerProductionOeufs(List<Animal> animaux) {
+        List<Animal> coqsReproducteurs = animaux.stream()
+            .filter(animal -> animal.getTypeAnimal() == TypeAnimal.POULE)
+            .filter(animal -> TypeStade.ADULTE.equals(animal.getStade()))
+            .filter(animal -> TypeSexe.MALE.equals(animal.getSexe()))
+            .filter(animal -> TypeRole.REPRODUCTEUR.equals(animal.getRole()))
+            .filter(animal -> animal.getPoids() >= CHICKEN_MIN_ADULT_WEIGHT && animal.getPoids() <= CHICKEN_MAX_WEIGHT)
+            .toList();
+
+        if (coqsReproducteurs.isEmpty()) {
+            return 0;
+        }
+
+        int pontesAutorisees = coqsReproducteurs.size() * 5;
+
+        List<Animal> poulesPondeuses = animaux.stream()
+            .filter(this::peutPondre)
+            .limit(pontesAutorisees)
+            .toList();
+
+        int totalOeufs = 0;
+        for (Animal poule : poulesPondeuses) {
+            totalOeufs += ThreadLocalRandom.current().nextInt(3);
+        }
+        return totalOeufs;
+    }
+
+    private void ajouterNaissancesLapins(Ferme ferme, List<Animal> animaux) {
+        List<Animal> lapinsAdultes = animaux.stream()
+            .filter(animal -> animal.getTypeAnimal() == TypeAnimal.LAPIN)
+            .filter(animal -> TypeStade.ADULTE.equals(animal.getStade()))
+            .toList();
+
+        if (lapinsAdultes.isEmpty()) {
+            return;
+        }
+
+        long males = lapinsAdultes.stream()
+            .filter(this::peutSeReproduireLapin)
+            .filter(animal -> TypeSexe.MALE.equals(animal.getSexe()))
+            .count();
+        long femelles = lapinsAdultes.stream()
+            .filter(this::peutSeReproduireLapin)
+            .filter(animal -> TypeSexe.FEMELLE.equals(animal.getSexe()))
+            .count();
+
+        int couples = (int) Math.min(males, femelles);
+        if (couples <= 0) {
+            return;
+        }
+
+        int populationActuelle = (int) animaux.stream()
+            .filter(animal -> animal.getTypeAnimal() == TypeAnimal.LAPIN)
+            .count();
+        int placesDisponibles = MAX_RABBIT_POPULATION - populationActuelle;
+        if (placesDisponibles <= 0) {
+            return;
+        }
+
+        int totalNaissances = 0;
+        for (int i = 0; i < couples && placesDisponibles > 0; i++) {
+            int portee = ThreadLocalRandom.current().nextInt(1, 5);
+            int naissancesEffectives = Math.min(portee, placesDisponibles);
+            totalNaissances += naissancesEffectives;
+            placesDisponibles -= naissancesEffectives;
+        }
+
+        for (int i = 0; i < totalNaissances; i++) {
+            animaux.add(creerAnimalPourFerme(ferme, TypeAnimal.LAPIN, populationActuelle + i + 1));
+        }
+    }
+
+    private boolean peutSeReproduireLapin(Animal animal) {
+        return animal != null
+            && animal.getTypeAnimal() == TypeAnimal.LAPIN
+            && TypeStade.ADULTE.equals(animal.getStade())
+            && !animal.estMalade()
+            && animal.getJaugeProprete() >= 100
+            && animal.getJaugeFaim() >= 100
+            && animal.getJaugeHydratation() >= 100;
+    }
+
+    private void incrementerJeuneEtAppliquerPertePoids(Animal animal, List<Animal> animauxMorts) {
+        if (animal.getTypeAnimal() != TypeAnimal.POULE) {
+            return;
+        }
+
+        // On memorise les jours de jeune consecutifs pour appliquer
+        // les paliers de perte de poids demandes dans le sujet.
+        int joursJeune = animal.getJoursJeuneConsecutifs() + 1;
+        animal.setJoursJeuneConsecutifs(joursJeune);
+
+        if (joursJeune >= 4) {
+            animauxMorts.add(animal);
+            return;
+        }
+
+        float pertePoids = switch (joursJeune) {
+            case 1 -> 0.2f;
+            case 2 -> 0.5f;
+            case 3 -> 1f;
+            default -> 0f;
+        };
+
+        float nouveauPoids = Math.max(0f, animal.getPoids() - pertePoids);
+        animal.setPoids(nouveauPoids);
+
+        if (nouveauPoids <= 0f) {
+            animauxMorts.add(animal);
+        }
+    }
+
+    private float bornerPoidsPoule(float poids) {
+        return Math.max(0f, Math.min(CHICKEN_MAX_WEIGHT, poids));
     }
 
     private boolean synchroniserCompteursDepuisAnimaux(Ferme ferme) {
@@ -679,13 +1002,30 @@ public class FermeService {
         return stock - quantite;
     }
 
-    private void retirerLapinsVivants(Integer idFerme, int quantite) {
-        List<Animal> lapins = animalRepository.findByFerme_IdFermeAndTypeAnimalOrderByIdAnimalAsc(idFerme, TypeAnimal.LAPIN);
-        if (lapins.size() < quantite) {
-            throw new IllegalArgumentException("Stock insuffisant pour lapins");
+    public void retirerLapinsVivants(Integer idFerme, int quantite) {
+        List<Animal> lapinsVendables = animalRepository.findByFerme_IdFermeAndTypeAnimalOrderByIdAnimalAsc(idFerme, TypeAnimal.LAPIN)
+            .stream()
+            .filter(this::estLapinVendable)
+            .toList();
+        if (lapinsVendables.size() < quantite) {
+            throw new IllegalArgumentException("Stock insuffisant pour lapins adultes");
         }
 
-        animalRepository.deleteAll(lapins.subList(0, quantite));
+        animalRepository.deleteAll(lapinsVendables.subList(0, quantite));
+    }
+
+    public int countLapinsVendables(Integer idFerme) {
+        return (int) animalRepository.findByFerme_IdFermeAndTypeAnimalOrderByIdAnimalAsc(idFerme, TypeAnimal.LAPIN)
+            .stream()
+            .filter(this::estLapinVendable)
+            .count();
+    }
+
+    private boolean estLapinVendable(Animal animal) {
+        return animal != null
+            && animal.getTypeAnimal() == TypeAnimal.LAPIN
+            && TypeStade.ADULTE.equals(animal.getStade())
+            && animal.getRole() != TypeRole.ELEVAGE;
     }
 
     private int getCommunityBuybackPrice(String produitNormalise) {

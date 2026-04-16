@@ -4,6 +4,9 @@ import com.farm.tinyfarm.model.Animal;
 import com.farm.tinyfarm.model.Ferme;
 import com.farm.tinyfarm.model.Remise;
 import com.farm.tinyfarm.model.TypeAnimal;
+import com.farm.tinyfarm.model.TypeRole;
+import com.farm.tinyfarm.model.TypeSexe;
+import com.farm.tinyfarm.model.TypeStade;
 import com.farm.tinyfarm.model.TypeStock;
 import com.farm.tinyfarm.repository.FermeRepository;
 import com.farm.tinyfarm.service.FermeService;
@@ -117,8 +120,8 @@ public class FermeController {
         @RequestParam String produit,
         @RequestParam Integer quantite
     ) {
-        Ferme fermeMAJ = fermeService.vendreStockACollectivite(id, produit, quantite);
-        return ResponseEntity.ok(buildFrontData(fermeMAJ));
+        fermeService.vendreStockACollectivite(id, produit, quantite);
+        return ResponseEntity.ok(buildFrontData(fermeService.getById(id)));
     }
 
     @PostMapping("/{id}/marche/offres")
@@ -216,6 +219,7 @@ public class FermeController {
         fermeService.payerActionAnimale(id, normalized, "feed");
         remiseService.retirerStock(id, "vache".equals(normalized) || "vaches".equals(normalized) ? TypeStock.PAILLE : TypeStock.NOURRITURE, 1);
         animal.setJaugeFaim(100);
+        fermeService.appliquerEffetsNourrirAnimal(animal);
         return ResponseEntity.ok(buildFrontData(fermeService.sauvegarderApresActionsAnimaux(id, List.of(animal))));
     }
 
@@ -242,6 +246,7 @@ public class FermeController {
         fermeService.payerActionAnimale(id, normalized, "water");
         remiseService.retirerStock(id, TypeStock.EAU, 1);
         animal.setJaugeHydratation(100);
+        fermeService.appliquerEffetsAbreuverAnimal(animal);
         return ResponseEntity.ok(buildFrontData(fermeService.sauvegarderApresActionsAnimaux(id, List.of(animal))));
     }
 
@@ -359,13 +364,61 @@ public class FermeController {
         animal.put("img", imageName(sourceAnimal.getTypeAnimal()));
         animal.put("weight", sourceAnimal.getPoids());
         animal.put("age", sourceAnimal.getAge());
-        animal.put("stage", sourceAnimal.getStade() == null ? "Adulte" : sourceAnimal.getStade().name());
+        animal.put("stage", stageLabel(sourceAnimal.getStade()));
+        animal.put("sex", sexLabel(sourceAnimal));
+        animal.put("role", roleLabel(sourceAnimal.getRole()));
         animal.put("isSick", sourceAnimal.estMalade());
         animal.put("health", sourceAnimal.getJaugeSante());
         animal.put("hunger", sourceAnimal.getJaugeFaim());
         animal.put("hydration", sourceAnimal.getJaugeHydratation());
         animal.put("cleanliness", sourceAnimal.getJaugeProprete());
         return animal;
+    }
+
+    private String stageLabel(TypeStade stade) {
+        if (stade == null) {
+            return "Adulte";
+        }
+
+        return switch (stade) {
+            case ENFANT -> "Jeune";
+            case GROS_LAPEREAU -> "Gros lapereau";
+            case ADULTE -> "Adulte";
+        };
+    }
+
+    private String sexLabel(Animal animal) {
+        if (animal == null) {
+            return "-";
+        }
+
+        if ((animal.getTypeAnimal() == TypeAnimal.POULE || animal.getTypeAnimal() == TypeAnimal.LAPIN)
+            && animal.getStade() != TypeStade.ADULTE) {
+            return "???";
+        }
+
+        TypeSexe sexe = animal.getSexe();
+        if (sexe == null || sexe == TypeSexe.INCONNU) {
+            return animal.getTypeAnimal() == TypeAnimal.VACHE ? "Femelle" : "???";
+        }
+
+        return switch (sexe) {
+            case MALE -> "Male";
+            case FEMELLE -> "Femelle";
+            case INCONNU -> "???";
+        };
+    }
+
+    private String roleLabel(TypeRole role) {
+        if (role == null) {
+            return "-";
+        }
+
+        return switch (role) {
+            case REPRODUCTEUR -> "Reproducteur";
+            case PONDEUSE -> "Pondeuse";
+            case ELEVAGE -> "Elevage";
+        };
     }
 
     private String normalizeType(TypeAnimal typeAnimal) {
@@ -448,7 +501,7 @@ public class FermeController {
         List<Map<String, Object>> rows = new ArrayList<>();
         rows.add(createStockRow("Produits", "Oeufs", remise.getStockOeuf()));
         rows.add(createStockRow("Produits", "Lait", remise.getStockLait()));
-        rows.add(createStockRow("Produits", "Lapins", ferme.getNbLapins()));
+        rows.add(createStockRow("Produits", "Lapins", fermeService.countLapinsVendables(ferme.getIdFerme())));
         rows.add(createStockRow("Entretien", "Nourriture", remise.getStockNourriture()));
         rows.add(createStockRow("Entretien", "Seau d'eau", remise.getStockEau()));
         rows.add(createStockRow("Entretien", "Bottes de paille", remise.getStockPaille()));
