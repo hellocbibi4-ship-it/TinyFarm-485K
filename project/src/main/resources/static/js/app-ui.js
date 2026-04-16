@@ -303,6 +303,10 @@
 
     dom.marcheCollectiviteGrid.innerHTML = ""
 
+    if (!isCollectiviteOpen()) {
+      return
+    }
+
     products.forEach((product) => {
       const stockRow = sellRows.find((row) => normalizeMarketProduct(row.label) === product.id)
       const stockQuantity = Math.max(0, Number.parseInt(stockRow?.quantity, 10) || 0)
@@ -471,6 +475,11 @@
 
   function renderCollectivitePanel(items) {
     if (!dom.collectiviteList) {
+      return
+    }
+
+    if (!isCollectiviteOpen()) {
+      dom.collectiviteList.innerHTML = ""
       return
     }
 
@@ -826,6 +835,21 @@
     dom.marchePanels.forEach((panel) => {
       panel.classList.toggle("is-active", panel.dataset.marchePanel === activeTab)
     })
+
+    if (activeTab === "collectivite") {
+      const collectivitePanel = document.querySelector('[data-marche-panel="collectivite"]')
+      if (collectivitePanel) {
+        const texte = collectivitePanel.querySelector('.popup-marche-texte')
+        if (texte) {
+          // Remove existing status if any
+          const existingStatus = collectivitePanel.querySelector('.collectivite-status')
+          if (existingStatus) {
+            existingStatus.remove()
+          }
+          
+        }
+      }
+    }
   }
 
   async function refreshMarketData() {
@@ -865,6 +889,14 @@
     dom.popupMarche.setAttribute("aria-hidden", "false")
     dom.farmScreen.classList.add("popup-ouverte")
     await refreshMarketData()
+
+    if (dom.marcheTabButtons) {
+      dom.marcheTabButtons.forEach((button) => {
+        if (button.dataset.marcheTab === "collectivite") {
+          button.disabled = !isCollectiviteOpen()
+        }
+      })
+    }
   }
 
   function fermerPopupMarche() {
@@ -1218,6 +1250,14 @@
   }
 
   async function initializeCollectivitePanel() {
+    if (dom.collectivitePanel) {
+      dom.collectivitePanel.style.display = isCollectiviteOpen() ? 'block' : 'none'
+    }
+
+    if (!isCollectiviteOpen()) {
+      return
+    }
+
     if (!dom.collectiviteList) {
       return
     }
@@ -1280,6 +1320,14 @@
       `
     }
   }
+
+  function isCollectiviteOpen() {
+    const now = new Date()
+    const hour = now.getHours()
+    return (hour >= 5 && hour < 14) || (hour >= 17 && hour < 20) || (hour >= 22 || hour < 3)
+  }
+
+ 
 
   function updateClock() {
     const clock = document.getElementById("clock")
