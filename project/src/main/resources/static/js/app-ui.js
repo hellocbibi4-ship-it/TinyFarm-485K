@@ -317,7 +317,18 @@
         </div>
         <p class="prix">${price} <span class="piece" aria-hidden="true"></span></p>
         <p class="popup-marche-stock-chip">${stockQuantity} disponible(s)</p>
-        <button class="btn-acheter btn-acheter--collectivite" type="button" data-community-sell="${product.id}" ${stockQuantity <= 0 ? "disabled" : ""}>Vendre</button>
+        <label class="popup-marche-form-label" for="black-market-qty-${product.id}">Quantite</label>
+        <input
+          id="black-market-qty-${product.id}"
+          class="popup-marche-number"
+          type="number"
+          min="1"
+          max="${Math.max(1, stockQuantity)}"
+          value="${stockQuantity > 0 ? 1 : 0}"
+          data-community-sell-qty="${product.id}"
+          ${stockQuantity <= 0 ? "disabled" : ""}
+        >
+        <button class="btn-vendre btn-acheter--collectivite" type="button" data-community-sell="${product.id}" ${stockQuantity <= 0 ? "disabled" : ""}>Vendre</button>
       `
 
       dom.marcheCollectiviteGrid.appendChild(card)
@@ -359,8 +370,8 @@
       return
     }
 
-    // Le formulaire de revente a la collectivite reste volontairement
-    // simple : choix du produit, quantite, puis prix fixe en lecture seule.
+    // Le formulaire du marche noir reste volontairement simple :
+    // choix du produit, quantite, puis prix fixe en lecture seule.
     const sellRows = getMarketSellRows(data)
     const options = ['<option value="">Choisir un produit</option>']
 
@@ -387,6 +398,29 @@
     renderMarcheVenteForm(data)
     renderMarcheCollectiviteForm(data)
     renderMarcheCollectiviteGrid(data)
+
+    const blackMarketTab = document.getElementById("marche-tab-collectivite")
+    if (blackMarketTab) {
+      blackMarketTab.textContent = "Marche noir"
+    }
+
+    const blackMarketText = document.querySelector('[data-marche-panel="collectivite"] .popup-marche-texte')
+    if (blackMarketText) {
+      blackMarketText.textContent = "Vends directement au marche noir au prix fixe."
+    }
+
+    if (dom.marcheCollectiviteSubmit) {
+      dom.marcheCollectiviteSubmit.textContent = "Vendre au marche noir"
+    }
+
+    const blackMarketForm = document.querySelector('[data-marche-panel="collectivite"] .popup-marche-vente-form')
+    if (blackMarketForm) {
+      blackMarketForm.hidden = true
+    }
+
+    document.querySelectorAll('[data-marche-panel="collectivite"] [data-community-sell]').forEach((button) => {
+      button.textContent = "Vendre"
+    })
   }
 
   function renderStockTable(rows) {
@@ -833,7 +867,7 @@
       renderMarketPanels()
       setMarcheFeedback(dom.marcheAchatFeedback, "Connecte-toi pour acceder au marche.", "is-error")
       setMarcheFeedback(dom.marcheVenteFeedback, "Connecte-toi pour acceder au marche.", "is-error")
-      setMarcheFeedback(dom.marcheCollectiviteFeedback, "Connecte-toi pour acceder a la collectivite.", "is-error")
+      setMarcheFeedback(dom.marcheCollectiviteFeedback, "Connecte-toi pour acceder au marche noir.", "is-error")
       return
     }
 
@@ -850,7 +884,7 @@
       renderMarketPanels(state.latestFarmData)
       setMarcheFeedback(dom.marcheAchatFeedback, "Impossible de charger le marche.", "is-error")
       setMarcheFeedback(dom.marcheVenteFeedback, "Impossible de charger le marche.", "is-error")
-      setMarcheFeedback(dom.marcheCollectiviteFeedback, "Impossible de charger la collectivite.", "is-error")
+      setMarcheFeedback(dom.marcheCollectiviteFeedback, "Impossible de charger le marche noir.", "is-error")
     }
   }
 
@@ -888,6 +922,8 @@
     healthValue,
     hungerValue,
     hydrationValue,
+    sexValue,
+    roleValue,
     weightLabel,
     weightValue,
     targetLabel
@@ -903,6 +939,12 @@
     dom.modalHealth.textContent = healthValue || "-"
     dom.modalHunger.textContent = hungerValue || "-"
     dom.modalHydration.textContent = hydrationValue || "-"
+    if (dom.modalSex) {
+      dom.modalSex.textContent = sexValue || "-"
+    }
+    if (dom.modalRole) {
+      dom.modalRole.textContent = roleValue || "-"
+    }
     dom.modalWeightLabel.textContent = weightLabel
     dom.modalWeight.textContent = weightValue
     dom.actionButtons.forEach((button) => {
@@ -998,6 +1040,8 @@
       healthValue: deriveAnimalHealthState(animalDetails),
       hungerValue,
       hydrationValue: thirstValue,
+      sexValue: animalDetails.sex || "-",
+      roleValue: animalDetails.role || "-",
       weightLabel: "Poids :",
       weightValue: helpers.formatWeight(animalDetails.weight),
       targetLabel: getCareTargetLabel(animal.type, animalDetails.name || animal.name)
@@ -1058,6 +1102,8 @@
       healthValue: rabbitHealthValue,
       hungerValue: rabbitHungerValue,
       hydrationValue: rabbitHydrationValue,
+      sexValue: "-",
+      roleValue: "-",
       weightLabel: "Effectif :",
       weightValue: `${rabbitHealth.totalLapins} lapin${(rabbitHealth.totalLapins || 0) > 1 ? "s" : ""}`,
       targetLabel: "tout le clapier"

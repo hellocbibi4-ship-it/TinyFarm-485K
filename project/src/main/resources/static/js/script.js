@@ -435,17 +435,19 @@
 
         if (communitySellButton) {
           const product = communitySellButton.dataset.communitySell
+          const quantityInput = dom.popupMarche.querySelector(`[data-community-sell-qty="${product}"]`)
+          const quantity = Math.max(1, Number.parseInt(quantityInput?.value, 10) || 1)
 
           try {
             ui.setMarcheFeedback(dom.marcheCollectiviteFeedback)
-            const farmData = await api.vendreACollectivite(product, 1)
+            const farmData = await api.vendreACollectivite(product, quantity)
             ui.applyFarmData(farmData)
             ui.renderStockTable(ui.buildStockRows(farmData))
             ui.setStockFeedback()
-            ui.afficherMessage("Vente a la collectivite validee.", "succes")
+            ui.afficherMessage("Vente au marche noir validee.", "succes")
             ui.setMarcheFeedback(dom.marcheCollectiviteFeedback, "Vente effectuee avec succes.", "is-success")
           } catch (error) {
-            console.error("Erreur lors de la vente a la collectivite :", error)
+            console.error("Erreur lors de la vente au marche noir :", error)
             ui.setMarcheFeedback(dom.marcheCollectiviteFeedback, error.message || "Vente impossible.", "is-error")
           }
 
@@ -557,15 +559,15 @@
         try {
           dom.marcheCollectiviteSubmit.disabled = true
           ui.setMarcheFeedback(dom.marcheCollectiviteFeedback)
-          // La collectivite ne cree pas d'offre : la vente est immediate.
+          // Le marche noir ne cree pas d'offre : la vente est immediate.
           const farmData = await api.vendreACollectivite(product, quantity)
           ui.applyFarmData(farmData)
           ui.renderStockTable(ui.buildStockRows(farmData))
           ui.setStockFeedback()
-          ui.afficherMessage("Vente a la collectivite validee.", "succes")
+          ui.afficherMessage("Vente au marche noir validee.", "succes")
           ui.setMarcheFeedback(dom.marcheCollectiviteFeedback, "Vente effectuee avec succes.", "is-success")
         } catch (error) {
-          console.error("Erreur lors de la vente a la collectivite :", error)
+          console.error("Erreur lors de la vente au marche noir :", error)
           ui.setMarcheFeedback(dom.marcheCollectiviteFeedback, error.message || "Vente impossible.", "is-error")
         } finally {
           ui.updateMarcheCollectiviteSelection()

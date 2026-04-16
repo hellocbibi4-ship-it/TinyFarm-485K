@@ -24,7 +24,7 @@
       img: "vache.png",
       price: 50,
       minLevel: 2,
-      defaultWeight: 500
+      defaultWeight: 1
     },
     poule: {
       label: "Poule",
@@ -137,6 +137,8 @@
       weight: Number.isFinite(parsedWeight) ? parsedWeight : catalogEntry.defaultWeight,
       age: Number.parseInt(rawAnimal?.age, 10) || 0,
       stage: rawAnimal?.stage || null,
+      sex: rawAnimal?.sex || "-",
+      role: rawAnimal?.role || "-",
       isSick: Boolean(rawAnimal?.isSick),
       health: Number.parseInt(rawAnimal?.health, 10) || 100,
       hunger: Number.parseInt(rawAnimal?.hunger, 10) || 100,

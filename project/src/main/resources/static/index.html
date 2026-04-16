@@ -322,7 +322,7 @@
                     aria-selected="false"
                     data-marche-tab="collectivite"
                 >
-                    Collectivite
+                    Marche noir
                 </button>
             </div>
 
@@ -372,8 +372,8 @@
                 <section class="popup-marche-panneau" data-marche-panel="collectivite">
                     <p class="popup-marche-texte">Vends directement Ã  la collectivitÃ© au prix fixe.</p>
                     <p id="marche-collectivite-feedback" class="popup-marche-feedback" aria-live="polite"></p>
-                    <section id="marche-collectivite-grid" class="grille-animaux popup-marche-collectivite-grid" aria-label="Produits repris par la collectivite"></section>
-                    <div class="popup-marche-vente-form">
+                    <section id="marche-collectivite-grid" class="grille-animaux popup-marche-collectivite-grid" aria-label="Produits repris par le marche noir"></section>
+                    <div class="popup-marche-vente-form" hidden>
                         <label class="popup-marche-form-label" for="marche-collectivite-produit">Produit</label>
                         <select id="marche-collectivite-produit" class="popup-marche-select"></select>
 
@@ -413,6 +413,8 @@
                         <p><span class="info-label">Santé :</span> <span id="animal-health">-</span></p>
                         <p><span class="info-label">Faim :</span> <span id="animal-hunger">-</span></p>
                         <p><span class="info-label">Hydratation :</span> <span id="animal-hydration">-</span></p>
+                        <p><span class="info-label">Sexe :</span> <span id="animal-sex">-</span></p>
+                        <p><span class="info-label">Role :</span> <span id="animal-role">-</span></p>
                         <p><span id="animal-weight-label" class="info-label">Poids :</span> <span id="animal-weight">-</span></p>
                     </div>
                     <div class="modal-actions">
