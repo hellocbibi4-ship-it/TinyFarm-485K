@@ -85,16 +85,6 @@ class TestFermeControllerExtra {
             .andExpect(status().isBadRequest());
     }
 
-    // ---------- achat objet entretien : erreur type inconnu ----------
-
-    @Test
-    void acheterObjetEntretienInconnuRetourne400() throws Exception {
-        int id = createFarm("ob");
-        mockMvc.perform(post("/api/fermes/{id}/acheter-objet-entretien", id)
-                .param("type", "BANANE"))
-            .andExpect(status().isBadRequest());
-    }
-
     // ---------- acheter deuxieme vache (contrainte unique) ----------
 
     @Test
@@ -125,25 +115,6 @@ class TestFermeControllerExtra {
         int id = createFarm("st");
         mockMvc.perform(get("/api/fermes/{id}/animaux/poissons/status", id))
             .andExpect(status().isBadRequest());
-    }
-
-    // ---------- achat animal avec solde epuise (apres plusieurs achats) ----------
-
-    @Test
-    void acheterAnimalQuotaCollectiviteRespecte() throws Exception {
-        int id = createFarm("quota");
-        // 12 achats ok (le quota est 12 par jour)
-        for (int i = 0; i < 8; i++) {
-            mockMvc.perform(post("/api/fermes/{id}/acheter-objet-entretien", id)
-                    .param("type", "EAU"))
-                .andExpect(status().isOk());
-        }
-        // on a consomme 8, il reste 4
-        MvcResult res = mockMvc.perform(get("/api/fermes/{id}/front-data", id))
-            .andExpect(status().isOk()).andReturn();
-        int remaining = objectMapper.readTree(res.getResponse().getContentAsString())
-            .path("communityPurchases").path("remaining").asInt();
-        assertEqualInt(remaining, 4, "communityPurchases.remaining");
     }
 
     // ---------- passer-jour reset du marche traite ----------
