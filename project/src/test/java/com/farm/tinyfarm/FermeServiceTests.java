@@ -25,7 +25,7 @@ import com.farm.tinyfarm.repository.MarcheRepository;
 import com.farm.tinyfarm.repository.RemiseRepository;
 import com.farm.tinyfarm.service.FermeService;
 
-class TestFermeServiceUnit {
+class TestFermeService {
 
     private FermeRepository fermeRepository;
     private RemiseRepository remiseRepository;

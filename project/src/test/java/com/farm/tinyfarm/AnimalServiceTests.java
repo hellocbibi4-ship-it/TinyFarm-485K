@@ -21,7 +21,7 @@ import com.farm.tinyfarm.repository.AnimalRepository;
 import com.farm.tinyfarm.service.AnimalService;
 import com.farm.tinyfarm.service.FermeService;
 
-class TestAnimalServiceUnit {
+class TestAnimalService {
 
     private AnimalRepository animalRepository;
     private FermeService fermeService;

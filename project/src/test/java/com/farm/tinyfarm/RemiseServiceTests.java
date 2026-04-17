@@ -22,7 +22,7 @@ import com.farm.tinyfarm.repository.RemiseRepository;
 import com.farm.tinyfarm.service.FermeService;
 import com.farm.tinyfarm.service.RemiseService;
 
-class TestRemiseServiceUnit {
+class TestRemiseService {
 
     private RemiseRepository remiseRepository;
     private FermeRepository fermeRepository;

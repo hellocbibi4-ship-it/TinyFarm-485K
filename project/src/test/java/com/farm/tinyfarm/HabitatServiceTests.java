@@ -29,7 +29,7 @@ import com.farm.tinyfarm.service.HabitatService;
 
 import jakarta.persistence.EntityNotFoundException;
 
-class TestHabitatServiceUnit {
+class TestHabitatService {
 
     private HabitatRepository habitatRepository;
     private FermeService fermeService;
