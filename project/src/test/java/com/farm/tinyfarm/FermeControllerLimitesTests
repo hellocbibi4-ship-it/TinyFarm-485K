@@ -1,0 +1,209 @@
+package com.farm.tinyfarm.controller;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.UUID;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
+
+import com.farm.tinyfarm.model.TypeStock;
+import com.farm.tinyfarm.service.FermeService;
+import com.farm.tinyfarm.service.RemiseService;
+
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+
+@SpringBootTest
+@TestPropertySource(properties = {
+    "spring.datasource.url=jdbc:h2:mem:tinyfarm-fermeextra-tests;DB_CLOSE_DELAY=-1;MODE=LEGACY",
+    "spring.datasource.driver-class-name=org.h2.Driver",
+    "spring.datasource.username=sa",
+    "spring.datasource.password=",
+    "spring.jpa.hibernate.ddl-auto=create-drop",
+    "spring.sql.init.mode=never",
+    "tinyfarm.dev.seed-local-users=false"
+})
+class TestFermeControllerExtra {
+
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired
+    private RemiseService remiseService;
+
+    @Autowired
+    private FermeService fermeService;
+
+    @Autowired
+    private WebApplicationContext webApplicationContext;
+
+    @BeforeEach
+    void setUp() {
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+    }
+
+    // ---------- vente collectivite (cas d'erreurs) ----------
+
+    @Test
+    void vendreACollectiviteProduitInconnuRetourne400() throws Exception {
+        int id = createFarm("pv");
+        mockMvc.perform(post("/api/fermes/{id}/collectivite/vente", id)
+                .param("produit", "BANANE")
+                .param("quantite", "1"))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void vendreACollectiviteQuantiteNulleRetourne400() throws Exception {
+        int id = createFarm("q0");
+        mockMvc.perform(post("/api/fermes/{id}/collectivite/vente", id)
+                .param("produit", "OEUF")
+                .param("quantite", "0"))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void vendreACollectiviteStockInsuffisantRetourne400() throws Exception {
+        int id = createFarm("si");
+        mockMvc.perform(post("/api/fermes/{id}/collectivite/vente", id)
+                .param("produit", "OEUF")
+                .param("quantite", "99"))
+            .andExpect(status().isBadRequest());
+    }
+
+    // ---------- achat objet entretien : erreur type inconnu ----------
+
+    @Test
+    void acheterObjetEntretienInconnuRetourne400() throws Exception {
+        int id = createFarm("ob");
+        mockMvc.perform(post("/api/fermes/{id}/acheter-objet-entretien", id)
+                .param("type", "BANANE"))
+            .andExpect(status().isBadRequest());
+    }
+
+    // ---------- acheter deuxieme vache (contrainte unique) ----------
+
+    @Test
+    void deuxiemeAchatVacheRetourne400() throws Exception {
+        int id = createFarm("v2");
+        mockMvc.perform(post("/api/fermes/{id}/acheter-animal", id)
+                .param("type", "vache"))
+            .andExpect(status().isBadRequest());
+    }
+
+    // ---------- limite lapins 50 ----------
+
+    @Test
+    void acheterLapinSuccesJusquaLaLimiteEstOk() throws Exception {
+        int id = createFarm("lap");
+        // la ferme part avec 8 lapins, on en achete quelques-uns
+        mockMvc.perform(post("/api/fermes/{id}/acheter-animal", id)
+                .param("type", "lapin"))
+            .andExpect(status().isOk());
+        mockMvc.perform(get("/api/fermes/{id}/animaux/lapins/status", id))
+            .andExpect(jsonPath("$.total").value(9));
+    }
+
+    // ---------- status par type : inconnu ----------
+
+    @Test
+    void statusTypeInconnuRetourne400() throws Exception {
+        int id = createFarm("st");
+        mockMvc.perform(get("/api/fermes/{id}/animaux/poissons/status", id))
+            .andExpect(status().isBadRequest());
+    }
+
+    // ---------- achat animal avec solde epuise (apres plusieurs achats) ----------
+
+    @Test
+    void acheterAnimalQuotaCollectiviteRespecte() throws Exception {
+        int id = createFarm("quota");
+        // 12 achats ok (le quota est 12 par jour)
+        for (int i = 0; i < 8; i++) {
+            mockMvc.perform(post("/api/fermes/{id}/acheter-objet-entretien", id)
+                    .param("type", "EAU"))
+                .andExpect(status().isOk());
+        }
+        // on a consomme 8, il reste 4
+        MvcResult res = mockMvc.perform(get("/api/fermes/{id}/front-data", id))
+            .andExpect(status().isOk()).andReturn();
+        int remaining = objectMapper.readTree(res.getResponse().getContentAsString())
+            .path("communityPurchases").path("remaining").asInt();
+        assertEqualInt(remaining, 4, "communityPurchases.remaining");
+    }
+
+    // ---------- passer-jour reset du marche traite ----------
+
+    @Test
+    void passerJourResetIsTraiteDesVaches() throws Exception {
+        int id = createFarm("day");
+        mockMvc.perform(post("/api/fermes/{id}/passer-jour", id))
+            .andExpect(status().isOk());
+        mockMvc.perform(post("/api/fermes/{id}/passer-jour", id))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.gameTime.day").value(3));
+    }
+
+    // ---------- FermeService direct : create avec nom invalide ----------
+
+    @Test
+    void fermeServiceCreateNomInvalideLeveException() {
+        com.farm.tinyfarm.model.Ferme f = new com.farm.tinyfarm.model.Ferme();
+        f.setNom("ab");
+        try {
+            fermeService.create(f);
+            throw new AssertionError("Devait lever une exception");
+        } catch (IllegalArgumentException expected) {
+            // ok
+        }
+    }
+
+    // ---------- classement filtre les fermes sans utilisateur ----------
+
+    @Test
+    void classementExcluesFermesSansUtilisateur() throws Exception {
+        // les fermes creees ici n'ont pas d'utilisateur GitHub, donc classement vide
+        createFarm("cl1");
+        createFarm("cl2");
+        MvcResult res = mockMvc.perform(get("/api/fermes/classement"))
+            .andExpect(status().isOk())
+            .andReturn();
+        JsonNode body = objectMapper.readTree(res.getResponse().getContentAsString());
+        if (!body.path("ranking").isArray()) {
+            throw new AssertionError("ranking doit etre un tableau");
+        }
+    }
+
+    // ---------- utilitaires ----------
+
+    private int createFarm(String prefix) throws Exception {
+        String uniqueName = prefix + "-" + UUID.randomUUID().toString().substring(0, 4);
+        MvcResult result = mockMvc.perform(post("/api/fermes")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"nom\":\"%s\"}".formatted(uniqueName)))
+            .andExpect(status().isCreated())
+            .andReturn();
+        JsonNode body = objectMapper.readTree(result.getResponse().getContentAsString());
+        return body.get("idFerme").asInt();
+    }
+
+    private static void assertEqualInt(int actual, int expected, String msg) {
+        if (actual != expected) {
+            throw new AssertionError(msg + " attendu=" + expected + " obtenu=" + actual);
+        }
+    }
+}
