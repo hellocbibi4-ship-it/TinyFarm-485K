@@ -122,7 +122,7 @@ public class AnimalController {
         try {
             switch (animal.getTypeAnimal()) {
                 case POULE -> animalService.soignerPoule(animal);
-                case VACHE -> animalService.soigner(animal);
+                case VACHE -> animalService.soignerVache(animal);
                 default -> {
                     return ResponseEntity.badRequest().body("Action non disponible pour ce type d'animal.");
                 }
