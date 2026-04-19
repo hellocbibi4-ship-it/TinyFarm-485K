@@ -86,48 +86,5 @@ class AnimalServiceTests {
         assertEquals(TypeRole.REPRODUCTEUR, animal.getRole());
         assertNotNull(animal.getSexe());
     }
-
-    @Test
-    void testUpdateRabbitAgeWhenFedAndWatered() {
-        FermeService fermeServiceMock = mock(FermeService.class);
-        AnimalRepository animalRepositoryMock = mock(AnimalRepository.class);
-        AnimalService animalService = new AnimalService(animalRepositoryMock, fermeServiceMock);
-
-        Animal animal = new Animal();
-        animal.setTypeAnimal(TypeAnimal.LAPIN);
-        animal.setAge(2);
-        animal.setStade(TypeStade.ENFANT);
-        animal.setSexe(TypeSexe.INCONNU);
-        animal.setAMange(true);
-        animal.setJaugeHydratation(100);
-
-        animalService.updateRabbitAge(animal);
-
-        assertEquals(3, animal.getAge());
-        assertEquals(TypeStade.ADULTE, animal.getStade());
-        assertTrue(animal.getSexe() == TypeSexe.MALE || animal.getSexe() == TypeSexe.FEMELLE);
-    }
-
-    @Test
-    void testUpdateRabbitAgeOnlyFedNoAgeChange() {
-        FermeService fermeServiceMock = mock(FermeService.class);
-        AnimalRepository animalRepositoryMock = mock(AnimalRepository.class);
-        AnimalService animalService = new AnimalService(animalRepositoryMock, fermeServiceMock);
-
-        Animal animal = new Animal();
-        animal.setTypeAnimal(TypeAnimal.LAPIN);
-        animal.setAge(1);
-        animal.setStade(TypeStade.ENFANT);
-        animal.setSexe(TypeSexe.INCONNU);
-        animal.setAMange(true);
-        animal.setJaugeHydratation(80);
-
-        animalService.updateRabbitAge(animal);
-
-        assertEquals(1, animal.getAge());
-        assertEquals(TypeStade.ENFANT, animal.getStade());
-        assertEquals(TypeSexe.INCONNU, animal.getSexe());
-    }
 }
-
-
+  

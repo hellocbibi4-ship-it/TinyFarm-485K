@@ -75,14 +75,25 @@ public class AnimalService {
     public Animal createBaseAnimal(Animal animal){
         Utilitaires.validationNom(animal.getNom()); //Appel de fonction pour entrer un nom valide
         
+        animal.setAge(0);
+        animal.setVivant(true);
+        animal.setNbJoursSansNourriture(0);
+        animal.setNbJoursSansHydratation(0);
+        animal.setNbJoursMalade(0);
+        animal.setEstMalade(false);
+        animal.setAMange(false);
+        animal.setAEteTraite(false);
+        animal.setSexe(TypeSexe.INCONNU);
+        
         switch (animal.getTypeAnimal()){
             case POULE :
                 animal.setPoids(0.05f);
                 animal.setStade(TypeStade.ENFANT);
+                animal.setRole(TypeRole.ELEVAGE);
                 break;
             case LAPIN : 
-                animal.setPoids((float)0.0);
-                animal.setStade(TypeStade.ENFANT);
+                animal.setPoids(0.0f);
+                animal.setStade(TypeStade.BEBE);
                 break;
             case VACHE :
                 animal.setPoids((float) 1.0);
@@ -188,6 +199,11 @@ public class AnimalService {
     //Méthode qui nourrit une poule
     public void nourrirPoule(Animal animal) {
         assert(animal.getTypeAnimal().equals(TypeAnimal.POULE));
+        
+        if (!animal.isVivant()) {
+            throw new IllegalStateException("ERREUR : la poule est morte.");
+        }
+
         if (animal.getJaugeFaim() == 100){throw new IllegalCallerException ("ERREUR : La poule ne peut manger qu'une fois par jour");}
         
         animal.setJaugeFaim(100);
@@ -207,6 +223,11 @@ public class AnimalService {
 
     public void hydraterPoule(Animal animal){
         assert(animal.getTypeAnimal().equals(TypeAnimal.POULE));
+        
+        if (!animal.isVivant()) {
+            throw new IllegalStateException("ERREUR : la poule est morte.");
+        }
+
         if (animal.getJaugeFaim() == 100){throw new IllegalCallerException ("ERREUR : La poule ne peut manger qu'une fois par jour");}
         
         animal.setJaugeHydratation(100); 
@@ -225,6 +246,11 @@ public class AnimalService {
     @Transactional
     public void soignerPoule(Animal animal){
         assert(animal.getTypeAnimal().equals(TypeAnimal.POULE));
+        
+        if (!animal.isVivant()) {
+            throw new IllegalStateException("ERREUR : la poule est morte.");
+        }
+        
         if (!animal.estMalade()) {
             throw new IllegalCallerException("ERREUR : la poule ne peut pas être soignée si elle n'est pas malade");
         }
@@ -239,13 +265,81 @@ public class AnimalService {
     //Méthode qui actualise le statut d'un lapin en fonction de son age
     //Doit aussi choisir un sexe une fois l'age adulte atteint (voir méthode pour la poule)
     //PRE : l'animal doit être un lapin
-    public void updateRabbitStatus() {}
+   public void updateRabbitStatus(Animal animal) {
+        if (!TypeAnimal.LAPIN.equals(animal.getTypeAnimal())) {
+            throw new IllegalArgumentException("ERREUR : cet animal n'est pas un lapin.");
+        }
+        
+        if (!animal.isVivant()) {
+            return;
+        }
+
+        int age = animal.getAge();
+
+        // Les gros lapereaux deviennent des adultes à l'âge 3
+        if (age >= 3) {
+            animal.setStade(TypeStade.ADULTE); 
+            
+            // Le sexe est révélé uniquement à l'âge adulte 
+            if (animal.getSexe() == null || TypeSexe.INCONNU.equals(animal.getSexe())) {
+                animal.setSexe(Utilitaires.generateRandomGender());
+            }
+        } else {
+            // Sexe caché pour tous les lapereaux 
+            animal.setSexe(TypeSexe.INCONNU); 
+            
+            // Évolution dans la série des lapereaux 
+            if (age == 0) {
+                animal.setStade(TypeStade.BEBE);
+            } else if (age == 1) {
+                animal.setStade(TypeStade.PETIT);
+            } else if (age == 2) {
+                animal.setStade(TypeStade.GROS);
+            }
+        }
+    }
     
     //TODO
     //Méthode qui augmente l'age d'un lapin
     //Si un lapin n'est pas nourri, il ne change pas d'age
     //PRE : l'animal doit être un lapin
-    public void updateRabbitAge() {}
+    public void updateRabbitAge(Animal animal) {
+        if (!TypeAnimal.LAPIN.equals(animal.getTypeAnimal())) {
+            throw new IllegalArgumentException("ERREUR : cet animal n'est pas un lapin.");
+        }
+        
+        if (!animal.isVivant()) {
+            return;
+        }
+
+        // 1. Condition stricte : ils ne grandissent QUE s'ils sont nourris ET abreuvés
+        if (animal.isAMange() && animal.getJaugeHydratation() == 100) {
+            animal.setAge(animal.getAge() + 1);
+        }
+
+        // 2. Suivi des jours sans nourriture pour la mortalité
+        if (!animal.isAMange()) {
+            animal.setNbJoursSansNourriture(animal.getNbJoursSansNourriture() + 1);
+        } else {
+            animal.setNbJoursSansNourriture(0);
+        }
+
+        // 3. Suivi de la maladie
+        if (animal.estMalade()) {
+            animal.setNbJoursMalade(animal.getNbJoursMalade() + 1);
+        }
+
+        // 4. Réinitialisation des actions journalières
+        animal.setAMange(false);
+        animal.setJaugeFaim(0);
+        animal.setJaugeHydratation(0);
+
+        // 5. Mise à jour du statut (Bébé -> Petit -> Gros -> Adulte)
+        updateRabbitStatus(animal);
+
+        // 6. Sauvegarde
+        animalRepository.save(animal);
+    }
 
     //TODO
     //méthode qui actualise le statut d'une vache en fonction de son age et de son poids
