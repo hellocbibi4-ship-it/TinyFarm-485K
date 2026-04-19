@@ -2,6 +2,8 @@ package com.farm.tinyfarm.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -29,9 +31,17 @@ public class Animal{
         private Habitat habitat;*/
 
         private String nom;
+
+        @Enumerated(EnumType.STRING)
         private TypeAnimal typeAnimal;
+
+        @Enumerated(EnumType.STRING)
         private TypeSexe sexe;
+
+        @Enumerated(EnumType.STRING)
         private TypeStade stade;
+
+        @Enumerated(EnumType.STRING)
         private TypeRole role;
 
         private float poids;
@@ -44,6 +54,10 @@ public class Animal{
         private boolean estMalade = false;
         private boolean aMange = false;
         private boolean aEteTraite = false;
+        private int nbJoursSansNourriture = 0;
+        private int nbJoursSansHydratation = 0;
+        private int nbJoursMalade = 0;
+        private boolean vivant = true;
 
         public Animal(){} //Constructeur par défaut nécessaire pour JPA
 
