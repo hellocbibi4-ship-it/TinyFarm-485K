@@ -678,12 +678,17 @@
       dom.elementsInterface.ownerBalance.textContent = String(state.currentFarmModel.balance)
     }
 
+    const henCount = state.currentFarmModel.animals.filter(
+      (animal) => animal.typeKey === "poule" && String(animal.sex || "").toLowerCase() !== "male"
+    ).length
+
     Object.entries(state.currentFarmModel.counts).forEach(([typeKey, count]) => {
       if (dom.elementsInterface.compteurs[typeKey]) {
+        const displayedCount = typeKey === "poule" ? henCount : count
         dom.elementsInterface.compteurs[typeKey].textContent =
           typeKey === "vache" || typeKey === "poule"
-            ? `${count}/${count}`
-            : String(count)
+            ? `${displayedCount}/${displayedCount}`
+            : String(displayedCount)
       }
     })
   }

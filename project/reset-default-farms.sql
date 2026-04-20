@@ -88,6 +88,8 @@ INSERT INTO animal (
     id_ferme,
     nom,
     type_animal,
+    role,
+    sexe,
     poids,
     age,
     jauge_sante,
@@ -99,22 +101,36 @@ INSERT INTO animal (
     a_mange,
     a_ete_traite
 )
-SELECT f.id_ferme, animal_name, animal_type, animal_weight, 0, 100, 100, 100, 100, 0, FALSE, FALSE, FALSE
+SELECT f.id_ferme,
+       animal_name,
+       animal_type,
+       animal_role,
+       animal_sex,
+       animal_weight,
+       animal_age,
+       100,
+       100,
+       100,
+       100,
+       0,
+       FALSE,
+       FALSE,
+       FALSE
 FROM ferme f
 JOIN utilisateur u ON u.id_utilisateur = f.id_utilisateur
 JOIN (
-    SELECT 'Vache 1' AS animal_name, 2 AS animal_type, 500 AS animal_weight
-    UNION ALL SELECT 'Poule 1', 0, 2
-    UNION ALL SELECT 'Poule 2', 0, 2
-    UNION ALL SELECT 'Poule 3', 0, 2
-    UNION ALL SELECT 'Poule 4', 0, 2
-    UNION ALL SELECT 'Lapin 1', 1, 2
-    UNION ALL SELECT 'Lapin 2', 1, 2
-    UNION ALL SELECT 'Lapin 3', 1, 2
-    UNION ALL SELECT 'Lapin 4', 1, 2
-    UNION ALL SELECT 'Lapin 5', 1, 2
-    UNION ALL SELECT 'Lapin 6', 1, 2
-    UNION ALL SELECT 'Lapin 7', 1, 2
-    UNION ALL SELECT 'Lapin 8', 1, 2
+    SELECT 'Vache 1' AS animal_name, 2 AS animal_type, 2 AS animal_role, 2 AS animal_sex, 500 AS animal_weight, 0 AS animal_age
+    UNION ALL SELECT 'Coq 1', 0, 0, 0, 2.5, 5
+    UNION ALL SELECT 'Poule 1', 0, 1, 1, 2, 0
+    UNION ALL SELECT 'Poule 2', 0, 1, 1, 2, 0
+    UNION ALL SELECT 'Poule 3', 0, 1, 1, 2, 0
+    UNION ALL SELECT 'Lapin 1', 1, 2, 2, 2, 0
+    UNION ALL SELECT 'Lapin 2', 1, 2, 2, 2, 0
+    UNION ALL SELECT 'Lapin 3', 1, 2, 2, 2, 0
+    UNION ALL SELECT 'Lapin 4', 1, 2, 2, 2, 0
+    UNION ALL SELECT 'Lapin 5', 1, 2, 2, 2, 0
+    UNION ALL SELECT 'Lapin 6', 1, 2, 2, 2, 0
+    UNION ALL SELECT 'Lapin 7', 1, 2, 2, 2, 0
+    UNION ALL SELECT 'Lapin 8', 1, 2, 2, 2, 0
 ) template
 WHERE u.github_username IN ('a', 'b');

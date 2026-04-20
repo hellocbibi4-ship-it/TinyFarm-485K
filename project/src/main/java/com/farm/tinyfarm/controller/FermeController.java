@@ -4,6 +4,7 @@ import com.farm.tinyfarm.model.Animal;
 import com.farm.tinyfarm.model.Ferme;
 import com.farm.tinyfarm.model.Remise;
 import com.farm.tinyfarm.model.TypeAnimal;
+import com.farm.tinyfarm.model.TypeSexe;
 import com.farm.tinyfarm.model.TypeStock;
 import com.farm.tinyfarm.repository.FermeRepository;
 import com.farm.tinyfarm.service.FermeService;
@@ -354,9 +355,10 @@ public class FermeController {
         animal.put("idAnimal", sourceAnimal.getIdAnimal());
         animal.put("name", sourceAnimal.getNom());
         animal.put("type", normalizeType(sourceAnimal.getTypeAnimal()));
-        animal.put("typeLabel", typeLabel(sourceAnimal.getTypeAnimal()));
+        animal.put("typeLabel", typeLabel(sourceAnimal));
         animal.put("homeLabel", homeLabel(sourceAnimal.getTypeAnimal()));
         animal.put("img", imageName(sourceAnimal.getTypeAnimal()));
+        animal.put("sex", normalizeSex(sourceAnimal.getSexe()));
         animal.put("weight", sourceAnimal.getPoids());
         animal.put("age", sourceAnimal.getAge());
         animal.put("stage", sourceAnimal.getStade() == null ? "Adulte" : sourceAnimal.getStade().name());
@@ -376,11 +378,28 @@ public class FermeController {
         };
     }
 
-    private String typeLabel(TypeAnimal typeAnimal) {
+    private String typeLabel(Animal animal) {
+        TypeAnimal typeAnimal = animal.getTypeAnimal();
+        if (typeAnimal == TypeAnimal.POULE && animal.getSexe() == TypeSexe.MALE) {
+            return "Coq";
+        }
+
         return switch (typeAnimal) {
             case VACHE -> "Vache";
             case POULE -> "Poule";
             case LAPIN -> "Lapin";
+        };
+    }
+
+    private String normalizeSex(TypeSexe sexe) {
+        if (sexe == null) {
+            return "inconnu";
+        }
+
+        return switch (sexe) {
+            case MALE -> "male";
+            case FEMELLE -> "femelle";
+            case INCONNU -> "inconnu";
         };
     }
 
