@@ -121,9 +121,9 @@ JOIN utilisateur u ON u.id_utilisateur = f.id_utilisateur
 JOIN (
     SELECT 'Vache 1' AS animal_name, 2 AS animal_type, 2 AS animal_role, 2 AS animal_sex, 500 AS animal_weight, 0 AS animal_age
     UNION ALL SELECT 'Coq 1', 0, 0, 0, 2.5, 5
-    UNION ALL SELECT 'Poule 1', 0, 1, 1, 2, 0
-    UNION ALL SELECT 'Poule 2', 0, 1, 1, 2, 0
-    UNION ALL SELECT 'Poule 3', 0, 1, 1, 2, 0
+    UNION ALL SELECT 'Poule 1', 0, 1, 1, 2.5, 5
+    UNION ALL SELECT 'Poule 2', 0, 1, 1, 2.5, 5
+    UNION ALL SELECT 'Poule 3', 0, 1, 1, 2.5, 5
     UNION ALL SELECT 'Lapin 1', 1, 2, 2, 2, 0
     UNION ALL SELECT 'Lapin 2', 1, 2, 2, 2, 0
     UNION ALL SELECT 'Lapin 3', 1, 2, 2, 2, 0

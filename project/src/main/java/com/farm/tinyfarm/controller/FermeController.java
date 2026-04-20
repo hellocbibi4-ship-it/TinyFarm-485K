@@ -5,6 +5,7 @@ import com.farm.tinyfarm.model.Ferme;
 import com.farm.tinyfarm.model.Remise;
 import com.farm.tinyfarm.model.TypeAnimal;
 import com.farm.tinyfarm.model.TypeSexe;
+import com.farm.tinyfarm.model.TypeStade;
 import com.farm.tinyfarm.model.TypeStock;
 import com.farm.tinyfarm.repository.FermeRepository;
 import com.farm.tinyfarm.service.FermeService;
@@ -216,7 +217,11 @@ public class FermeController {
         Animal animal = requireIndividualAnimal(id, normalized, animalId);
         fermeService.payerActionAnimale(id, normalized, "feed");
         remiseService.retirerStock(id, "vache".equals(normalized) || "vaches".equals(normalized) ? TypeStock.PAILLE : TypeStock.NOURRITURE, 1);
-        animal.setJaugeFaim(100);
+        if ("poule".equals(normalized) || "poules".equals(normalized)) {
+            fermeService.nourrirVolaille(animal);
+        } else {
+            animal.setJaugeFaim(100);
+        }
         return ResponseEntity.ok(buildFrontData(fermeService.sauvegarderApresActionsAnimaux(id, List.of(animal))));
     }
 
@@ -380,6 +385,10 @@ public class FermeController {
 
     private String typeLabel(Animal animal) {
         TypeAnimal typeAnimal = animal.getTypeAnimal();
+        if (typeAnimal == TypeAnimal.POULE && animal.getStade() == TypeStade.ENFANT) {
+            return "Poussin";
+        }
+
         if (typeAnimal == TypeAnimal.POULE && animal.getSexe() == TypeSexe.MALE) {
             return "Coq";
         }

@@ -6,6 +6,7 @@ import com.farm.tinyfarm.model.Remise;
 import com.farm.tinyfarm.model.TypeAnimal;
 import com.farm.tinyfarm.model.TypeRole;
 import com.farm.tinyfarm.model.TypeSexe;
+import com.farm.tinyfarm.model.TypeStade;
 import com.farm.tinyfarm.outils.Utilitaires;
 import com.farm.tinyfarm.repository.AnimalRepository;
 import com.farm.tinyfarm.repository.FermeRepository;
@@ -35,6 +36,10 @@ public class FermeService {
     public static final int ROOSTER_MIN_REPRODUCTIVE_AGE_DAYS = 5;
     public static final float ROOSTER_MIN_WEIGHT_KG = 2.5f;
     public static final float ROOSTER_MAX_WEIGHT_KG = 3.5f;
+    public static final int CHICK_TO_ADULT_DAYS = 4;
+    public static final float CHICK_DEFAULT_WEIGHT_KG = 0.5f;
+    public static final float CHICKEN_FEED_WEIGHT_GAIN_KG = 0.5f;
+    public static final float CHICKEN_MAX_WEIGHT_KG = 3.5f;
     // Petites listes de prenoms pour eviter les animaux tous nommes
     // "Poule 1" ou "Vache 1" dans l'interface.
     private static final List<String> COW_NAMES = List.of(
@@ -284,6 +289,7 @@ public class FermeService {
             .orElseThrow(() -> new RuntimeException("Ferme introuvable"));
         boolean changed = normalizeDailyState(ferme);
         changed = garantirPresenceCoqReproducteur(ferme) || changed;
+        changed = normaliserVolaillesAdultesLegacy(ferme) || changed;
         changed = synchroniserCompteursDepuisAnimaux(ferme) || changed;
         return changed ? fermeRepository.save(ferme) : ferme;
     }
@@ -301,16 +307,27 @@ public class FermeService {
         });
 
         List<Animal> animaux = animalRepository.findByFerme_IdFermeOrderByIdAnimalAsc(idFerme);
+
+        int oeufsAIncuber = Math.max(0, remise.getStockOeuf());
+        if (oeufsAIncuber > 0) {
+            List<Animal> nouveauxPoussins = creerPoussinsDepuisOeufs(ferme, oeufsAIncuber);
+            if (!nouveauxPoussins.isEmpty()) {
+                animalRepository.saveAll(nouveauxPoussins);
+                animaux.addAll(nouveauxPoussins);
+            }
+            remise.setStockOeuf(0);
+        }
+
         // La production est calculee avant la degradation du nouveau jour :
         // un animal sale ou malade ne produit deja plus.
-        int nbPoulesPondues = calculerNombrePondeusesDuJour(animaux);
+        int nbOeufsPondus = calculerNombreOeufsDuJour(animaux);
         int nbVaches = (int) animaux.stream()
             .filter(animal -> animal.getTypeAnimal() == TypeAnimal.VACHE)
             .filter(this::peutProduireLait)
             .count();
 
-        if (nbPoulesPondues > 0) {
-            remise.setStockOeuf(remise.getStockOeuf() + nbPoulesPondues);
+        if (nbOeufsPondus > 0) {
+            remise.setStockOeuf(remise.getStockOeuf() + nbOeufsPondus);
         }
         if (nbVaches > 0) {
             remise.setStockLait(remise.getStockLait() + nbVaches);
@@ -404,6 +421,16 @@ public class FermeService {
         animalRepository.saveAll(animaux);
         synchroniserCompteursDepuisAnimaux(ferme);
         return fermeRepository.save(ferme);
+    }
+
+    public void nourrirVolaille(Animal animal) {
+        if (animal == null || animal.getTypeAnimal() != TypeAnimal.POULE) {
+            return;
+        }
+
+        animal.setJaugeFaim(100);
+        float nouveauPoids = Math.min(CHICKEN_MAX_WEIGHT_KG, animal.getPoids() + CHICKEN_FEED_WEIGHT_GAIN_KG);
+        animal.setPoids(nouveauPoids);
     }
 
     private void consommerAchatCollectivite(Ferme ferme) {
@@ -523,7 +550,7 @@ public class FermeService {
         return !animal.estMalade() && animal.getJaugeProprete() >= 100;
     }
 
-    private int calculerNombrePondeusesDuJour(List<Animal> animaux) {
+    private int calculerNombreOeufsDuJour(List<Animal> animaux) {
         int nbPondeusesEligibles = (int) animaux.stream()
             .filter(this::estPoulePondeuseEligible)
             .count();
@@ -541,12 +568,23 @@ public class FermeService {
         }
 
         int capaciteMaxPonte = nbCoqsReproducteurs * MAX_HENS_PER_ROOSTER_PER_DAY;
-        return Math.min(nbPondeusesEligibles, capaciteMaxPonte);
+        int nbPondeusesActives = Math.min(nbPondeusesEligibles, capaciteMaxPonte);
+
+        int totalOeufs = 0;
+        for (int index = 0; index < nbPondeusesActives; index++) {
+            // Une poule peut pondre 0, 1 ou 2 oeufs sur une journee.
+            totalOeufs += ThreadLocalRandom.current().nextInt(0, 3);
+        }
+        return totalOeufs;
     }
 
     private boolean estPoulePondeuseEligible(Animal animal) {
         return animal.getTypeAnimal() == TypeAnimal.POULE
             && animal.getSexe() == TypeSexe.FEMELLE
+            && animal.getAge() >= ROOSTER_MIN_REPRODUCTIVE_AGE_DAYS
+            && animal.getPoids() >= ROOSTER_MIN_WEIGHT_KG
+            && animal.getPoids() <= CHICKEN_MAX_WEIGHT_KG
+            && animal.getJaugeFaim() >= 100
             && peutPondre(animal);
     }
 
@@ -578,11 +616,83 @@ public class FermeService {
             animal.setRole(TypeRole.REPRODUCTEUR);
             animal.setAge(ROOSTER_MIN_REPRODUCTIVE_AGE_DAYS);
             animal.setPoids(Math.min(ROOSTER_MIN_WEIGHT_KG, ROOSTER_MAX_WEIGHT_KG));
+            animal.setStade(TypeStade.ADULTE);
             return;
         }
 
         animal.setSexe(TypeSexe.FEMELLE);
         animal.setRole(TypeRole.PONDEUSE);
+        animal.setAge(ROOSTER_MIN_REPRODUCTIVE_AGE_DAYS);
+        animal.setPoids(Math.max(ROOSTER_MIN_WEIGHT_KG, Math.min(animal.getPoids(), CHICKEN_MAX_WEIGHT_KG)));
+        animal.setStade(TypeStade.ADULTE);
+    }
+
+    private List<Animal> creerPoussinsDepuisOeufs(Ferme ferme, int quantiteOeufs) {
+        List<Animal> poussins = new ArrayList<>();
+        if (quantiteOeufs <= 0) {
+            return poussins;
+        }
+
+        long existingCount = animalRepository.countByFerme_IdFermeAndTypeAnimal(ferme.getIdFerme(), TypeAnimal.POULE);
+        for (int index = 0; index < quantiteOeufs; index++) {
+            Animal poussin = new Animal();
+            poussin.setFerme(ferme);
+            poussin.setTypeAnimal(TypeAnimal.POULE);
+            poussin.setNom("Poussin " + (existingCount + index + 1));
+            poussin.setPoids(CHICK_DEFAULT_WEIGHT_KG);
+            poussin.setAge(0);
+            poussin.setStade(TypeStade.ENFANT);
+            poussin.setSexe(TypeSexe.INCONNU);
+            poussin.setRole(TypeRole.ELEVAGE);
+            poussin.setJaugeSante(100);
+            poussin.setJaugeFaim(100);
+            poussin.setJaugeHydratation(100);
+            poussin.setJaugeProprete(100);
+            poussin.setJoursMaladeConsecutifs(0);
+            poussin.setEstMalade(false);
+            poussin.setAMange(false);
+            poussin.setAEteTraite(false);
+            poussins.add(poussin);
+        }
+
+        return poussins;
+    }
+
+    private void actualiserCycleDeVieVolaille(Animal animal) {
+        if (animal.getTypeAnimal() != TypeAnimal.POULE) {
+            return;
+        }
+
+        animal.setAge(animal.getAge() + 1);
+
+        if (animal.getStade() == TypeStade.ENFANT) {
+            if (animal.getAge() >= CHICK_TO_ADULT_DAYS) {
+                animal.setStade(TypeStade.ADULTE);
+                TypeSexe sexeAdulte = ThreadLocalRandom.current().nextBoolean() ? TypeSexe.MALE : TypeSexe.FEMELLE;
+                animal.setSexe(sexeAdulte);
+            }
+        }
+
+        if (animal.getAge() < ROOSTER_MIN_REPRODUCTIVE_AGE_DAYS || animal.getPoids() < ROOSTER_MIN_WEIGHT_KG) {
+            animal.setRole(TypeRole.ELEVAGE);
+            return;
+        }
+
+        if (animal.getSexe() == TypeSexe.FEMELLE) {
+            boolean peutPondreAujourdhui = !animal.estMalade()
+                && animal.getJaugeProprete() >= 100
+                && animal.getJaugeFaim() >= 100
+                && animal.getPoids() <= CHICKEN_MAX_WEIGHT_KG;
+            animal.setRole(peutPondreAujourdhui ? TypeRole.PONDEUSE : TypeRole.ELEVAGE);
+            return;
+        }
+
+        if (animal.getSexe() == TypeSexe.MALE) {
+            animal.setRole(estCoqReproducteur(animal) ? TypeRole.REPRODUCTEUR : TypeRole.ELEVAGE);
+            return;
+        }
+
+        animal.setRole(TypeRole.ELEVAGE);
     }
 
     private boolean garantirPresenceCoqReproducteur(Ferme ferme) {
@@ -619,6 +729,42 @@ public class FermeService {
         return true;
     }
 
+    private boolean normaliserVolaillesAdultesLegacy(Ferme ferme) {
+        List<Animal> volailles = animalRepository.findByFerme_IdFermeAndTypeAnimalOrderByIdAnimalAsc(
+            ferme.getIdFerme(),
+            TypeAnimal.POULE
+        );
+
+        if (volailles.isEmpty()) {
+            return false;
+        }
+
+        boolean changed = false;
+        for (Animal volaille : volailles) {
+            if (volaille.getStade() == TypeStade.ENFANT) {
+                continue;
+            }
+
+            if (volaille.getAge() < ROOSTER_MIN_REPRODUCTIVE_AGE_DAYS) {
+                volaille.setAge(ROOSTER_MIN_REPRODUCTIVE_AGE_DAYS);
+                changed = true;
+            }
+
+            float poidsCible = Math.max(ROOSTER_MIN_WEIGHT_KG, Math.min(volaille.getPoids(), CHICKEN_MAX_WEIGHT_KG));
+            if (Float.compare(volaille.getPoids(), poidsCible) != 0) {
+                volaille.setPoids(poidsCible);
+                changed = true;
+            }
+        }
+
+        if (!changed) {
+            return false;
+        }
+
+        animalRepository.saveAll(volailles);
+        return true;
+    }
+
     private boolean peutProduireLait(Animal animal) {
         return !animal.estMalade() && animal.getJaugeProprete() >= 100;
     }
@@ -633,6 +779,8 @@ public class FermeService {
         }
 
         for (Animal animal : animaux) {
+            actualiserCycleDeVieVolaille(animal);
+
             boolean etaitAffame = animal.getJaugeFaim() < 100;
             boolean etaitAssoiffe = animal.getJaugeHydratation() < 100;
             boolean etaitMalade = animal.estMalade();
