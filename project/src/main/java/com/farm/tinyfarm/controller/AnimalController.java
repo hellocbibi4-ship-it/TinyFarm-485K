@@ -150,4 +150,46 @@ public class AnimalController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+    @PatchMapping("/animaux/{id}/produire-lait")
+    public ResponseEntity<?> produireLait(@PathVariable Integer id) {
+        Animal animal = animalRepository.findById(id).orElse(null);
+        if (animal == null) {
+            return ResponseEntity.notFound().build();
+        }
+        try {
+            if (animal.getTypeAnimal() != TypeAnimal.VACHE) {
+                return ResponseEntity.badRequest().body("Seules les vaches peuvent produire du lait.");
+            }
+            int laitProduit = animalService.produireLait(animal);
+            return ResponseEntity.ok(Map.of(
+                "message", "Succès !",
+                "litresProduits", laitProduit
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PatchMapping("/animaux/{id}/traire")
+    public ResponseEntity<?> traire(@PathVariable Integer id) {
+        Animal animal = animalRepository.findById(id).orElse(null);
+        if (animal == null) {
+            return ResponseEntity.notFound().build();
+        }
+        try {
+            if (animal.getTypeAnimal() != TypeAnimal.VACHE) {
+                return ResponseEntity.badRequest().body("Seules les vaches peuvent etre traies.");
+            }
+            int laitTraite = animalService.traireVache(animal);
+            int ecusGagnes = laitTraite * 2;
+            return ResponseEntity.ok(Map.of(
+                "message", "Succès !",
+                "litresReccoltes", laitTraite,
+                "ecusGagnes", ecusGagnes
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
 }
