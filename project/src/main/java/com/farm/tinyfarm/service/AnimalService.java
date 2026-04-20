@@ -155,7 +155,8 @@ public class AnimalService {
         }
     }
 
-    private boolean isHealthyAdultRooster(Animal animal) {
+    // Méthode qui vérifie si une poule est un coq reproducteur en bonne santé
+    private boolean coqReproducteur(Animal animal) {
         return TypeAnimal.POULE.equals(animal.getTypeAnimal())
                 && animal.isVivant()
                 && !animal.estMalade()
@@ -164,7 +165,8 @@ public class AnimalService {
                 && TypeSexe.MALE.equals(animal.getSexe());
     }
 
-    private boolean isEligibleLayingHen(Animal animal) {
+    // Méthode qui vérifie si une poule est éligible à pondre un œuf aujourd'hui
+    private boolean eligibilitePondeuse(Animal animal) {
         return TypeAnimal.POULE.equals(animal.getTypeAnimal())
                 && animal.isVivant()
                 && !animal.estMalade()
@@ -174,13 +176,14 @@ public class AnimalService {
                 && animal.isAMange()
                 && animal.getJaugeProprete() == 100;
     }
-
-    private boolean canHenLayEggToday(Animal hen) {
+    
+    // Méthode qui vérifie si une poule peut pondre un œuf aujourd'hui en fonction de la capacité de reproduction de la ferme
+    private boolean peutPondreOeuf(Animal hen) {
         Integer idFerme = hen.getFerme().getIdFerme();
         List<Animal> animaux = animalRepository.findByFerme_IdFerme(idFerme);
 
         long nbCoqs = animaux.stream()
-                .filter(this::isHealthyAdultRooster)
+                .filter(this::coqReproducteur)
                 .count();
 
         long capacite = nbCoqs * MAX_PONDEUSES_PAR_COQ;
@@ -189,7 +192,7 @@ public class AnimalService {
         }
 
         List<Animal> pondeusesEligibles = animaux.stream()
-                .filter(this::isEligibleLayingHen)
+                .filter(this::eligibilitePondeuse)
                 .sorted(Comparator.comparing(a -> a.getIdAnimal() == null ? Integer.MAX_VALUE : a.getIdAnimal()))
                 .toList();
 
@@ -232,7 +235,7 @@ if (animal.estMalade()) {
     // La poule doit être pondeuse, nourrie, propre et non malade
     if (TypeRole.PONDEUSE.equals(animal.getRole()) && animal.isAMange()
         && animal.getJaugeProprete() == 100 && !animal.estMalade()
-        && canHenLayEggToday(animal)) {
+        && peutPondreOeuf(animal)) {
         
         // Entre 0 et 2 oeufs 
         int nbOeufs = new java.util.Random().nextInt(3); 
