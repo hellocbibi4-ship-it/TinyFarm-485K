@@ -44,8 +44,6 @@ public class AnimalService {
     private final AnimalRepository animalRepository;
     private final FermeService fermeService;
 
-    private Utilitaires utilitaire; //Sert à appeler des fonctions de la classe Utilitaires
-
     public AnimalService(AnimalRepository animalRepository, FermeService fermeService){
         this.animalRepository = animalRepository;
         this.fermeService = fermeService;
@@ -105,10 +103,12 @@ public class AnimalService {
             case LAPIN : 
                 animal.setPoids(0.0f);
                 animal.setStade(TypeStade.BEBE);
+                animal.setRole(TypeRole.ELEVAGE);
                 break;
             case VACHE :
                 animal.setPoids(1.0f);
                 animal.setStade(TypeStade.ENFANT);
+                animal.setRole(TypeRole.ELEVAGE);
                 break;
         }
         return animal;
@@ -120,8 +120,8 @@ public class AnimalService {
     //Si malade 4 jours de suite, meurt (Ajouter attribut nombre jours malade)
     //Vérifie une poule et la fait grandir si nécessaire
    // Vérifie une poule et la fait grandir ou rétrograder si nécessaire
-    public void updateChickenStatus(Animal animal){
-        assert(animal.getTypeAnimal().equals(TypeAnimal.POULE));
+    public void uateChickenStatus(Animal animal){
+        assertPoule(animal);
         verifyMortality(animal);
 
         if (!animal.isVivant()) {
@@ -153,51 +153,49 @@ public class AnimalService {
     }
     
     //Méthode qui augmente l'age d'une poule
-   public void updateChickenAge(Animal animal){
-        assert(animal.getTypeAnimal().equals(TypeAnimal.POULE));
-        if (!animal.isVivant()) {
-            return;
-        }
-
-        // Augmenter l'âge quotidiennement 
-        animal.setAge(animal.getAge() + 1);
-
-        //  Gestion du jeûne et perte de poids cumulative 
-        if (!animal.isAMange()) {
-            animal.setNbJoursSansNourriture(animal.getNbJoursSansNourriture() + 1);
-            
-            int joursJeune = animal.getNbJoursSansNourriture();
-            if (joursJeune == 1) {
-                animal.setPoids(animal.getPoids() - 0.2f); // -0,2 kg 
-            } else if (joursJeune == 2) {
-                animal.setPoids(animal.getPoids() - 0.3f); // Total -0,5 kg 
-            } else if (joursJeune == 3) {
-                animal.setPoids(animal.getPoids() - 0.5f); // Total -1 kg 
-            }
-        } else {
-            animal.setNbJoursSansNourriture(0); // Réinitialisation si nourri 
-        }
-
-        //  Gestion de la maladie (mort après 4 jours) 
-        if (animal.estMalade()) {
-            animal.setNbJoursMalade(animal.getNbJoursMalade() + 1);
-        }
-
-        //  Réinitialisation des indicateurs quotidiens
-        animal.setAMange(false);
-        animal.setJaugeFaim(0); 
-        animal.setJaugeHydratation(0);
-        
-        // Mise à jour du statut et vérification de la mort 
-        updateChickenStatus(animal);
-        verifyMortality(animal);
-
-        animalRepository.save(animal);
+    public void updateChickenAge(Animal animal){
+    assertPoule(animal);
+    if (!animal.isVivant()) {
+        return;
     }
 
+    // Vieillissement et gestion faim/poids existante
+    animal.setAge(animal.getAge() + 1);
+
+    if (!animal.isAMange()) {
+    animal.setNbJoursSansNourriture(animal.getNbJoursSansNourriture() + 1);
+} else {
+    animal.setNbJoursSansNourriture(0);
+}
+
+if (animal.estMalade()) {
+    animal.setNbJoursMalade(animal.getNbJoursMalade() + 1);
+}
+    // La poule doit être pondeuse, nourrie, propre et non malade
+    if (TypeRole.PONDEUSE.equals(animal.getRole()) && animal.isAMange() 
+        && animal.getJaugeProprete() == 100 && !animal.estMalade()) {
+        
+        // Entre 0 et 2 oeufs 
+        int nbOeufs = new java.util.Random().nextInt(3); 
+        
+        if (nbOeufs > 0) {
+            int gain = nbOeufs * 8; // 8 écus par oeuf 
+            fermeService.ajouterEcus(animal.getFerme().getIdFerme(), gain);
+        }
+    }
+
+    // Réinitialisation pour le lendemain
+    animal.setAMange(false);
+    animal.setJaugeFaim(0); 
+    animal.setJaugeHydratation(0);
+    
+    updateChickenStatus(animal);
+    verifyMortality(animal);
+    animalRepository.save(animal);
+}
     //Méthode d'augmentation du poids d'une poule
     public void updateChickenWeight(Animal animal, float addWeight){
-        assert(animal.getTypeAnimal().equals(TypeAnimal.POULE));
+        assertPoule(animal);
         if (animal.getPoids() + addWeight > 3.5){
             animal.setPoids((float)3.5);
         }
@@ -206,54 +204,42 @@ public class AnimalService {
         }
     }
 
-    @Transactional
     //Méthode qui nourrit une poule
-    public void nourrirPoule(Animal animal) {
-        assert(animal.getTypeAnimal().equals(TypeAnimal.POULE));
-        
-        if (!animal.isVivant()) {
-            throw new IllegalStateException("ERREUR : la poule est morte.");
-        }
+   @Transactional
+public void nourrirPoule(Animal animal) {
+    assertPoule(animal); 
+    
+    if (!animal.isVivant()) throw new IllegalStateException("ERREUR : la poule est morte.");
+    if (animal.getJaugeFaim() == 100) throw new IllegalCallerException("Déjà nourrie aujourd'hui.");
+    
+    animal.setJaugeFaim(100);
+    animal.setAMange(true); 
+    
+    // Calcul du poids selon l'eau 
+    float gainPoids = (animal.getJaugeHydratation() == 100) ? 0.65f : 0.5f;
+    animal.setPoids(animal.getPoids() + gainPoids);
 
-        if (animal.getJaugeFaim() == 100){throw new IllegalCallerException ("ERREUR : La poule ne peut manger qu'une fois par jour");}
-        
-        animal.setJaugeFaim(100);
-        if(animal.getJaugeHydratation() == 100) { //Cas ou la poule a bu mais sans avoir mangé au préalable
-            animal.setPoids((float) (animal.getPoids() + 0.65));
-        }
-        else {
-            animal.setPoids((float) (animal.getPoids() + 0.5));
-        }
-        //Retrait d'écus
-        Integer id = animal.getFerme().getIdFerme();
-        fermeService.retirerEcus(id, 3);
+    fermeService.retirerEcus(animal.getFerme().getIdFerme(), 3); // Coût : 3 écus
+    updateChickenStatus(animal);
+    animalRepository.save(animal);
+}
 
+public void hydraterPoule(Animal animal){
+    assertPoule(animal);
+    
+    if (!animal.isVivant()) throw new IllegalStateException("La poule est morte.");
+    if (animal.getJaugeHydratation() == 100) throw new IllegalCallerException("Déjà hydratée aujourd'hui.");
+    
+    animal.setJaugeHydratation(100); 
+
+    if(animal.getJaugeFaim() == 100) {
+        animal.setPoids(animal.getPoids() + 0.15f); // L'eau ne fait grossir que si combinée au grain 
         updateChickenStatus(animal);
-        animalRepository.save(animal);
     }
 
-    public void hydraterPoule(Animal animal){
-        assert(animal.getTypeAnimal().equals(TypeAnimal.POULE));
-        
-        if (!animal.isVivant()) {
-            throw new IllegalStateException("ERREUR : la poule est morte.");
-        }
-
-        if (animal.getJaugeFaim() == 100){throw new IllegalCallerException ("ERREUR : La poule ne peut manger qu'une fois par jour");}
-        
-        animal.setJaugeHydratation(100); 
-
-        if(animal.getJaugeFaim() == 100) { //Cas ou la poule a mangé
-            animal.setPoids((float) (animal.getPoids() + 0.15));
-            updateChickenStatus(animal);
-        }
-
-        //Retrait d'écus
-        Integer id = animal.getFerme().getIdFerme();
-        fermeService.retirerEcus(id, 1);
-        animalRepository.save(animal);
-    }
-
+    fermeService.retirerEcus(animal.getFerme().getIdFerme(), 1); // Coût : 1 écu 
+    animalRepository.save(animal);
+}
     @Transactional
     public void soignerPoule(Animal animal){
         assertPoule(animal);
@@ -281,9 +267,9 @@ public class AnimalService {
     //Doit aussi choisir un sexe une fois l'age adulte atteint (voir méthode pour la poule)
     //PRE : l'animal doit être un lapin
    public void updateRabbitStatus(Animal animal) {
-        if (!TypeAnimal.LAPIN.equals(animal.getTypeAnimal())) {
-            throw new IllegalArgumentException("ERREUR : cet animal n'est pas un lapin.");
-        }
+        assertLapin(animal);
+
+        verifyMortality(animal);
         
         if (!animal.isVivant()) {
             return;
@@ -318,11 +304,12 @@ public class AnimalService {
     //Si un lapin n'est pas nourri, il ne change pas d'age
     //PRE : l'animal doit être un lapin
     public void updateRabbitAge(Animal animal) {
-        if (!TypeAnimal.LAPIN.equals(animal.getTypeAnimal())) {
-            throw new IllegalArgumentException("ERREUR : cet animal n'est pas un lapin.");
-        }
+        assertLapin(animal);
+
+        verifyMortality(animal);
         
         if (!animal.isVivant()) {
+            animalRepository.save(animal);
             return;
         }
 
@@ -341,6 +328,8 @@ public class AnimalService {
         //  Suivi de la maladie
         if (animal.estMalade()) {
             animal.setNbJoursMalade(animal.getNbJoursMalade() + 1);
+        } else {
+            animal.setNbJoursMalade(0);
         }
 
         //  Réinitialisation des actions journalières
@@ -350,6 +339,7 @@ public class AnimalService {
 
         // Mise à jour du statut (Bébé -> Petit -> Gros -> Adulte)
         updateRabbitStatus(animal);
+        verifyMortality(animal);
 
         //Sauvegarde
         animalRepository.save(animal);
@@ -383,8 +373,11 @@ public class AnimalService {
     // Méthode qui augmente l'âge d'une vache 
     public void updateCowAge(Animal animal) {
         assertVache(animal);
+
+        verifyMortality(animal);
         
         if (!animal.isVivant()) {
+            animalRepository.save(animal);
             return;
         }
 
@@ -398,6 +391,12 @@ public class AnimalService {
             animal.setNbJoursMalade(0);
         }
 
+        if (!animal.isAMange()) {
+            animal.setNbJoursSansNourriture(animal.getNbJoursSansNourriture() + 1);
+        } else {
+            animal.setNbJoursSansNourriture(0);
+        }
+
         //  Réinitialisation des indicateurs quotidiens (Nourriture, Traite, etc.)
         animal.setAMange(false);
         animal.setAEteTraite(false);
@@ -406,7 +405,7 @@ public class AnimalService {
 
         // Mise à jour du stade et vérification de la mort
         updateCowStatus(animal);
-        verifyMortality(animal); // Utilise la méthode générique que nous avons créée
+        verifyMortality(animal); 
 
         animalRepository.save(animal);
     }
@@ -426,7 +425,7 @@ public class AnimalService {
     animalRepository.save(animal);
 }
 
-    //TODO
+    
     //Méthode qui ajoute du poids a une vache (poids max 750 kg)
     public void updateCowWeight(Animal animal, float addWeight) {
         assertVache(animal);
@@ -496,45 +495,35 @@ public class AnimalService {
         animalRepository.save(animal);
     }
 
-    //TODO
+    
     //Méthode qui fait produire du lait à une vache et l'ajoute dans la remise
     //Adulte : 8L à 6H et 18H si la vache n'est pas traite, 4L sinon (Possibilité d'ajouter attributs estTraite)
     //PRE l'animal doit être une vache non sale et nourrie
     @Transactional
-    public int produireLait(Animal animal) {
-        assertVache(animal);
-
-        if (!TypeStade.ADULTE.equals(animal.getStade())) {
-            return 0;
-        }
-        if (!animal.isAMange()) {
-            return 0;
-        }
-        if (animal.getJaugeProprete() < 100 || animal.estMalade()) {
-            return 0;
-        }
-
-        if(!animal.isVivant()) {
-            throw new IllegalStateException(
-                "ERREUR : La vache est morte.");
-        }
-
-         if (animal.isAEteTraite()) {
-            throw new IllegalStateException(
-                "ERREUR : La vache a déjà été traitée aujourd'hui.");
-        }
-
-        int litres;
-        if (!animal.isAEteTraite()) {
-            litres = LITRES_PREMIERE_TRAITE;
-            animal.setAEteTraite(true);
-        } else {
-            litres = LITRES_DEUXIEME_TRAITE;
-        }
-
-        animalRepository.save(animal);
-        return litres;
+public int produireLait(Animal animal) { 
+    assertVache(animal);
+    
+    // Une vache morte, enfant, affamée ou malade ne produit rien 
+    if (!animal.isVivant() || !TypeStade.ADULTE.equals(animal.getStade()) 
+        || !animal.isAMange() || animal.estMalade()) {
+        return 0;
     }
+
+    if (animal.isAEteTraite()) {
+        return 0; 
+    }
+
+    // 8L si propre (100), sinon 4L 
+    int litres = (animal.getJaugeProprete() == 100) ? 8 : 4; 
+    int gain = litres * 2; // 2 écus le litre 
+
+    fermeService.ajouterEcus(animal.getFerme().getIdFerme(), gain);
+    
+    animal.setAEteTraite(true);
+    animalRepository.save(animal);
+    
+    return litres; 
+}
 
     //Méthode pour soigner une vache 
     //PRE : La vache doit être malade et ne pas avoir été soignée dans la journée
