@@ -54,6 +54,8 @@ public class Animal{
         private boolean estMalade = false;
         private boolean aMange = false;
         private boolean aEteTraite = false;
+        private int stockLaitPis = 0;
+        private int stockLaitPisMax = 16;
         private int nbJoursSansNourriture = 0;
         private int nbJoursSansHydratation = 0;
         private int nbJoursMalade = 0;

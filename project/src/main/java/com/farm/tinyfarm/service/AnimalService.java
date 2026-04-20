@@ -5,6 +5,9 @@ import com.farm.tinyfarm.repository.AnimalRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
+import java.util.List;
+
 
 import com.farm.tinyfarm.model.Animal;
 import com.farm.tinyfarm.model.TypeAnimal;
@@ -32,6 +35,7 @@ public class AnimalService {
     // Production de lait
     private static final int LITRES_PREMIERE_TRAITE  = 4;
     private static final int LITRES_DEUXIEME_TRAITE  = 8;
+    private static final int MAX_PONDEUSES_PAR_COQ = 5;
 
     // Seuils adulte vache
     private static final int AGE_ADULTE   = 10;//jours
@@ -114,13 +118,12 @@ public class AnimalService {
         return animal;
     }
 
-    //TODO Ajouter dans la fonction les jours de jeune, et mort de l'animal
     //(1 jour : -2KG, 2 jours : - 0.5KG, 3 jours : 1KG, 4 jours ; meurt)
     //Si poids = 0 alors la poule meurt
     //Si malade 4 jours de suite, meurt (Ajouter attribut nombre jours malade)
     //Vérifie une poule et la fait grandir si nécessaire
    // Vérifie une poule et la fait grandir ou rétrograder si nécessaire
-    public void uateChickenStatus(Animal animal){
+    public void updateChickenStatus(Animal animal){
         assertPoule(animal);
         verifyMortality(animal);
 
@@ -151,6 +154,61 @@ public class AnimalService {
             animal.setRole(TypeRole.ELEVAGE);
         }
     }
+
+    private boolean isHealthyAdultRooster(Animal animal) {
+        return TypeAnimal.POULE.equals(animal.getTypeAnimal())
+                && animal.isVivant()
+                && !animal.estMalade()
+                && TypeStade.ADULTE.equals(animal.getStade())
+                && TypeRole.REPRODUCTEUR.equals(animal.getRole())
+                && TypeSexe.MALE.equals(animal.getSexe());
+    }
+
+    private boolean isEligibleLayingHen(Animal animal) {
+        return TypeAnimal.POULE.equals(animal.getTypeAnimal())
+                && animal.isVivant()
+                && !animal.estMalade()
+                && TypeStade.ADULTE.equals(animal.getStade())
+                && TypeRole.PONDEUSE.equals(animal.getRole())
+                && TypeSexe.FEMELLE.equals(animal.getSexe())
+                && animal.isAMange()
+                && animal.getJaugeProprete() == 100;
+    }
+
+    private boolean canHenLayEggToday(Animal hen) {
+        Integer idFerme = hen.getFerme().getIdFerme();
+        List<Animal> animaux = animalRepository.findByFerme_IdFerme(idFerme);
+
+        long nbCoqs = animaux.stream()
+                .filter(this::isHealthyAdultRooster)
+                .count();
+
+        long capacite = nbCoqs * MAX_PONDEUSES_PAR_COQ;
+        if (capacite <= 0) {
+            return false;
+        }
+
+        List<Animal> pondeusesEligibles = animaux.stream()
+                .filter(this::isEligibleLayingHen)
+                .sorted(Comparator.comparing(a -> a.getIdAnimal() == null ? Integer.MAX_VALUE : a.getIdAnimal()))
+                .toList();
+
+        int position = -1;
+        for (int i = 0; i < pondeusesEligibles.size(); i++) {
+            Animal candidate = pondeusesEligibles.get(i);
+            if (hen.getIdAnimal() != null && hen.getIdAnimal().equals(candidate.getIdAnimal())) {
+                position = i;
+                break;
+            }
+        }
+
+        // Si la poule n'est pas encore persistée, on applique uniquement la capacité globale.
+        if (position < 0) {
+            return capacite > 0;
+        }
+
+        return position < capacite;
+    }
     
     //Méthode qui augmente l'age d'une poule
     public void updateChickenAge(Animal animal){
@@ -172,8 +230,9 @@ if (animal.estMalade()) {
     animal.setNbJoursMalade(animal.getNbJoursMalade() + 1);
 }
     // La poule doit être pondeuse, nourrie, propre et non malade
-    if (TypeRole.PONDEUSE.equals(animal.getRole()) && animal.isAMange() 
-        && animal.getJaugeProprete() == 100 && !animal.estMalade()) {
+    if (TypeRole.PONDEUSE.equals(animal.getRole()) && animal.isAMange()
+        && animal.getJaugeProprete() == 100 && !animal.estMalade()
+        && canHenLayEggToday(animal)) {
         
         // Entre 0 et 2 oeufs 
         int nbOeufs = new java.util.Random().nextInt(3); 
@@ -262,7 +321,6 @@ public void hydraterPoule(Animal animal){
         animalRepository.save(animal);
     }
 
-    //TODO
     //Méthode qui actualise le statut d'un lapin en fonction de son age
     //Doit aussi choisir un sexe une fois l'age adulte atteint (voir méthode pour la poule)
     //PRE : l'animal doit être un lapin
@@ -473,7 +531,6 @@ public void hydraterPoule(Animal animal){
         animalRepository.save(animal);
     }
 
-    //TODO
     //Méthode qui abreuve une vache
     @Transactional
     public void abreuverVache(Animal animal) {
@@ -509,20 +566,51 @@ public int produireLait(Animal animal) {
         return 0;
     }
 
-    if (animal.isAEteTraite()) {
-        return 0; 
+    // Production basée sur l'historique de traite (intervalle précédent).
+    int litresProduits = animal.isAEteTraite() ? LITRES_DEUXIEME_TRAITE : LITRES_PREMIERE_TRAITE;
+
+    int stockActuel = animal.getStockLaitPis();
+    int capaciteRestante = Math.max(0, animal.getStockLaitPisMax() - stockActuel);
+    int litresStockes = Math.min(litresProduits, capaciteRestante);
+
+    if (litresStockes <= 0) {
+        return 0;
     }
 
-    // 8L si propre (100), sinon 4L 
-    int litres = (animal.getJaugeProprete() == 100) ? 8 : 4; 
-    int gain = litres * 2; // 2 écus le litre 
-
-    fermeService.ajouterEcus(animal.getFerme().getIdFerme(), gain);
-    
+    animal.setStockLaitPis(stockActuel + litresStockes);
     animal.setAEteTraite(true);
     animalRepository.save(animal);
     
-    return litres; 
+    return litresStockes; 
+}
+
+@Transactional
+//Methode qui traite une vache (et aussi de gagner de l'argent)
+public int traireVache(Animal animal) {
+    assertVache(animal);
+
+    if (!animal.isVivant()) {
+        throw new IllegalStateException("ERREUR : La vache est morte.");
+    }
+
+    int litresDisponibles = animal.getStockLaitPis();
+    
+    if (litresDisponibles <= 0) {
+        throw new IllegalStateException("ERREUR : Le pis de la vache est vide, il n'y a pas de lait à traire.");
+    }
+
+    // Calcul du gain (2 écus par litre)
+    int gain = litresDisponibles * 2;
+
+    // Ajouter les écus à la ferme
+    fermeService.ajouterEcus(animal.getFerme().getIdFerme(), gain);
+
+    // Réinitialiser le stock de lait du pis après la traite
+    animal.setStockLaitPis(0);
+    animalRepository.save(animal);
+
+    // Retourner le nombre de litres traités pour information
+    return litresDisponibles;
 }
 
     //Méthode pour soigner une vache 
