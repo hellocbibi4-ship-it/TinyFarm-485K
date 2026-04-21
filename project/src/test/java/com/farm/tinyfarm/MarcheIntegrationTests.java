@@ -160,6 +160,86 @@ class MarcheIntegrationTests {
     }
 
     @Test
+    void newFarmStartsWithCowAtOneKilogram() throws Exception {
+        int farmId = createFarm("cowkg");
+
+        MvcResult result = mockMvc.perform(get("/api/fermes/{id}/front-data", farmId))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        JsonNode animals = objectMapper.readTree(result.getResponse().getContentAsString()).path("animals");
+        JsonNode cow = null;
+        for (JsonNode animal : animals) {
+            if ("vache".equals(animal.path("type").asText())) {
+                cow = animal;
+                break;
+            }
+        }
+
+        if (cow == null) {
+            throw new AssertionError("Aucune vache initiale trouvee dans la ferme");
+        }
+
+        if (Math.abs(cow.path("weight").asDouble() - 1.0d) > 0.001d) {
+            throw new AssertionError("Le poids initial de la vache doit etre 1 kg");
+        }
+    }
+
+    @Test
+    void feedingAndWateringCowIncreaseWeightWithExpectedGains() throws Exception {
+        int farmId = createFarm("cowfeed");
+
+        mockMvc.perform(post("/api/fermes/{id}/acheter-objet-entretien", farmId)
+                .param("type", "PAILLE"))
+            .andExpect(status().isOk());
+        mockMvc.perform(post("/api/fermes/{id}/acheter-objet-entretien", farmId)
+                .param("type", "EAU"))
+            .andExpect(status().isOk());
+
+        int cowId = findAnimalIdByType(farmId, "vache");
+
+        MvcResult initialResult = mockMvc.perform(get("/api/fermes/{id}/front-data", farmId))
+            .andExpect(status().isOk())
+            .andReturn();
+        double initialWeight = findAnimalWeightByType(
+            objectMapper.readTree(initialResult.getResponse().getContentAsString()),
+            "vache"
+        );
+
+        mockMvc.perform(post("/api/fermes/{id}/animaux/vaches/feed", farmId)
+                .param("animalId", String.valueOf(cowId)))
+            .andExpect(status().isOk());
+
+        MvcResult afterFeedResult = mockMvc.perform(get("/api/fermes/{id}/front-data", farmId))
+            .andExpect(status().isOk())
+            .andReturn();
+        double afterFeedWeight = findAnimalWeightByType(
+            objectMapper.readTree(afterFeedResult.getResponse().getContentAsString()),
+            "vache"
+        );
+
+        if (Math.abs((afterFeedWeight - initialWeight) - 3.0d) > 0.001d) {
+            throw new AssertionError("La paille doit faire prendre 3 kg a la vache");
+        }
+
+        mockMvc.perform(post("/api/fermes/{id}/animaux/vaches/water", farmId)
+                .param("animalId", String.valueOf(cowId)))
+            .andExpect(status().isOk());
+
+        MvcResult afterWaterResult = mockMvc.perform(get("/api/fermes/{id}/front-data", farmId))
+            .andExpect(status().isOk())
+            .andReturn();
+        double afterWaterWeight = findAnimalWeightByType(
+            objectMapper.readTree(afterWaterResult.getResponse().getContentAsString()),
+            "vache"
+        );
+
+        if (Math.abs((afterWaterWeight - afterFeedWeight) - 1.0d) > 0.001d) {
+            throw new AssertionError("L'eau doit faire prendre 1 kg si la vache a mange");
+        }
+    }
+
+    @Test
     void communityPurchasesAreBlockedAfterTwelveBuysUntilNextDay() throws Exception {
         int farmId = createFarm("quota");
 
@@ -658,6 +738,17 @@ class MarcheIntegrationTests {
         for (JsonNode animal : animals) {
             if (type.equals(animal.path("type").asText())) {
                 return animal.path("idAnimal").asInt();
+            }
+        }
+
+        throw new IllegalStateException("Animal de type " + type + " introuvable");
+    }
+
+    private double findAnimalWeightByType(JsonNode body, String type) {
+        JsonNode animals = body.path("animals");
+        for (JsonNode animal : animals) {
+            if (type.equals(animal.path("type").asText())) {
+                return animal.path("weight").asDouble();
             }
         }
 

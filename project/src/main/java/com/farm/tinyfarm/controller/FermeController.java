@@ -215,11 +215,18 @@ public class FermeController {
         }
 
         Animal animal = requireIndividualAnimal(id, normalized, animalId);
-        fermeService.payerActionAnimale(id, normalized, "feed");
-        remiseService.retirerStock(id, "vache".equals(normalized) || "vaches".equals(normalized) ? TypeStock.PAILLE : TypeStock.NOURRITURE, 1);
         if ("poule".equals(normalized) || "poules".equals(normalized)) {
+            fermeService.payerActionAnimale(id, normalized, "feed");
+            remiseService.retirerStock(id, TypeStock.NOURRITURE, 1);
             fermeService.nourrirVolaille(animal);
+        } else if ("vache".equals(normalized) || "vaches".equals(normalized)) {
+            // Validation metier d'abord: une vache ne peut prendre qu'un repas par jour.
+            fermeService.nourrirVachePaille(animal);
+            fermeService.payerActionAnimale(id, normalized, "feed");
+            remiseService.retirerStock(id, TypeStock.PAILLE, 1);
         } else {
+            fermeService.payerActionAnimale(id, normalized, "feed");
+            remiseService.retirerStock(id, TypeStock.NOURRITURE, 1);
             animal.setJaugeFaim(100);
         }
         return ResponseEntity.ok(buildFrontData(fermeService.sauvegarderApresActionsAnimaux(id, List.of(animal))));
@@ -247,7 +254,11 @@ public class FermeController {
         Animal animal = requireIndividualAnimal(id, normalized, animalId);
         fermeService.payerActionAnimale(id, normalized, "water");
         remiseService.retirerStock(id, TypeStock.EAU, 1);
-        animal.setJaugeHydratation(100);
+        if ("vache".equals(normalized) || "vaches".equals(normalized)) {
+            fermeService.abreuverVache(animal);
+        } else {
+            animal.setJaugeHydratation(100);
+        }
         return ResponseEntity.ok(buildFrontData(fermeService.sauvegarderApresActionsAnimaux(id, List.of(animal))));
     }
 

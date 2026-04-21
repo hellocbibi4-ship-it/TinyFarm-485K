@@ -40,6 +40,16 @@ public class FermeService {
     public static final float CHICK_DEFAULT_WEIGHT_KG = 0.5f;
     public static final float CHICKEN_FEED_WEIGHT_GAIN_KG = 0.5f;
     public static final float CHICKEN_MAX_WEIGHT_KG = 3.5f;
+    public static final int COW_ADULT_MIN_AGE_DAYS = 10;
+    public static final float COW_ADULT_MIN_WEIGHT_KG = 80f;
+    public static final float COW_MAX_WEIGHT_KG = 750f;
+    public static final float COW_GRASS_DAILY_GAIN_KG = 5f;
+    public static final float COW_STRAW_GAIN_KG = 3f;
+    public static final float COW_WATER_GAIN_KG = 1f;
+    public static final int COW_MILK_TRAITE_PER_SLOT_LITERS = 8;
+    public static final int COW_MILK_NON_TRAITE_PER_SLOT_LITERS = 4;
+    public static final int COW_MILK_SLOTS_PER_DAY = 2; // 6h et 18h
+    public static final int COW_MILK_DAILY_CAP_LITERS = 16;
     // Petites listes de prenoms pour eviter les animaux tous nommes
     // "Poule 1" ou "Vache 1" dans l'interface.
     private static final List<String> COW_NAMES = List.of(
@@ -321,16 +331,16 @@ public class FermeService {
         // La production est calculee avant la degradation du nouveau jour :
         // un animal sale ou malade ne produit deja plus.
         int nbOeufsPondus = calculerNombreOeufsDuJour(animaux);
-        int nbVaches = (int) animaux.stream()
+        int laitProduit = animaux.stream()
             .filter(animal -> animal.getTypeAnimal() == TypeAnimal.VACHE)
-            .filter(this::peutProduireLait)
-            .count();
+            .mapToInt(this::calculerLaitVachePourUnJour)
+            .sum();
 
         if (nbOeufsPondus > 0) {
             remise.setStockOeuf(remise.getStockOeuf() + nbOeufsPondus);
         }
-        if (nbVaches > 0) {
-            remise.setStockLait(remise.getStockLait() + nbVaches);
+        if (laitProduit > 0) {
+            remise.setStockLait(remise.getStockLait() + laitProduit);
         }
 
         List<Animal> animauxMorts = appliquerEtatsQuotidiensAnimaux(animaux);
@@ -433,6 +443,70 @@ public class FermeService {
         animal.setPoids(nouveauPoids);
     }
 
+    public void nourrirVachePaille(Animal animal) {
+        assertVache(animal);
+
+        if (animal.isAMange()) {
+            throw new IllegalArgumentException("La vache ne prend qu'un repas par jour");
+        }
+
+        animal.setJaugeFaim(100);
+        animal.setAMange(true);
+        animal.setPoids(Math.min(COW_MAX_WEIGHT_KG, animal.getPoids() + COW_STRAW_GAIN_KG));
+        actualiserStadeVache(animal);
+    }
+
+    public void abreuverVache(Animal animal) {
+        assertVache(animal);
+        animal.setJaugeHydratation(100);
+
+        // L'eau seule ne fait pas grossir la vache.
+        if (animal.isAMange()) {
+            animal.setPoids(Math.min(COW_MAX_WEIGHT_KG, animal.getPoids() + COW_WATER_GAIN_KG));
+            actualiserStadeVache(animal);
+        }
+    }
+
+    private void assertVache(Animal animal) {
+        if (animal == null || animal.getTypeAnimal() != TypeAnimal.VACHE) {
+            throw new IllegalArgumentException("Cet animal n'est pas une vache");
+        }
+    }
+
+    private void actualiserStadeVache(Animal animal) {
+        if (animal.getTypeAnimal() != TypeAnimal.VACHE) {
+            return;
+        }
+
+        if (animal.getAge() >= COW_ADULT_MIN_AGE_DAYS && animal.getPoids() >= COW_ADULT_MIN_WEIGHT_KG) {
+            animal.setStade(TypeStade.ADULTE);
+        } else {
+            animal.setStade(TypeStade.ENFANT);
+        }
+    }
+
+    private int calculerLaitVachePourUnJour(Animal animal) {
+        if (animal.getTypeAnimal() != TypeAnimal.VACHE) {
+            return 0;
+        }
+
+        actualiserStadeVache(animal);
+        if (animal.getStade() != TypeStade.ADULTE) {
+            return 0;
+        }
+
+        // Blocages metier: vache sale, malade ou non nourrie.
+        if (!peutProduireLait(animal)) {
+            return 0;
+        }
+
+        int litresParTraite = animal.isAEteTraite()
+            ? COW_MILK_TRAITE_PER_SLOT_LITERS
+            : COW_MILK_NON_TRAITE_PER_SLOT_LITERS;
+        int productionJour = litresParTraite * COW_MILK_SLOTS_PER_DAY;
+        return Math.min(COW_MILK_DAILY_CAP_LITERS, productionJour);
+    }
+
     private void consommerAchatCollectivite(Ferme ferme) {
         normalizeDailyState(ferme);
         if (ferme.getAchatsCollectiviteRestants() <= 0) {
@@ -509,6 +583,15 @@ public class FermeService {
         animal.setAMange(false);
         animal.setAEteTraite(false);
 
+        if (typeAnimal == TypeAnimal.VACHE) {
+            // Regle metier: a la premiere rencontre, la vache pese 1 kg.
+            animal.setStade(TypeStade.ENFANT);
+            animal.setAge(0);
+        } else if (typeAnimal == TypeAnimal.LAPIN) {
+            animal.setStade(TypeStade.ENFANT);
+            animal.setAge(0);
+        }
+
         if (typeAnimal == TypeAnimal.POULE) {
             initialiserProfilVolaille(ferme, animal);
         } else {
@@ -540,7 +623,7 @@ public class FermeService {
 
     private float defaultWeight(TypeAnimal typeAnimal) {
         return switch (typeAnimal) {
-            case VACHE -> 500f;
+            case VACHE -> 1f;
             case POULE -> 2f;
             case LAPIN -> 2f;
         };
@@ -766,7 +849,10 @@ public class FermeService {
     }
 
     private boolean peutProduireLait(Animal animal) {
-        return !animal.estMalade() && animal.getJaugeProprete() >= 100;
+        return !animal.estMalade()
+            && animal.getJaugeProprete() >= 100
+            && animal.getJaugeFaim() >= 100
+            && animal.isAMange();
     }
 
     private List<Animal> appliquerEtatsQuotidiensAnimaux(List<Animal> animaux) {
@@ -779,6 +865,13 @@ public class FermeService {
         }
 
         for (Animal animal : animaux) {
+            if (animal.getTypeAnimal() == TypeAnimal.VACHE) {
+                // L'herbe pousse naturellement et fait grossir la vache chaque jour.
+                animal.setPoids(Math.min(COW_MAX_WEIGHT_KG, animal.getPoids() + COW_GRASS_DAILY_GAIN_KG));
+                animal.setAge(animal.getAge() + 1);
+                actualiserStadeVache(animal);
+            }
+
             actualiserCycleDeVieVolaille(animal);
 
             boolean etaitAffame = animal.getJaugeFaim() < 100;
@@ -809,6 +902,7 @@ public class FermeService {
 
             animal.setJaugeFaim(0);
             animal.setJaugeHydratation(0);
+            animal.setAMange(false);
 
             if ((animal.getTypeAnimal() == TypeAnimal.POULE || animal.getTypeAnimal() == TypeAnimal.VACHE)
                 && animal.getJoursMaladeConsecutifs() >= 4) {
