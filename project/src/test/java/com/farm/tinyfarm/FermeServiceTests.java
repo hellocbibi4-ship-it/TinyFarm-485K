@@ -522,27 +522,14 @@ class TestFermeService {
         Animal femelle = newLapinAdulteOptimal(TypeSexe.FEMELLE);
         male.setJaugeProprete(50);
         femelle.setJaugeProprete(50);
-
-        // Les lapins sales sont supprimés par gererMortaliteClapier lors du passerJour.
-        // On crée 8 lapins supplémentaires propres pour survivre à la mortalité
-        // et vérifier qu'aucune naissance n'a lieu.
-        List<Animal> animaux = new ArrayList<>();
-        for (int i = 0; i < 8; i++) {
-            animaux.add(newLapinAdulteOptimal(i % 2 == 0 ? TypeSexe.MALE : TypeSexe.FEMELLE));
-        }
-        // On marque tous comme sales pour empecher toute reproduction
-        for (Animal a : animaux) {
-            a.setJaugeProprete(50);
-        }
-        animaux.add(male);
-        animaux.add(femelle);
-        setUpPasserJour(animaux);
+        setUpPasserJour(List.of(male,femelle));
 
         Ferme result = fermeService.passerJour(1);
 
-        // Tous sales => aucun ne peut se reproduire
-        assertEquals(0, result.getNbLapins(),
-            "Des lapins sales ne peuvent pas se reproduire (et meurent tous)");
+        // Sales => aucune naissance possible (jaugeProprete < 100).
+        // gererMortaliteClapier tue ceil(2 * 0.25) = 1 lapin sale, il en reste 1.
+        assertEquals(1, result.getNbLapins(),
+            "Des lapins sales ne peuvent pas se reproduire");
     }
 
     @Test
