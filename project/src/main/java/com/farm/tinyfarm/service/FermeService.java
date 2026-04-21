@@ -332,6 +332,10 @@ public class FermeService {
             .filter(animal -> animal.getTypeAnimal() == TypeAnimal.VACHE)
             .forEach(animal -> animal.setPoids(Math.max(0f, animal.getPoids() + COW_DAILY_GRASS_WEIGHT_GAIN)));
 
+        // Les naissances sont calculees avant la degradation quotidienne pour
+        // que les conditions de reproduction (jaugeFaim, jaugeHydratation)
+        // refletent l'etat reel des animaux avant la remise a zero des jauges.
+        ajouterNaissancesLapins(ferme, animaux);
         List<Animal> animauxMorts = appliquerEtatsQuotidiensAnimaux(animaux);
         ferme.setJourActuel(ferme.getJourActuel() + 1);
         ferme.setAchatsCollectiviteRestants(DAILY_COMMUNITY_PURCHASE_LIMIT);
@@ -339,7 +343,7 @@ public class FermeService {
         if (!animauxMorts.isEmpty()) {
             animalRepository.deleteAll(animauxMorts);
         }
-        ajouterNaissancesLapins(ferme, animaux);
+        
         animalRepository.saveAll(animaux);
         synchroniserCompteursDepuisAnimaux(ferme, animaux);
         remiseRepository.save(remise);

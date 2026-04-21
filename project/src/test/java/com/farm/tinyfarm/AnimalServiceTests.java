@@ -392,4 +392,49 @@ class TestAnimalService {
         v.setEstMalade(true);
         assertEquals(0, animalService.produireLait(v));
     }
+    // ---------- updateChickenStatus(adulte)----------
+
+    @Test
+    void updateChickenStatusAdulteMalePoidsOkDevientReproducteur() {
+        Animal a = newPoule(100, 100);
+        a.setStade(TypeStade.ADULTE);
+        a.setSexe(com.farm.tinyfarm.model.TypeSexe.MALE);
+        a.setAge(5);
+        a.setPoids(2.5f);
+        animalService.updateChickenStatus(a);
+        assertEquals(com.farm.tinyfarm.model.TypeRole.REPRODUCTEUR, a.getRole());
+    }
+
+    @Test
+    void updateChickenStatusAdulteFemellePoidOkDevientPondeuse() {
+        Animal a = newPoule(100, 100);
+        a.setStade(TypeStade.ADULTE);
+        a.setSexe(com.farm.tinyfarm.model.TypeSexe.FEMELLE);
+        a.setAge(5);
+        a.setPoids(2.5f);
+        animalService.updateChickenStatus(a);
+        assertEquals(com.farm.tinyfarm.model.TypeRole.PONDEUSE, a.getRole());
+    }
+
+    @Test
+    void updateChickenStatusAdultePoidsInsuffisantGardeRoleElevage() {
+        Animal a = newPoule(100, 100);
+        a.setStade(TypeStade.ADULTE);
+        a.setSexe(com.farm.tinyfarm.model.TypeSexe.MALE);
+        a.setAge(5);
+        a.setPoids(1.0f);  // < 2.5
+        animalService.updateChickenStatus(a);
+        assertEquals(com.farm.tinyfarm.model.TypeRole.ELEVAGE, a.getRole());
+    }
+
+    @Test
+    void updateChickenStatusAdulteAgeInsuffisantGardeRoleElevage() {
+        Animal a = newPoule(100, 100);
+        a.setStade(TypeStade.ADULTE);
+        a.setSexe(com.farm.tinyfarm.model.TypeSexe.MALE);
+        a.setAge(3);  // < 5
+        a.setPoids(2.5f);
+        animalService.updateChickenStatus(a);
+        assertEquals(com.farm.tinyfarm.model.TypeRole.ELEVAGE, a.getRole());
+    }
 }
