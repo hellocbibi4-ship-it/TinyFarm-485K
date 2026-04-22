@@ -222,6 +222,7 @@ public class FermeController {
         }
 
         Animal animal = requireIndividualAnimal(id, normalized, animalId);
+        fermeService.verifierActionQuotidienneVache(animal, "feed");
         fermeService.payerActionAnimale(id, normalized, "feed");
         remiseService.retirerStock(id, "vache".equals(normalized) || "vaches".equals(normalized) ? TypeStock.PAILLE : TypeStock.NOURRITURE, 1);
         animal.setJaugeFaim(100);
@@ -249,6 +250,7 @@ public class FermeController {
         }
 
         Animal animal = requireIndividualAnimal(id, normalized, animalId);
+        fermeService.verifierActionQuotidienneVache(animal, "water");
         fermeService.payerActionAnimale(id, normalized, "water");
         remiseService.retirerStock(id, TypeStock.EAU, 1);
         animal.setJaugeHydratation(100);

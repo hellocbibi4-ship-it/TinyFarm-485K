@@ -259,6 +259,7 @@ class TestFermeService {
         a.setSexe(sexe);
         a.setRole(null);
         a.setFerme(ferme);
+        a.setPoids(2.0f);
         a.setJaugeFaim(100);
         a.setJaugeHydratation(100);
         a.setJaugeProprete(100);
@@ -586,4 +587,63 @@ class TestFermeService {
         assertTrue(result.getNbLapins() <= FermeService.MAX_RABBIT_POPULATION,
             "Le nombre de lapins ne doit pas dépasser le maximum autorisé");
     }
+
+    @Test
+    void passerJourPouleAffameePremierJourPerdPointDeuxKilo() {
+        Animal poule = newPoule(TypeStade.ADULTE, TypeSexe.FEMELLE, 3.0f);
+        poule.setJaugeFaim(0);
+        poule.setJaugeHydratation(100);
+        setUpPasserJour(List.of(poule));
+
+        fermeService.passerJour(1);
+
+        assertEquals(2.8f, poule.getPoids(), 0.001f);
+        assertEquals(1, poule.getJoursJeuneConsecutifs());
+    }
+
+    @Test
+    void passerJourPouleQuatriemeJourDeJeuneMeurt() {
+        Animal poule = newPoule(TypeStade.ADULTE, TypeSexe.FEMELLE, 3.0f);
+        poule.setJaugeFaim(0);
+        poule.setJaugeHydratation(100);
+        poule.setJoursJeuneConsecutifs(3);
+        setUpPasserJour(List.of(poule));
+
+        Ferme result = fermeService.passerJour(1);
+
+        assertEquals(0, result.getNbPoules());
+    }
+
+    @Test
+    void passerJourLapinAffamePremierJourPerdPointDeuxKilo() {
+        Animal lapin = newLapin(TypeStade.ADULTE, null);
+        lapin.setPoids(2.0f);
+        lapin.setJaugeFaim(0);
+        lapin.setJaugeHydratation(100);
+        lapin.setJaugeProprete(100);
+        lapin.setSexe(TypeSexe.MALE);
+        setUpPasserJour(List.of(lapin));
+
+        fermeService.passerJour(1);
+
+        assertEquals(1.8f, lapin.getPoids(), 0.001f);
+        assertEquals(1, lapin.getJoursJeuneConsecutifs());
+    }
+
+    @Test
+    void passerJourLapinQuatriemeJourDeJeuneMeurt() {
+        Animal lapin = newLapin(TypeStade.ADULTE, null);
+        lapin.setPoids(2.0f);
+        lapin.setJaugeFaim(0);
+        lapin.setJaugeHydratation(100);
+        lapin.setJaugeProprete(100);
+        lapin.setSexe(TypeSexe.FEMELLE);
+        lapin.setJoursJeuneConsecutifs(3);
+        setUpPasserJour(List.of(lapin));
+
+        Ferme result = fermeService.passerJour(1);
+
+        assertEquals(0, result.getNbLapins());
+    }
+
 }

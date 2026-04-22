@@ -43,6 +43,7 @@ public class Animal{
         
         private boolean estMalade = false;
         private boolean aMange = false;
+        private boolean aBu = false;
         private boolean aEteTraite = false;
 
         public Animal(){} //Constructeur par défaut nécessaire pour JPA

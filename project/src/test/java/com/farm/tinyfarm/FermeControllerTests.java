@@ -199,6 +199,42 @@ class TestFermeController {
             .andExpect(status().isBadRequest());
     }
 
+    @Test
+    void nourrirVacheDeuxFoisDansLaMemeJourneeRetourne400() throws Exception {
+        int id = createFarm("vf");
+        int cowId = getSingleAnimalId(id, "vache");
+
+        mockMvc.perform(post("/api/fermes/{id}/acheter-objet-entretien", id).param("type", "PAILLE"))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/fermes/{id}/animaux/vache/feed", id).param("animalId", String.valueOf(cowId)))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/fermes/{id}/acheter-objet-entretien", id).param("type", "PAILLE"))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/fermes/{id}/animaux/vache/feed", id).param("animalId", String.valueOf(cowId)))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void abreuverVacheDeuxFoisDansLaMemeJourneeRetourne400() throws Exception {
+        int id = createFarm("vw");
+        int cowId = getSingleAnimalId(id, "vache");
+
+        mockMvc.perform(post("/api/fermes/{id}/acheter-objet-entretien", id).param("type", "EAU"))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/fermes/{id}/animaux/vache/water", id).param("animalId", String.valueOf(cowId)))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/fermes/{id}/acheter-objet-entretien", id).param("type", "EAU"))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/fermes/{id}/animaux/vache/water", id).param("animalId", String.valueOf(cowId)))
+            .andExpect(status().isBadRequest());
+    }
+
     // ---------- utilitaires ----------
 
     private int createFarm(String prefix) throws Exception {
@@ -210,5 +246,20 @@ class TestFermeController {
             .andReturn();
         JsonNode body = objectMapper.readTree(result.getResponse().getContentAsString());
         return body.get("idFerme").asInt();
+    }
+
+    private int getSingleAnimalId(int farmId, String type) throws Exception {
+        MvcResult result = mockMvc.perform(get("/api/fermes/{id}/front-data", farmId))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        JsonNode body = objectMapper.readTree(result.getResponse().getContentAsString());
+        for (JsonNode animal : body.get("animals")) {
+            if (type.equals(animal.get("type").asText())) {
+                return animal.get("idAnimal").asInt();
+            }
+        }
+
+        throw new IllegalStateException("Animal introuvable pour le type " + type);
     }
 }

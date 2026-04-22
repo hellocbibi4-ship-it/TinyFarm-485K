@@ -515,6 +515,7 @@ public class FermeService {
         animal.setJoursJeuneConsecutifs(0);
         animal.setEstMalade(false);
         animal.setAMange(false);
+        animal.setABu(false);
         animal.setAEteTraite(false);
         return animal;
     }
@@ -584,6 +585,7 @@ public class FermeService {
         if (animal.getTypeAnimal() == TypeAnimal.VACHE) {
             // Nourrir la vache avec une botte de paille lui ajoute 3 kg.
             animal.setPoids(Math.max(0f, animal.getPoids() + COW_FEED_WEIGHT_GAIN));
+            animal.setAMange(true);
         }
     }
 
@@ -601,6 +603,30 @@ public class FermeService {
 
         if (animal.getTypeAnimal() == TypeAnimal.VACHE) {
             animal.setPoids(Math.max(0f, animal.getPoids() + COW_WATER_WEIGHT_GAIN));
+            animal.setABu(true);
+        }
+    }
+
+    public void verifierActionQuotidienneVache(Animal animal, String action) {
+        if (animal == null || animal.getTypeAnimal() != TypeAnimal.VACHE) {
+            return;
+        }
+
+        String normalizedAction = action == null ? "" : action.trim().toLowerCase();
+        switch (normalizedAction) {
+            case "feed" -> {
+                if (animal.isAMange()) {
+                    throw new IllegalArgumentException("La vache ne peut manger qu'une seule fois par jour");
+                }
+            }
+            case "water" -> {
+                if (animal.isABu()) {
+                    throw new IllegalArgumentException("La vache ne peut boire qu'une seule fois par jour");
+                }
+            }
+            default -> {
+                return;
+            }
         }
     }
 
@@ -654,7 +680,7 @@ public class FermeService {
                 if (!etaitMalade) {
                     animal.setJoursMaladeConsecutifs(1);
                 }
-                incrementerJeuneEtAppliquerPertePoids(animal, animauxMorts);
+                appliquerJeuneEtPertePoids(animal, animauxMorts);
             } else {
                 animal.setJoursJeuneConsecutifs(0);
             }
@@ -667,6 +693,8 @@ public class FermeService {
 
             animal.setJaugeFaim(0);
             animal.setJaugeHydratation(0);
+            animal.setAMange(false);
+            animal.setABu(false);
 
             if ((animal.getTypeAnimal() == TypeAnimal.POULE || animal.getTypeAnimal() == TypeAnimal.VACHE)
                 && animal.getJoursMaladeConsecutifs() >= 4) {
@@ -903,8 +931,8 @@ public class FermeService {
             && animal.getJaugeHydratation() >= 100;
     }
 
-    private void incrementerJeuneEtAppliquerPertePoids(Animal animal, List<Animal> animauxMorts) {
-        if (animal.getTypeAnimal() != TypeAnimal.POULE) {
+    private void appliquerJeuneEtPertePoids(Animal animal, List<Animal> animauxMorts) {
+        if (animal == null || animal.getTypeAnimal() == TypeAnimal.VACHE) {
             return;
         }
 
@@ -918,12 +946,7 @@ public class FermeService {
             return;
         }
 
-        float pertePoids = switch (joursJeune) {
-            case 1 -> 0.2f;
-            case 2 -> 0.5f;
-            case 3 -> 1f;
-            default -> 0f;
-        };
+        float pertePoids = getFastingWeightLoss(animal, joursJeune);
 
         float nouveauPoids = Math.max(0f, animal.getPoids() - pertePoids);
         animal.setPoids(nouveauPoids);
@@ -931,6 +954,22 @@ public class FermeService {
         if (nouveauPoids <= 0f) {
             animauxMorts.add(animal);
         }
+    }
+
+    private float getFastingWeightLoss(Animal animal, int joursJeune) {
+        if (animal == null || joursJeune <= 0) {
+            return 0f;
+        }
+
+        return switch (animal.getTypeAnimal()) {
+            case POULE, LAPIN -> switch (joursJeune) {
+                case 1 -> 0.2f;
+                case 2 -> 0.5f;
+                case 3 -> 1f;
+                default -> 0f;
+            };
+            case VACHE -> 0f;
+        };
     }
 
     private float bornerPoidsPoule(float poids) {

@@ -63,6 +63,7 @@ Ce qu'il faut retenir pour la suite :
 - HANOU Aristippe
 - KHALDI Rami
 - PENALVA Theo
+- SAID ALI AHMED Bassam
 - ABUBAKER MOHAMED Mohamed
 - PARRACHO Henri
 
