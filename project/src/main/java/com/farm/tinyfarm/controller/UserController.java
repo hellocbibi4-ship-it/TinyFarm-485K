@@ -74,6 +74,11 @@ public class UserController {
                     remiseMap.put("savon", remise.getStockSavon());
                     remiseMap.put("seringue", remise.getStockSeringue());
                     remiseMap.put("paille", remise.getStockPaille());
+                    remiseMap.put("eau", remise.getStockEau());
+                    remiseMap.put("nourriture", remise.getStockNourriture());
+                    remiseMap.put("oeuf", remise.getStockOeuf());
+                    remiseMap.put("lait", remise.getStockLait());
+                    remiseMap.put("lapin", remise.getStockLapin());
                     response.put("remise", remiseMap);
                 });
             }

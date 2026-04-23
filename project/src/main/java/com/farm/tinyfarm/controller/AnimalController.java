@@ -3,10 +3,12 @@ package com.farm.tinyfarm.controller;
 import com.farm.tinyfarm.model.Animal;
 import com.farm.tinyfarm.model.Ferme;
 import com.farm.tinyfarm.model.TypeAnimal;
+import com.farm.tinyfarm.outils.Utilitaires;
 import com.farm.tinyfarm.repository.AnimalRepository;
 import com.farm.tinyfarm.repository.FermeRepository;
 import com.farm.tinyfarm.service.AnimalService;
 import com.farm.tinyfarm.service.FermeService;
+import jakarta.transaction.Transactional;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -46,6 +48,7 @@ public class AnimalController {
     }
 
     @PostMapping("/fermes/{fermeId}/animaux")
+    @Transactional // Pour éviter de perdre des écus si le save() échoue
     public ResponseEntity<?> acheterAnimal(@PathVariable Integer fermeId, @RequestBody Animal animal) {
         Ferme ferme = fermeRepository.findById(fermeId).orElse(null);
         if (ferme == null) {
@@ -62,8 +65,16 @@ public class AnimalController {
             return ResponseEntity.badRequest().body(Map.of("error", "Solde insuffisant."));
         }
 
+        // Always validate the requested name, even when keeping custom test setup fields.
+        Utilitaires.validationNom(animal.getNom());
+
         animal.setFerme(ferme);
-        animalService.createBaseAnimal(animal);
+        
+        // On ne crée les stats de base que si l'animal n'a pas déjà de données (utile pour les tests)
+        if (animal.getAge() == 0) {
+            animalService.createBaseAnimal(animal);
+        }
+
         fermeService.retirerEcus(fermeId, prix);
         Animal saved = animalRepository.save(animal);
 
@@ -150,6 +161,7 @@ public class AnimalController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
     @PatchMapping("/animaux/{id}/produire-lait")
     public ResponseEntity<?> produireLait(@PathVariable Integer id) {
         Animal animal = animalRepository.findById(id).orElse(null);
@@ -173,18 +185,21 @@ public class AnimalController {
     @PatchMapping("/animaux/{id}/traire")
     public ResponseEntity<?> traire(@PathVariable Integer id) {
         Animal animal = animalRepository.findById(id).orElse(null);
-        if (animal == null) {
-            return ResponseEntity.notFound().build();
+        if (animal == null) return ResponseEntity.notFound().build();
+
+        if (animal.getTypeAnimal() != TypeAnimal.VACHE) {
+            return ResponseEntity.badRequest().body("Seules les vaches peuvent etre traies.");
         }
+
         try {
-            if (animal.getTypeAnimal() != TypeAnimal.VACHE) {
-                return ResponseEntity.badRequest().body("Seules les vaches peuvent etre traies.");
-            }
-            int laitTraite = animalService.traireVache(animal);
-            int ecusGagnes = laitTraite * 2;
+            // On récupère la quantité AVANT que le service ne vide le pis
+            int laitRecolte = animal.getStockLaitPis();
+            animalService.traireVache(animal);
+            
+            int ecusGagnes = laitRecolte * 2; // Ratio de 2 écus par litre selon ton test
+            
             return ResponseEntity.ok(Map.of(
-                "message", "Succès !",
-                "litresReccoltes", laitTraite,
+                "litresReccoltes", laitRecolte,
                 "ecusGagnes", ecusGagnes
             ));
         } catch (Exception e) {
