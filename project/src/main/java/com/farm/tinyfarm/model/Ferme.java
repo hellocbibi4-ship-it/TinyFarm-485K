@@ -1,5 +1,6 @@
 package com.farm.tinyfarm.model;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,6 +35,8 @@ public class Ferme{
     private Boolean hibernation;
     private LocalDateTime dateCreation;
     private Integer score;
+    private Integer achatsJour = 0; // pour limiter les achats à 12 par jour
+    private LocalDate dateDernierAchat;
     private LocalDateTime derniereCo;
     @OneToOne(mappedBy = "ferme", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore

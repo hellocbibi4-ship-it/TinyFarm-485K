@@ -18,7 +18,11 @@ public class Remise {
     private int stockSavon = 0;
     private int stockSeringue = 0;
     private int stockPaille =0;
-    //TODO  Liste des objets à collectionner
+    private int stockEau = 0;
+    private int stockNourriture = 0;
+    private int stockOeuf = 0;
+    private int stockLait = 0;
+    private int stockLapin = 0;
     
     @OneToOne
     @MapsId
