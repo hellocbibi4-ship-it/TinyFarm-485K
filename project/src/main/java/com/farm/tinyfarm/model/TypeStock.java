@@ -9,4 +9,4 @@ public enum TypeStock {
     OEUF,
     LAIT,
     LAPIN
-}
+};

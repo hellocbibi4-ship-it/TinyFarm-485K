@@ -116,5 +116,5 @@ public class SecurityConfig {
                 })
                 .attributes(attributes -> attributes.remove(PkceParameterNames.CODE_VERIFIER))
                 .build();
-    }
+    };
 }

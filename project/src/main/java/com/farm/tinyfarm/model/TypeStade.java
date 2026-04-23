@@ -6,4 +6,4 @@ public enum TypeStade {
     PETIT,
     GROS,
     ADULTE
-}
+};
