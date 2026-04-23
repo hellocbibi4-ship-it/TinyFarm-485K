@@ -7,6 +7,7 @@ import com.farm.tinyfarm.repository.RemiseRepository;
 import com.farm.tinyfarm.outils.Utilitaires;
 import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 
 import org.springframework.stereotype.Service;
@@ -29,6 +30,8 @@ public class FermeService {
         Utilitaires.validationNom(ferme.getNom());
         ferme.setScore(0);
         ferme.setSoldeEcus(1500);
+        ferme.setAchatsJour(0);
+        ferme.setDateDernierAchat(LocalDate.now());
         ferme.setHibernation(false);
         ferme.setDateCreation(LocalDateTime.now());
         
@@ -120,6 +123,39 @@ public class FermeService {
         fermeRepository.save(ferme);
     }
 
+    //Procédure de réinitialisation des achats journaliers
+    @Transactional
+    public void ajouterAchats(Integer idFerme, int quantite) {
+        Ferme ferme = fermeRepository.findById(idFerme)
+            .orElseThrow(() -> new RuntimeException("Ferme introuvable"));
+
+        int achatsJour = ferme.getAchatsJour() == null ? 0 : ferme.getAchatsJour();
+        LocalDate aujourdHui = LocalDate.now();
+
+        if (ferme.getDateDernierAchat() == null || !ferme.getDateDernierAchat().equals(aujourdHui)) {
+            achatsJour = 0;
+        }
+
+        ferme.setAchatsJour(achatsJour + quantite);
+        ferme.setDateDernierAchat(aujourdHui);
+    }
+
+    @Transactional
+    public int getAchatsJourActuels(Integer idFerme) {
+        Ferme ferme = fermeRepository.findById(idFerme)
+            .orElseThrow(() -> new RuntimeException("Ferme introuvable"));
+
+        LocalDate aujourdHui = LocalDate.now();
+        int achatsJour = ferme.getAchatsJour() == null ? 0 : ferme.getAchatsJour();
+
+        if (ferme.getDateDernierAchat() == null || !ferme.getDateDernierAchat().equals(aujourdHui)) {
+            ferme.setAchatsJour(0);
+            ferme.setDateDernierAchat(aujourdHui);
+            return 0;
+        }
+
+        return achatsJour;
+    }
 
     public Ferme getById(Integer id) {
         return fermeRepository.findById(id)

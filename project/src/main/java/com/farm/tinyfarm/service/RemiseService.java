@@ -32,6 +32,11 @@ public class RemiseService {
         remise.setStockSavon(0);
         remise.setStockSeringue(0);
         remise.setStockPaille (0);
+        remise.setStockEau(0);
+        remise.setStockNourriture(0);
+        remise.setStockOeuf(0);
+        remise.setStockLait(0);
+        remise.setStockLapin(0);
         return remiseRepository.save(remise);
     }
 
@@ -49,6 +54,26 @@ public class RemiseService {
             case PAILLE :
                 int montantTotal = remise.getStockPaille() + montant;
                 remise.setStockPaille(montantTotal);
+                break;
+            case EAU :
+                int totalEau = remise.getStockEau() + montant;
+                remise.setStockEau(totalEau);
+                break;
+            case NOURRITURE :
+                int totalNourriture = remise.getStockNourriture() + montant;
+                remise.setStockNourriture(totalNourriture);
+                break;
+            case OEUF :
+                int totalOeuf = remise.getStockOeuf() + montant;
+                remise.setStockOeuf(totalOeuf);
+                break;
+            case LAIT :
+                int totalLait = remise.getStockLait() + montant;
+                remise.setStockLait(totalLait);
+                break;
+            case LAPIN :
+                int totalLapin = remise.getStockLapin() + montant;
+                remise.setStockLapin(totalLapin);
                 break;
             case SAVON :
                 montantTotal = remise.getStockSavon() + montant;
@@ -74,6 +99,26 @@ public class RemiseService {
             case PAILLE :
                 int montantTotal = remise.getStockPaille() - montant;
                 remise.setStockPaille(montantTotal);
+                break;
+            case EAU :
+                int totalEau = remise.getStockEau() - montant;
+                remise.setStockEau(totalEau);
+                break;
+            case NOURRITURE :
+                int totalNourriture = remise.getStockNourriture() - montant;
+                remise.setStockNourriture(totalNourriture);
+                break;
+            case OEUF :
+                int totalOeuf = remise.getStockOeuf() - montant;
+                remise.setStockOeuf(totalOeuf);
+                break;
+            case LAIT :
+                int totalLait = remise.getStockLait() - montant;
+                remise.setStockLait(totalLait);
+                break;
+            case LAPIN :
+                int totalLapin = remise.getStockLapin() - montant;
+                remise.setStockLapin(totalLapin);
                 break;
             case SAVON :
                 montantTotal = remise.getStockSavon() - montant;
