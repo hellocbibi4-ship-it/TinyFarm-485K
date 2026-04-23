@@ -9,7 +9,6 @@ import java.util.Optional;
 @Repository
 public interface UtilisateurRepository extends JpaRepository<Utilisateur, Integer> {
     
-    // SELECT * FROM utilisateur WHERE github_username = ?
     Optional<Utilisateur> findByGithubUsername(String githubUsername);
 
 }
