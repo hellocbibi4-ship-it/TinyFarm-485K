@@ -316,7 +316,7 @@ public class FermeController {
 
     //Classement des fermes par score
     @GetMapping("/classement")
-    public ResponseEntity<List<Map<String, Object>>> getClassement() {
+    public ResponseEntity<Map<String, Object>> getClassement() {
         List<Ferme> fermes = fermeRepository.findAllByOrderByScoreDesc();
         List<Map<String, Object>> classement = fermes.stream().map(f -> {
             Map<String, Object> entry = new HashMap<>();
@@ -326,7 +326,9 @@ public class FermeController {
             entry.put("capacity", animalRepository.findByFerme_IdFerme(f.getIdFerme()).size());
             return entry;
         }).toList();
-        return ResponseEntity.ok(classement);
+        Map<String, Object> response = new HashMap<>();
+        response.put("ranking", classement);
+        return ResponseEntity.ok(response);
     }
 
     //Gestion des erreurs

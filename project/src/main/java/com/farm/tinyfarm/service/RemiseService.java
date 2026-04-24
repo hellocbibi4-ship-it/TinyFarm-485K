@@ -80,8 +80,7 @@ public class RemiseService {
                 remise.setStockLapin(totalLapin);
                 break;
             case SAVON :
-                montantTotal = remise.getStockSavon() + montant;
-                remise.setStockSavon(montantTotal);
+                remise.setStockSavon(remise.getStockSavon() + montant);
                 break;
             case PAILLE:
                 remise.setStockPaille(remise.getStockPaille() + montant);
@@ -97,7 +96,7 @@ public class RemiseService {
     @Transactional
     public void retirerStock(Integer idRemise, TypeStock typeStock, int montant) {
         Remise remise = getOrCreateByFermeId(idRemise);
-
+        int montantTotal;
         if (montant <= 0) {
             throw new IllegalArgumentException("Impossible de retirer du stock, le montant doit etre au moins de 1");
         }
@@ -120,8 +119,7 @@ public class RemiseService {
                 remise.setStockLapin(totalLapin);
                 break;
             case SAVON :
-                montantTotal = remise.getStockSavon() - montant;
-                remise.setStockSavon(montantTotal);
+                remise.setStockSavon(remise.getStockSavon() - montant);
                 break;
             case LAIT:
                 verifierStock(remise.getStockLait(), montant, "lait");

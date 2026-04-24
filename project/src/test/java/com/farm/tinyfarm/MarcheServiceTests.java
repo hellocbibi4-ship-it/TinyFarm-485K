@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -62,15 +63,15 @@ class MarcheServiceTests {
         ferme.setVElev(0.0);
         ferme.setBElev(0.0);
 
-        when(fermeRepository.findById(1)).thenReturn(Optional.of(ferme));
+        lenient().when(fermeRepository.findById(1)).thenReturn(Optional.of(ferme));
         
         // Configuration des comportements par défaut pour éviter les NullPointer lors des tests create
-        when(remiseService.fromProduitMarche("OEUF")).thenReturn(TypeStock.OEUF);
-        when(remiseService.fromProduitMarche("oeuf")).thenReturn(TypeStock.OEUF);
-        when(remiseService.fromProduitMarche("LAIT")).thenReturn(TypeStock.LAIT);
-        when(remiseService.fromProduitMarche("lait")).thenReturn(TypeStock.LAIT);
-        when(remiseService.fromProduitMarche("LAPIN")).thenReturn(TypeStock.LAPIN);
-        when(remiseService.fromProduitMarche("lapin")).thenReturn(TypeStock.LAPIN);
+        lenient().when(remiseService.fromProduitMarche("OEUF")).thenReturn(TypeStock.OEUF);
+        lenient().when(remiseService.fromProduitMarche("oeuf")).thenReturn(TypeStock.OEUF);
+        lenient().when(remiseService.fromProduitMarche("LAIT")).thenReturn(TypeStock.LAIT);
+        lenient().when(remiseService.fromProduitMarche("lait")).thenReturn(TypeStock.LAIT);
+        lenient().when(remiseService.fromProduitMarche("LAPIN")).thenReturn(TypeStock.LAPIN);
+        lenient().when(remiseService.fromProduitMarche("lapin")).thenReturn(TypeStock.LAPIN);
     }
 
     // ---------- create ----------
@@ -181,12 +182,7 @@ class MarcheServiceTests {
     void transactionQuantiteTropGrandeLeveException() {
         Marche offre = newOffre(2, 3, "oeuf");
         when(marcheRepository.findById(10)).thenReturn(Optional.of(offre));
-        
-        Ferme acheteur = new Ferme();
-        acheteur.setIdFerme(2);
-        acheteur.setSoldeEcus(1000);
-        when(fermeRepository.findById(2)).thenReturn(Optional.of(acheteur));
-        
+
         assertThrows(IllegalArgumentException.class, () -> marcheService.transaction(2, 10, 5));
     }
 

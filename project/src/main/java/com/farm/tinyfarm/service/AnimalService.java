@@ -105,7 +105,7 @@ public class AnimalService {
                 break;
             case LAPIN:
                 animal.setPoids(0.0f);
-                animal.setStade(TypeStade.BEBE);
+                animal.setStade(TypeStade.ENFANT);
                 animal.setRole(TypeRole.ELEVAGE);
                 break;
             case VACHE:
@@ -294,6 +294,8 @@ public class AnimalService {
 
         if (!animal.isVivant())
             throw new IllegalStateException("La poule est morte.");
+        if (animal.getJaugeFaim() == 100)
+            throw new IllegalCallerException("Déjà nourrie aujourd'hui.");
         if (animal.getJaugeHydratation() == 100)
             throw new IllegalCallerException("Déjà hydratée aujourd'hui.");
 
@@ -573,7 +575,7 @@ public class AnimalService {
 
         // Une vache morte, enfant, affamée ou malade ne produit rien
         if (!animal.isVivant() || !TypeStade.ADULTE.equals(animal.getStade())
-                || !animal.isAMange() || animal.estMalade()) {
+                || !animal.isAMange() || animal.estMalade() || animal.getJaugeProprete() < 100) {
             return 0;
         }
 

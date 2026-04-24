@@ -327,7 +327,7 @@ class AnimalServiceTests {
         Animal v = newVache();
         v.setEstMalade(true);
         v.setJaugeSante(0);
-        animalService.soigner(v);
+        animalService.soignerVache(v);
         assertEquals(false, v.estMalade());
         assertEquals(100, v.getJaugeSante());
         verify(fermeService).retirerEcus(1, 6);
@@ -337,7 +337,7 @@ class AnimalServiceTests {
     void soignerVacheNonMaladeLeveException() {
         Animal v = newVache();
         v.setEstMalade(false);
-        assertThrows(IllegalStateException.class, () -> animalService.soigner(v));
+        assertThrows(IllegalStateException.class, () -> animalService.soignerVache(v));
     }
 
     @Test

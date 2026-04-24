@@ -105,7 +105,7 @@ public class FermeService {
 
         synchroniserAnimaux(savedFerme);
         synchroniserCompteursDepuisAnimaux(savedFerme);
-        return fermeRepository.save(savedFerme);
+        return savedFerme;
     }
 
     @Transactional

@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -55,9 +56,9 @@ class TestRemiseService {
         remise.setFerme(ferme);
 
         // Configuration standard des comportements des mocks pour les tests
-        when(remiseRepository.save(any(Remise.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(fermeRepository.findById(1)).thenReturn(Optional.of(ferme));
-        when(remiseRepository.findById(1)).thenReturn(Optional.of(remise));
+        lenient().when(remiseRepository.save(any(Remise.class))).thenAnswer(inv -> inv.getArgument(0));
+        lenient().when(fermeRepository.findById(1)).thenReturn(Optional.of(ferme));
+        lenient().when(remiseRepository.findById(1)).thenReturn(Optional.of(remise));
     }
 
     // ---------- ajouterStock ----------
@@ -274,7 +275,7 @@ class TestRemiseService {
     @Test
     void createRemise_initialise_les_stocks_a_zero() {
         when(fermeRepository.findById(2)).thenReturn(Optional.of(ferme));
-        when(remiseRepository.findById(2)).thenReturn(Optional.empty());
+        lenient().when(remiseRepository.findById(2)).thenReturn(Optional.empty());
 
         Remise created = remiseService.createRemise(2);
 
@@ -285,7 +286,7 @@ class TestRemiseService {
 
     @Test
     void createRemiseInitialiseTousLesStocksAZero() {
-        when(remiseRepository.findById(2)).thenReturn(Optional.empty());
+        lenient().when(remiseRepository.findById(2)).thenReturn(Optional.empty());
         when(fermeRepository.findById(2)).thenReturn(Optional.of(ferme));
         
         Remise nouvelle = remiseService.createRemise(2);
