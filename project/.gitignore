@@ -34,6 +34,12 @@ build/
 
 ### Secrets ###
 application-local.properties
+### Local debug artifacts ###
+*.class
+*.log
+*.trace.db
+*.lock.db
+.DS_Store
 
 ### Pycache ###
 __pycache__/

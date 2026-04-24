@@ -31,6 +31,23 @@ def test_create_ferme():
     requests.delete(f"{BASE_URL}/{data['idFerme']}")
 
 
+def test_create_ferme_nom_invalide_court():
+    # Nom de moins de 3 caracteres : refuse
+    response = requests.post(BASE_URL, json={"nom": "ab"})
+    assert response.status_code == 400
+
+
+def test_create_ferme_nom_invalide_long():
+    # Plus de 16 caracteres : refuse
+    response = requests.post(BASE_URL, json={"nom": "a" * 17})
+    assert response.status_code == 400
+
+
+def test_create_ferme_nom_invalide_caracteres():
+    response = requests.post(BASE_URL, json={"nom": "ferme!!"})
+    assert response.status_code == 400
+
+
 def test_ajouter_ecus(new_ferme):
     ferme_id = new_ferme.get("idFerme")
 
@@ -65,3 +82,76 @@ def test_ajouter_score(new_ferme):
     assert response.status_code == 200
     assert data.get("score") == 100
     print(data)
+
+
+def test_front_data(new_ferme):
+    ferme_id = new_ferme["idFerme"]
+    response = requests.get(f"{BASE_URL}/{ferme_id}/front-data")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["farmId"] == ferme_id
+    assert data["cash"] == 1500
+    assert data["score"] == 0
+    assert data["gameTime"]["day"] == 1
+    assert data["communityPurchases"]["remaining"] == 12
+    assert data["communityPurchases"]["maxPerDay"] == 12
+    assert isinstance(data["animals"], list)
+    assert isinstance(data["stockInventory"], list)
+
+
+def test_hibernation(new_ferme):
+    ferme_id = new_ferme["idFerme"]
+    response = requests.patch(
+        f"{BASE_URL}/{ferme_id}/hibernation", params={"etat": "true"}
+    )
+    assert response.status_code == 200
+    assert "true" in response.text
+
+
+def test_classement():
+    response = requests.get(f"{BASE_URL}/classement")
+    assert response.status_code == 200
+    data = response.json()
+    assert "ranking" in data
+    assert isinstance(data["ranking"], list)
+
+
+def test_classement_update():
+    response = requests.get(f"{BASE_URL}/classement/update")
+    assert response.status_code == 200
+    data = response.json()
+    assert "ranking" in data
+
+
+def test_supprimer_ferme():
+    # Creation
+    response = requests.post(BASE_URL, json={"nom": "Ferme_A_Supp"})
+    assert response.status_code == 201
+    ferme_id = response.json()["idFerme"]
+
+    # Suppression
+    delete_response = requests.delete(f"{BASE_URL}/{ferme_id}")
+    assert delete_response.status_code == 204
+
+
+def test_acheter_objet_entretien_eau(new_ferme):
+    ferme_id = new_ferme["idFerme"]
+    response = requests.post(
+        f"{BASE_URL}/{ferme_id}/acheter-objet-entretien", params={"type": "EAU"}
+    )
+    assert response.status_code == 200
+    data = response.json()
+    # Apres achat d'un seau d'eau (2 ecus), le solde doit avoir baisse.
+    assert data["cash"] == 1498
+    assert data["careInventory"]["water-bucket"] == 1
+
+
+def test_passer_jour(new_ferme):
+    ferme_id = new_ferme["idFerme"]
+    response = requests.post(f"{BASE_URL}/{ferme_id}/passer-jour")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["gameTime"]["day"] == 2
+    # Le quota de la collectivite est remis a 12 chaque nouveau jour.
+    assert data["communityPurchases"]["remaining"] == 12

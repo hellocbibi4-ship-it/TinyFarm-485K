@@ -8,25 +8,25 @@ import jakarta.persistence.Table;
 import lombok.Data;
 
 @Entity
-@Table(name="remise")
+@Table(name = "remise")
 @Data
 public class Remise {
 
     @Id
     private Integer remiseId;
 
-    private int stockSavon = 0;
-    private int stockSeringue = 0;
-    private int stockPaille =0;
-    private int stockEau = 0;
-    private int stockNourriture = 0;
     private int stockOeuf = 0;
     private int stockLait = 0;
     private int stockLapin = 0;
+    private int stockNourriture = 0;
+    private int stockEau = 0;
+    private int stockSavon = 0;
+    private int stockSeringue = 0;
+    private int stockPaille =0;
     
     @OneToOne
     @MapsId
-    private Ferme ferme; //Partage le même id que la ferme
+    private Ferme ferme;
 
-    public Remise() {} //Constructeur de base requis par JPA
+    public Remise() {}
 }

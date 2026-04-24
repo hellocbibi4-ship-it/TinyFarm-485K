@@ -16,6 +16,8 @@ public class Utilisateur {
     @Column(unique = true, nullable = false)
     private String githubUsername; 
 
+    private String password;
+
     @OneToOne(mappedBy = "utilisateur", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore
     private Ferme ferme;

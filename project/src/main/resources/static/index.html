@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TinyFarm - Front Merge</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/achat-animaux.css">
+    <link rel="stylesheet" href="css/style.css?v=4">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=ADLaM+Display&display=swap" rel="stylesheet">
@@ -22,9 +21,10 @@
                 <tr>
                     <th>Rang</th>
                     <th>Nom</th>
-                    <th>Production/J</th>
-                    <th>Capacite</th>
+                    <th>Score</th>
                     <th>Argent</th>
+                    <th>Ventes</th>
+                    <th>Achats</th>
                 </tr>
             </thead>
             <tbody id="classement-body"></tbody>
@@ -36,6 +36,17 @@
         <h1 class="title">TinyFarm</h1>
 
         <button id="login-btn" class="login-btn" type="button" aria-label="Entrer dans la ferme"></button>
+
+        <div id="login-modal" class="auth-modal hidden" aria-hidden="true">
+            <div class="auth-modal-backdrop" data-close-login-modal></div>
+            <div class="auth-modal-card" role="dialog" aria-modal="true" aria-labelledby="login-modal-title">
+                <button type="button" class="auth-modal-close" data-close-login-modal aria-label="Fermer">X</button>
+                <h2 id="login-modal-title">Connexion GitHub indisponible</h2>
+                <p class="auth-modal-text">TinyFarm utilise maintenant uniquement des fermes liees a un compte GitHub.</p>
+                <p id="login-feedback" class="auth-feedback" aria-live="polite"></p>
+                <p class="auth-note">Configure l'application OAuth GitHub sur la machine de demo puis reconnecte-toi avec le bouton principal.</p>
+            </div>
+        </div>
 
         <button class="settings-login-btn" type="button" aria-label="Ouvrir les reglages"></button>
         <div class="settings-login-panel">
@@ -55,6 +66,45 @@
 
     <section id="farm-screen" class="hidden">
         <div class="bg-ferme"></div>
+
+        <section class="care-inventory" aria-label="Objets de soin">
+            <article class="care-item-card" data-care-display="feed-bag">
+                <div class="care-item-visual care-item-visual--feed-bag" aria-hidden="true"></div>
+                <p class="care-item-label">Nourriture</p>
+                <p class="care-item-count"><span data-care-count="feed-bag">0</span></p>
+            </article>
+
+            <article class="care-item-card" data-care-display="straw-bales">
+                <div class="care-item-visual care-item-visual--straw-bales" aria-hidden="true"></div>
+                <p class="care-item-label">Bottes de paille</p>
+                <p class="care-item-count"><span data-care-count="straw-bales">0</span></p>
+            </article>
+
+            <article class="care-item-card" data-care-display="syringe">
+                <div class="care-item-visual care-item-visual--syringe" aria-hidden="true"></div>
+                <p class="care-item-label">Seringue</p>
+                <p class="care-item-count"><span data-care-count="syringe">0</span></p>
+            </article>
+
+            <article class="care-item-card" data-care-display="water-bucket">
+                <div class="care-item-visual care-item-visual--water-bucket" aria-hidden="true"></div>
+                <p class="care-item-label">Seau d'eau</p>
+                <p class="care-item-count"><span data-care-count="water-bucket">0</span></p>
+            </article>
+
+            <article class="care-item-card" data-care-display="soap">
+                <div class="care-item-visual care-item-visual--soap" aria-hidden="true"></div>
+                <p class="care-item-label">Savon</p>
+                <p class="care-item-count"><span data-care-count="soap">0</span></p>
+            </article>
+        </section>
+
+        <aside class="farm-owner-panel" aria-label="Informations de la ferme">
+            <p class="farm-owner-label">Ferme de :</p>
+            <p id="farm-owner-name" class="farm-owner-value">-</p>
+            <p class="farm-owner-label farm-owner-label--money">Argent :</p>
+            <p id="farm-owner-balance" class="farm-owner-value">0</p>
+        </aside>
 
         <div class="farm-canvas" aria-label="Zones de la ferme">
             <section class="zone zone-poulailler" aria-label="Poulailler">
@@ -156,43 +206,40 @@
                 </p>
             </div>
 
-            <div class="stock-field">
-                <label for="stock-product">Produit :</label>
-                <select id="stock-product" class="stock-select"></select>
+            <div class="stock-table-shell">
+                <table class="stock-table">
+                    <thead>
+                        <tr>
+                            <th>Categorie</th>
+                            <th>Objet</th>
+                            <th>Quantite</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stock-table-body"></tbody>
+                </table>
             </div>
 
-            <p class="stock-line">Stock dispo : <span id="stock-available">0</span></p>
-
-            <div class="stock-field stock-field-quantity">
-                <label for="stock-quantity">Quantite :</label>
-                <div class="stock-stepper">
-                    <button id="stock-minus" class="stock-stepper-btn" type="button" aria-label="Retirer une unite">-</button>
-                    <input id="stock-quantity" class="stock-quantity-input" type="number" min="1" value="1" inputmode="numeric">
-                    <button id="stock-plus" class="stock-stepper-btn" type="button" aria-label="Ajouter une unite">+</button>
-                </div>
-            </div>
-
-            <p class="stock-line">Prix unitaire : <span id="stock-unit-price">0 ecu</span></p>
-            <p class="stock-line stock-total-line">Total : <span id="stock-total-price">0 ecu</span></p>
             <p id="stock-feedback" class="stock-feedback" aria-live="polite"></p>
-
-            <div class="stock-actions">
-                <button id="stock-cancel" class="stock-action stock-action-cancel" type="button">Annuler</button>
-                <button id="stock-sell" class="stock-action stock-action-confirm" type="button">Vendre</button>
-            </div>
         </aside>
 
         <aside id="collectivite-panel" class="collectivite-panel" aria-labelledby="collectivite-title">
             <div class="collectivite-panel-inner">
-                <h2 id="collectivite-title" class="collectivite-title">Collectivite</h2>
+                <div class="collectivite-header">
+                <h2 id="collectivite-title" class="collectivite-title">Collectivité</h2>
+                <div class="collectivite-header">
+                    <p id="collectivite-counter" class="collectivite-counter" aria-live="polite">12/12</p>
+                </div>
+                </div>
                 <div id="collectivite-list" class="collectivite-list"></div>
                 <p id="collectivite-feedback" class="collectivite-feedback" aria-live="polite"></p>
             </div>
         </aside>
 
+        <button id="pass-day-button" class="pass-day-button" type="button">Passez le jour</button>
+
         <section id="popup-achat" class="popup-achat hidden" role="dialog" aria-modal="true" aria-labelledby="titre-popup">
             <header class="entete-bois">
-                <h2 id="titre-popup">Achat animaux</h2>
+                <h2 id="titre-popup">Achat d'animaux</h2>
             </header>
 
             <p class="ligne-solde">Solde : <span id="solde-ecus">120</span> <span class="piece" aria-hidden="true"></span></p>
@@ -227,9 +274,9 @@
             </section>
 
             <section class="resume-achats" aria-label="Totaux des animaux">
-                <p>Vaches : <span id="compteur-vache">0</span></p>
-                <p>Poules : <span id="compteur-poule">0</span></p>
-                <p>Lapins : <span id="compteur-lapin">0</span></p>
+                <p>Vaches : <span id="compteur-vache">1</span></p>
+                <p>Poules : <span id="compteur-poule">3</span></p>
+                <p>Lapins : <span id="compteur-lapin">2</span></p>
             </section>
 
             <p id="message-action" class="message-action" aria-live="polite"></p>
@@ -239,6 +286,118 @@
             </footer>
         </section>
 
+        <section id="popup-marche" class="popup-marche hidden" role="dialog" aria-modal="true" aria-labelledby="titre-popup-marche">
+            <div class="popup-marche-backdrop" data-close-marche></div>
+            <header class="popup-marche-entete">
+                <h2 id="titre-popup-marche">Marche des producteurs</h2>
+                <button id="bouton-fermer-marche" class="popup-marche-fermer" type="button" aria-label="Fermer">X</button>
+            </header>
+
+            <div class="popup-marche-onglets" role="tablist" aria-label="Sections du marché">
+                <button
+                    id="marche-tab-achat"
+                    class="popup-marche-onglet is-active"
+                    type="button"
+                    role="tab"
+                    aria-selected="true"
+                    data-marche-tab="achat"
+                >
+                    Achat
+                </button>
+                <button
+                    id="marche-tab-vente"
+                    class="popup-marche-onglet"
+                    type="button"
+                    role="tab"
+                    aria-selected="false"
+                    data-marche-tab="vente"
+                >
+                    Vente
+                </button>
+                <button
+                    id="marche-tab-collectivite"
+                    class="popup-marche-onglet"
+                    type="button"
+                    role="tab"
+                    aria-selected="false"
+                    data-marche-tab="collectivite"
+                >
+                    Marché noir
+                </button>
+            </div>
+
+            <div class="popup-marche-contenu">
+                <section class="popup-marche-panneau is-active" data-marche-panel="achat">
+                    <p class="popup-marche-texte">Achète les offres publiées par les autres fermes.</p>
+                    <p id="marche-achat-feedback" class="popup-marche-feedback" aria-live="polite"></p>
+                    <div class="popup-marche-table-shell">
+                        <table class="popup-marche-table">
+                            <thead>
+                                <tr>
+                                    <th>Vendeur</th>
+                                    <th>Produit</th>
+                                    <th>Dispo</th>
+                                    <th>Prix/u</th>
+                                    <th>Quantité</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="marche-achat-body"></tbody>
+                        </table>
+                    </div>
+                </section>
+                <section class="popup-marche-panneau" data-marche-panel="vente">
+                    <p class="popup-marche-texte">Dépose une offre à partir du stock de ta ferme.</p>
+                    <p id="marche-vente-feedback" class="popup-marche-feedback" aria-live="polite"></p>
+                    <div class="popup-marche-vente-form">
+                        <label class="popup-marche-form-label" for="marche-vente-produit">Produit</label>
+                        <select id="marche-vente-produit" class="popup-marche-select"></select>
+
+                        <p class="popup-marche-stock-line">
+                            Stock disponible :
+                            <span id="marche-vente-stock">0</span>
+                        </p>
+
+                        <label class="popup-marche-form-label" for="marche-vente-quantite">Quantité</label>
+                        <input id="marche-vente-quantite" class="popup-marche-number" type="number" min="1" value="1">
+
+                        <label class="popup-marche-form-label" for="marche-vente-prix">Prix unitaire</label>
+                        <input id="marche-vente-prix" class="popup-marche-number" type="number" min="1" value="1">
+
+                        <button id="marche-vente-submit" class="popup-marche-action popup-marche-action--sell" type="button">
+                            Mettre en vente
+                        </button>
+                    </div>
+                </section>
+                <section class="popup-marche-panneau" data-marche-panel="collectivite">
+                    <p class="popup-marche-texte">Achète au marché noir.</p>
+                    <p id="marche-collectivite-feedback" class="popup-marche-feedback" aria-live="polite"></p>
+                    <section id="marche-collectivite-grid" class="grille-animaux popup-marche-collectivite-grid" aria-label="Produits repris par le marche noir"></section>
+                    <div class="popup-marche-vente-form" hidden>
+                        <label class="popup-marche-form-label" for="marche-collectivite-produit">Produit</label>
+                        <select id="marche-collectivite-produit" class="popup-marche-select"></select>
+
+                        <p class="popup-marche-stock-line">
+                            Stock disponible :
+                            <span id="marche-collectivite-stock">0</span>
+                        </p>
+
+                        <p class="popup-marche-stock-line">
+                            Prix fixe :
+                            <span id="marche-collectivite-prix">-</span>
+                        </p>
+
+                        <label class="popup-marche-form-label" for="marche-collectivite-quantite">Quantité</label>
+                        <input id="marche-collectivite-quantite" class="popup-marche-number" type="number" min="1" value="1">
+
+                        <button id="marche-collectivite-submit" class="popup-marche-action popup-marche-action--sell" type="button">
+                            Acheter au marché noir
+                        </button>
+                    </div>
+                </section>
+            </div>
+        </section>
+
         <div id="animal-modal" class="modal hidden" aria-hidden="true">
             <div class="modal-backdrop" data-close-modal></div>
             <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="animal-name">
@@ -246,27 +405,38 @@
                     <h2 id="animal-name">Animal</h2>
                     <button type="button" class="close-btn" data-close-modal aria-label="Fermer">X</button>
                 </div>
-                <div class="modal-info">
-                    <p><span class="info-label">Type :</span> <span id="animal-type">-</span></p>
-                    <p><span class="info-label">Lieu :</span> <span id="animal-place">-</span></p>
-                    <p><span id="animal-weight-label" class="info-label">Poids :</span> <span id="animal-weight">-</span></p>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="action-btn" data-action="Nourrir">Nourrir</button>
-                    <button type="button" class="action-btn" data-action="Abreuver">Abreuver</button>
-                    <button type="button" class="action-btn" data-action="Soigner">Soigner</button>
-                    <button type="button" class="action-btn" data-action="Nettoyer">Nettoyer</button>
+                <div class="modal-body">
+                    <div class="modal-info">
+                        <p><span class="info-label">Type :</span> <span id="animal-type">-</span></p>
+                        <p><span class="info-label">Lieu :</span> <span id="animal-place">-</span></p>
+                        <p><span class="info-label">Propreté :</span> <span id="animal-status">-</span></p>
+                        <p><span class="info-label">Santé :</span> <span id="animal-health">-</span></p>
+                        <p><span class="info-label">Faim :</span> <span id="animal-hunger">-</span></p>
+                        <p><span class="info-label">Hydratation :</span> <span id="animal-hydration">-</span></p>
+                        <p><span class="info-label">Sexe :</span> <span id="animal-sex">-</span></p>
+                        <p><span class="info-label">Role :</span> <span id="animal-role">-</span></p>
+                        <p><span id="animal-weight-label" class="info-label">Poids :</span> <span id="animal-weight">-</span></p>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="action-btn" data-action="Nourrir">Nourrir</button>
+                        <button type="button" class="action-btn" data-action="Abreuver">Abreuver</button>
+                        <button type="button" class="action-btn" data-action="Soigner">Soigner</button>
+                        <button type="button" class="action-btn" data-action="Nettoyer">Nettoyer</button>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
-        <div id="clock"></div>
+        <div id="clock" aria-live="polite"></div>
 
         <button class="side-btn right settings-btn" type="button" aria-label="Ouvrir les reglages"></button>
-        <div class="settings-panel">
-            <div class="settings-content">
+        <div class="settings-panel" aria-hidden="true">
+            <div class="settings-panel-backdrop" data-close-settings></div>
+            <div class="settings-content" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+                <button type="button" class="auth-modal-close settings-close-btn" data-close-settings aria-label="Fermer">X</button>
+                <h2 id="settings-title" class="settings-title">Parametres</h2>
                 <div class="language-btn">Langues &#9656;</div>
                 <div class="language-panel">
                     <div class="lang-option" data-lang="fr">
@@ -278,12 +448,41 @@
                         English
                     </div>
                 </div>
-                <p class="logout-btn">Deconnexion</p>
+                <button id="reset-farm-btn" class="settings-action-btn" type="button">Reinitialiser ma ferme</button>
+                <button class="logout-btn" type="button">Deconnexion</button>
             </div>
         </div>
     </section>
 
-    <script src="js/farm-state.js"></script>
-    <script src="js/script.js"></script>
+    <div id="poulailler-list-modal" class="modal hidden" aria-hidden="true">
+        <div class="modal-backdrop" data-close-modal></div>
+        <div class="modal-card modal-card--wide" role="dialog" aria-modal="true" aria-labelledby="poulailler-list-title">
+            <div class="modal-header">
+                <h2 id="poulailler-list-title">Poulailler</h2>
+                <button type="button" class="close-btn" data-close-modal aria-label="Fermer">X</button>
+            </div>
+            <div class="modal-body">
+                <table class="poulailler-table">
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>État</th>
+                            <th>Santé</th>
+                            <th>Faim</th>
+                            <th>Hydratation</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="poulailler-list-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/farm-state.js?v=5"></script>
+    <script src="js/app-shell.js?v=5"></script>
+    <script src="js/app-api.js?v=5"></script>
+    <script src="js/app-ui.js?v=5"></script>
+    <script src="js/script.js?v=5"></script>
 </body>
 </html>

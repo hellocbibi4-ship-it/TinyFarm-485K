@@ -16,6 +16,7 @@ import com.farm.tinyfarm.model.Ferme;
 import com.farm.tinyfarm.model.Remise;
 import com.farm.tinyfarm.model.Utilisateur;
 import com.farm.tinyfarm.repository.RemiseRepository;
+import com.farm.tinyfarm.model.Utilisateur;
 import com.farm.tinyfarm.repository.UtilisateurRepository;
 
 @Service
@@ -34,20 +35,13 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         OAuth2UserService<OAuth2UserRequest, OAuth2User> delegate = new DefaultOAuth2UserService();
         OAuth2User oAuth2User = delegate.loadUser(userRequest);
 
-        // Récupère le login GitHub
         String userLogin = oAuth2User.getAttribute("login");
-
-        // Gestion des rôles
         List<GrantedAuthority> authorities = new ArrayList<>(oAuth2User.getAuthorities());
-        String role = "ROLE_USER"; // Rôle par défaut
+        String role = "ROLE_USER";
 
-        // On cherche le joueur dans la base
         Optional<Utilisateur> userOpt = utilisateurRepository.findByGithubUsername(userLogin);
 
         if (userOpt.isEmpty()) {
-            // Si c'est un nouveau Joueur
-            System.out.println("Nouveau fermier détecté : " + userLogin + ". Création de sa ferme !");
-
             Utilisateur nouvelUtilisateur = new Utilisateur();
             nouvelUtilisateur.setGithubUsername(userLogin);
             nouvelUtilisateur.setRole(role);
@@ -74,13 +68,9 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
             remise.setFerme(savedFerme);
             remiseRepository.save(remise);
         } else {
-            // Le joueur existe déjà, on met juste à jour sa date de dernière connexion
-            System.out.println("Fermier existant détecté : " + userLogin + ". Mise à jour de sa ferme !");
             Utilisateur userExistant = userOpt.get();
-            if (userExistant.getFerme() != null) {
-                userExistant.getFerme().setDerniereCo(LocalDateTime.now());
-                utilisateurRepository.save(userExistant);
-            }
+            userExistant.setRole(role);
+            utilisateurRepository.save(userExistant);
         }
 
         return new CustomOAuth2User(oAuth2User, authorities);

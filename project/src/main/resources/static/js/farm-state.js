@@ -1,3 +1,8 @@
+/*
+ * Construction du modele front TinyFarm.
+ * Ce module transforme la reponse backend en donnees simples a rendre
+ * et garde un petit etat UI persiste en localStorage.
+ */
 (function attachTinyFarmState(global) {
   const STORAGE_KEY = "tinyfarm-front-ui-state-v2"
   const DEFAULT_LEVEL = 1
@@ -19,7 +24,7 @@
       img: "vache.png",
       price: 50,
       minLevel: 2,
-      defaultWeight: 500
+      defaultWeight: 1
     },
     poule: {
       label: "Poule",
@@ -125,12 +130,23 @@
 
     return {
       id: rawAnimal?.id || `base-${typeKey}-${index + 1}`,
+      idAnimal: Number.parseInt(rawAnimal?.idAnimal, 10) || null,
       name: rawAnimal?.name || `${catalogEntry.label} ${index + 1}`,
+      type: typeKey,
       typeKey,
       typeLabel: catalogEntry.label,
       homeLabel: catalogEntry.home,
       img: rawAnimal?.img || catalogEntry.img,
       weight: Number.isFinite(parsedWeight) ? parsedWeight : catalogEntry.defaultWeight,
+      age: Number.parseInt(rawAnimal?.age, 10) || 0,
+      stage: rawAnimal?.stage || null,
+      sex: rawAnimal?.sex || "-",
+      role: rawAnimal?.role || "-",
+      isSick: Boolean(rawAnimal?.isSick),
+      health: Number.parseInt(rawAnimal?.health, 10) || 100,
+      hunger: Number.parseInt(rawAnimal?.hunger, 10) || 100,
+      hydration: Number.parseInt(rawAnimal?.hydration, 10) || 100,
+      cleanliness: Number.parseInt(rawAnimal?.cleanliness, 10) || 100,
       isPurchased: false
     }
   }
@@ -156,6 +172,7 @@
         return {
           id: `purchase-${typeKey}-${displayIndex}`,
           name: `${catalogEntry.label} ${displayIndex}`,
+          type: typeKey,
           typeKey,
           typeLabel: catalogEntry.label,
           homeLabel: catalogEntry.home,

@@ -4,6 +4,6 @@ public enum TypeStade {
     ENFANT,
     BEBE,
     PETIT,
-    GROS,
+    GROS_LAPEREAU,
     ADULTE
 };

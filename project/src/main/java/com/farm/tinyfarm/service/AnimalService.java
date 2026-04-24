@@ -363,7 +363,7 @@ public class AnimalService {
             } else if (age == 1) {
                 animal.setStade(TypeStade.PETIT);
             } else if (age == 2) {
-                animal.setStade(TypeStade.GROS);
+                animal.setStade(TypeStade.GROS_LAPEREAU);
             }
         }
     }

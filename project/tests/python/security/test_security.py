@@ -45,6 +45,43 @@ def test_login_github_redirige():
     )
 
 
+def test_api_logout_url_public():
+    # Endpoint utilitaire accessible sans auth.
+    response = requests.get(f"{BASE_URL}/api/logout-url")
+    assert response.status_code == 200
+    assert response.json()["url"] == "/logout"
+
+
+def test_api_oauth_status_public():
+    response = requests.get(f"{BASE_URL}/api/auth/oauth-status")
+    assert response.status_code == 200
+    data = response.json()
+    assert "githubConfigured" in data
+    assert "authorizationUrl" in data
+
+
+def test_api_github_farm_use_sans_auth():
+    # Acces refuse si pas connecte a GitHub.
+    response = requests.post(f"{BASE_URL}/api/auth/github/farm/use")
+    assert response.status_code == 401
+
+
+def test_api_github_farm_new_sans_auth():
+    response = requests.post(f"{BASE_URL}/api/auth/github/farm/new")
+    assert response.status_code == 401
+
+
+def test_api_github_farm_reset_sans_auth():
+    response = requests.post(f"{BASE_URL}/api/auth/github/farm/reset")
+    assert response.status_code == 401
+
+
+def test_me_retourne_erreur_json():
+    response = requests.get(f"{BASE_URL}/api/me")
+    assert response.status_code == 401
+    assert response.json()["error"] == "Not authenticated"
+
+
 # il faut ajouter auth/test-token pour que ca fonctionne
 # def test_api_me_avec_token(github_pat):
 #     # Avec un vrai token, /api/me doit renvoyer 200

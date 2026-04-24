@@ -50,9 +50,12 @@ public class Animal{
         private int jaugeFaim = 100;
         private int jaugeProprete = 100;
         private int jaugeHydratation = 100;
+        private int joursMaladeConsecutifs = 0;
+        private int joursJeuneConsecutifs = 0;
         
         private boolean estMalade = false;
         private boolean aMange = false;
+        private boolean aBu = false;
         private boolean aEteTraite = false;
         private int stockLaitPis = 0;
         private int stockLaitPisMax = 16;
