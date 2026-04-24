@@ -42,6 +42,7 @@ public class RemiseService {
         remise.setStockEau(0);
         remise.setStockSavon(0);
         remise.setStockSeringue(0);
+        remise.setStockPaille (0);
         remise.setStockPaille(0);
         return remiseRepository.save(remise);
     }
@@ -62,23 +63,28 @@ public class RemiseService {
             case OEUF:
                 remise.setStockOeuf(remise.getStockOeuf() + montant);
                 break;
-            case LAIT:
-                remise.setStockLait(remise.getStockLait() + montant);
+            case EAU :
+                int totalEau = remise.getStockEau() + montant;
+                remise.setStockEau(totalEau);
                 break;
-            case LAPIN:
-                remise.setStockLapin(remise.getStockLapin() + montant);
+            case NOURRITURE :
+                int totalNourriture = remise.getStockNourriture() + montant;
+                remise.setStockNourriture(totalNourriture);
                 break;
-            case NOURRITURE:
-                remise.setStockNourriture(remise.getStockNourriture() + montant);
+            case LAIT :
+                int totalLait = remise.getStockLait() + montant;
+                remise.setStockLait(totalLait);
                 break;
-            case EAU:
-                remise.setStockEau(remise.getStockEau() + montant);
+            case LAPIN :
+                int totalLapin = remise.getStockLapin() + montant;
+                remise.setStockLapin(totalLapin);
+                break;
+            case SAVON :
+                montantTotal = remise.getStockSavon() + montant;
+                remise.setStockSavon(montantTotal);
                 break;
             case PAILLE:
                 remise.setStockPaille(remise.getStockPaille() + montant);
-                break;
-            case SAVON:
-                remise.setStockSavon(remise.getStockSavon() + montant);
                 break;
             case SERINGUE:
                 remise.setStockSeringue(remise.getStockSeringue() + montant);
@@ -101,29 +107,29 @@ public class RemiseService {
                 verifierStock(remise.getStockOeuf(), montant, "oeufs");
                 remise.setStockOeuf(remise.getStockOeuf() - montant);
                 break;
+            case EAU :
+                int totalEau = remise.getStockEau() - montant;
+                remise.setStockEau(totalEau);
+                break;
+            case NOURRITURE :
+                int totalNourriture = remise.getStockNourriture() - montant;
+                remise.setStockNourriture(totalNourriture);
+                break;
+            case LAPIN :
+                int totalLapin = remise.getStockLapin() - montant;
+                remise.setStockLapin(totalLapin);
+                break;
+            case SAVON :
+                montantTotal = remise.getStockSavon() - montant;
+                remise.setStockSavon(montantTotal);
+                break;
             case LAIT:
                 verifierStock(remise.getStockLait(), montant, "lait");
                 remise.setStockLait(remise.getStockLait() - montant);
                 break;
-            case LAPIN:
-                verifierStock(remise.getStockLapin(), montant, "lapins");
-                remise.setStockLapin(remise.getStockLapin() - montant);
-                break;
-            case NOURRITURE:
-                verifierStock(remise.getStockNourriture(), montant, "nourriture");
-                remise.setStockNourriture(remise.getStockNourriture() - montant);
-                break;
-            case EAU:
-                verifierStock(remise.getStockEau(), montant, "seau d'eau");
-                remise.setStockEau(remise.getStockEau() - montant);
-                break;
             case PAILLE:
                 verifierStock(remise.getStockPaille(), montant, "paille");
                 remise.setStockPaille(remise.getStockPaille() - montant);
-                break;
-            case SAVON:
-                verifierStock(remise.getStockSavon(), montant, "savon");
-                remise.setStockSavon(remise.getStockSavon() - montant);
                 break;
             case SERINGUE:
                 verifierStock(remise.getStockSeringue(), montant, "seringues");

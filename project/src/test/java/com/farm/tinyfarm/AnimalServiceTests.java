@@ -1,8 +1,9 @@
 package com.farm.tinyfarm.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doNothing;
@@ -17,11 +18,13 @@ import com.farm.tinyfarm.model.Animal;
 import com.farm.tinyfarm.model.Ferme;
 import com.farm.tinyfarm.model.TypeAnimal;
 import com.farm.tinyfarm.model.TypeStade;
+import com.farm.tinyfarm.model.TypeRole;
+import com.farm.tinyfarm.model.TypeSexe;
 import com.farm.tinyfarm.repository.AnimalRepository;
 import com.farm.tinyfarm.service.AnimalService;
 import com.farm.tinyfarm.service.FermeService;
 
-class TestAnimalService {
+class AnimalServiceTests {
 
     private AnimalRepository animalRepository;
     private FermeService fermeService;
@@ -74,8 +77,40 @@ class TestAnimalService {
         a.setTypeAnimal(TypeAnimal.POULE);
         a.setNom("poule1");
         Animal res = animalService.createBaseAnimal(a);
-        assertEquals(0.5f, res.getPoids());
+        assertEquals(0.05f, res.getPoids());
         assertEquals(TypeStade.ENFANT, res.getStade());
+    }
+
+    @Test
+    void testCreateBaseAnimalPoule() {
+        Animal animal = new Animal();
+        animal.setNom("PouleTest");
+        animal.setTypeAnimal(TypeAnimal.POULE);
+
+        animalService.createBaseAnimal(animal);
+
+        assertEquals(0, animal.getAge());
+        assertEquals(0.05f, animal.getPoids());
+        assertEquals(TypeStade.ENFANT, animal.getStade());
+        assertEquals(TypeRole.ELEVAGE, animal.getRole());
+        assertEquals(TypeSexe.INCONNU, animal.getSexe());
+        assertTrue(animal.isVivant());
+    }
+
+    @Test
+    void testUpdateChickenStatusRevealsRoleAtAgeFive() {
+        Animal animal = new Animal();
+        animal.setNom("PouleAdulte");
+        animal.setTypeAnimal(TypeAnimal.POULE);
+        animal.setAge(5);
+        animal.setPoids(2.5f);
+        animal.setStade(TypeStade.ADULTE);
+        animal.setSexe(TypeSexe.MALE);
+
+        animalService.updateChickenStatus(animal);
+
+        assertEquals(TypeRole.REPRODUCTEUR, animal.getRole());
+        assertNotNull(animal.getSexe());
     }
 
     @Test
@@ -188,7 +223,6 @@ class TestAnimalService {
 
     @Test
     void hydraterPouleDejaNourrieLeveException() {
-        // garde du code : if(jaugeFaim == 100) throw
         Animal a = newPoule(100, 50);
         assertThrows(IllegalCallerException.class, () -> animalService.hydraterPoule(a));
     }
@@ -260,8 +294,8 @@ class TestAnimalService {
     @Test
     void abreuverVacheApresManger1kgDePlus() {
         Animal v = newVache();
-        animalService.nourrirHerbe(v); // 100 -> 105, aMange=true
-        animalService.abreuverVache(v); // +1
+        animalService.nourrirHerbe(v); 
+        animalService.abreuverVache(v);
         assertEquals(106f, v.getPoids(), 0.0001);
     }
 
@@ -392,49 +426,50 @@ class TestAnimalService {
         v.setEstMalade(true);
         assertEquals(0, animalService.produireLait(v));
     }
+
     // ---------- updateChickenStatus(adulte)----------
 
     @Test
     void updateChickenStatusAdulteMalePoidsOkDevientReproducteur() {
         Animal a = newPoule(100, 100);
         a.setStade(TypeStade.ADULTE);
-        a.setSexe(com.farm.tinyfarm.model.TypeSexe.MALE);
+        a.setSexe(TypeSexe.MALE);
         a.setAge(5);
         a.setPoids(2.5f);
         animalService.updateChickenStatus(a);
-        assertEquals(com.farm.tinyfarm.model.TypeRole.REPRODUCTEUR, a.getRole());
+        assertEquals(TypeRole.REPRODUCTEUR, a.getRole());
     }
 
     @Test
     void updateChickenStatusAdulteFemellePoidOkDevientPondeuse() {
         Animal a = newPoule(100, 100);
         a.setStade(TypeStade.ADULTE);
-        a.setSexe(com.farm.tinyfarm.model.TypeSexe.FEMELLE);
+        a.setSexe(TypeSexe.FEMELLE);
         a.setAge(5);
         a.setPoids(2.5f);
         animalService.updateChickenStatus(a);
-        assertEquals(com.farm.tinyfarm.model.TypeRole.PONDEUSE, a.getRole());
+        assertEquals(TypeRole.PONDEUSE, a.getRole());
     }
 
     @Test
     void updateChickenStatusAdultePoidsInsuffisantGardeRoleElevage() {
         Animal a = newPoule(100, 100);
         a.setStade(TypeStade.ADULTE);
-        a.setSexe(com.farm.tinyfarm.model.TypeSexe.MALE);
+        a.setSexe(TypeSexe.MALE);
         a.setAge(5);
-        a.setPoids(1.0f);  // < 2.5
+        a.setPoids(1.0f);
         animalService.updateChickenStatus(a);
-        assertEquals(com.farm.tinyfarm.model.TypeRole.ELEVAGE, a.getRole());
+        assertEquals(TypeRole.ELEVAGE, a.getRole());
     }
 
     @Test
     void updateChickenStatusAdulteAgeInsuffisantGardeRoleElevage() {
         Animal a = newPoule(100, 100);
         a.setStade(TypeStade.ADULTE);
-        a.setSexe(com.farm.tinyfarm.model.TypeSexe.MALE);
-        a.setAge(3);  // < 5
+        a.setSexe(TypeSexe.MALE);
+        a.setAge(3);
         a.setPoids(2.5f);
         animalService.updateChickenStatus(a);
-        assertEquals(com.farm.tinyfarm.model.TypeRole.ELEVAGE, a.getRole());
+        assertEquals(TypeRole.ELEVAGE, a.getRole());
     }
 }

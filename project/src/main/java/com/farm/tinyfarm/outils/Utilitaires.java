@@ -12,8 +12,8 @@ public class Utilitaires {
         }
     }
 
-    public TypeSexe generateRandomGender(){
-        int rand = (int) Math.random() * 2; //Génére un int entre 0 et 1
+    public static TypeSexe generateRandomGender(){
+        int rand = (int) (Math.random() * 2); //Génére un int entre 0 et 1
         if(rand == 1) { return TypeSexe.FEMELLE;}
         else{ return TypeSexe.MALE; }
     }

@@ -32,6 +32,8 @@ build/
 ### VS Code ###
 .vscode/
 
+### Secrets ###
+application-local.properties
 ### Local debug artifacts ###
 *.class
 *.log

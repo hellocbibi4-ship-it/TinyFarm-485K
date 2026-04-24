@@ -10,7 +10,6 @@ import java.util.List;
 @Repository
 public interface UtilisateurRepository extends JpaRepository<Utilisateur, Integer> {
     
-    // SELECT * FROM utilisateur WHERE github_username = ?
     Optional<Utilisateur> findByGithubUsername(String githubUsername);
     List<Utilisateur> findAllByGithubUsernameStartingWith(String prefix);
     void deleteByGithubUsername(String githubUsername);

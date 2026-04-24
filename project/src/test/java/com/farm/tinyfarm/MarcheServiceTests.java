@@ -15,33 +15,46 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.farm.tinyfarm.model.Ferme;
 import com.farm.tinyfarm.model.Marche;
 import com.farm.tinyfarm.model.TypeStock;
 import com.farm.tinyfarm.repository.FermeRepository;
 import com.farm.tinyfarm.repository.MarcheRepository;
+import com.farm.tinyfarm.repository.RemiseRepository;
 import com.farm.tinyfarm.service.FermeService;
 import com.farm.tinyfarm.service.MarcheService;
 import com.farm.tinyfarm.service.RemiseService;
 
-class TestMarcheService {
+@ExtendWith(MockitoExtension.class)
+class MarcheServiceTests {
 
+    @Mock
     private FermeRepository fermeRepository;
+
+    @Mock
     private MarcheRepository marcheRepository;
+
+    @Mock
+    private RemiseRepository remiseRepository;
+
+    @Mock
     private RemiseService remiseService;
+
+    @Mock
     private FermeService fermeService;
+
+    @InjectMocks
     private MarcheService marcheService;
+
     private Ferme ferme;
 
     @BeforeEach
     void setUp() {
-        fermeRepository = mock(FermeRepository.class);
-        marcheRepository = mock(MarcheRepository.class);
-        remiseService = mock(RemiseService.class);
-        fermeService = mock(FermeService.class);
-        marcheService = new MarcheService(fermeRepository, marcheRepository, remiseService, fermeService);
-
         ferme = new Ferme();
         ferme.setIdFerme(1);
         ferme.setSoldeEcus(1000);
@@ -50,16 +63,14 @@ class TestMarcheService {
         ferme.setBElev(0.0);
 
         when(fermeRepository.findById(1)).thenReturn(Optional.of(ferme));
-        when(fermeRepository.save(any(Ferme.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(marcheRepository.save(any(Marche.class))).thenAnswer(inv -> inv.getArgument(0));
+        
+        // Configuration des comportements par défaut pour éviter les NullPointer lors des tests create
         when(remiseService.fromProduitMarche("OEUF")).thenReturn(TypeStock.OEUF);
         when(remiseService.fromProduitMarche("oeuf")).thenReturn(TypeStock.OEUF);
         when(remiseService.fromProduitMarche("LAIT")).thenReturn(TypeStock.LAIT);
         when(remiseService.fromProduitMarche("lait")).thenReturn(TypeStock.LAIT);
         when(remiseService.fromProduitMarche("LAPIN")).thenReturn(TypeStock.LAPIN);
         when(remiseService.fromProduitMarche("lapin")).thenReturn(TypeStock.LAPIN);
-        doNothing().when(remiseService).retirerStock(anyInt(), any(TypeStock.class), anyInt());
-        doNothing().when(remiseService).ajouterStock(anyInt(), any(TypeStock.class), anyInt());
     }
 
     // ---------- create ----------
@@ -68,6 +79,7 @@ class TestMarcheService {
     void createOffreOeufRetireLeStockEtCreeOffre() {
         when(marcheRepository.findByFerme_IdFermeAndProduitAndPrixUnitaire(eq(1), anyString(), eq(5)))
             .thenReturn(Optional.empty());
+        when(marcheRepository.save(any(Marche.class))).thenAnswer(inv -> inv.getArgument(0));
 
         Marche res = marcheService.create(1, "OEUF", 3, 5);
         assertEquals(3, res.getQuantite());
@@ -86,6 +98,7 @@ class TestMarcheService {
 
         when(marcheRepository.findByFerme_IdFermeAndProduitAndPrixUnitaire(eq(1), eq("oeuf"), eq(5)))
             .thenReturn(Optional.of(existant));
+        when(marcheRepository.save(any(Marche.class))).thenAnswer(inv -> inv.getArgument(0));
 
         Marche res = marcheService.create(1, "OEUF", 3, 5);
         assertEquals(5, res.getQuantite());
@@ -128,9 +141,25 @@ class TestMarcheService {
         when(fermeService.countLapinsVendables(1)).thenReturn(5);
         when(marcheRepository.findByFerme_IdFermeAndProduitAndPrixUnitaire(eq(1), eq("lapin"), eq(20)))
             .thenReturn(Optional.empty());
+        when(marcheRepository.save(any(Marche.class))).thenAnswer(inv -> inv.getArgument(0));
+
         Marche res = marcheService.create(1, "LAPIN", 3, 20);
         assertEquals(3, res.getQuantite());
         verify(fermeService).retirerLapinsVivants(1, 3);
+    }
+
+    @Test
+    void create_sauvegarde_l_offre_valide() {
+        when(marcheRepository.findByFerme_IdFermeAndProduitAndPrixUnitaire(eq(1), anyString(), eq(12)))
+            .thenReturn(Optional.empty());
+        when(marcheRepository.save(any(Marche.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Marche offre = marcheService.create(1, "OEUF", 4, 12);
+
+        assertEquals("oeuf", offre.getProduit());
+        assertEquals(4, offre.getQuantite());
+        assertEquals(12, offre.getPrix());
+        assertEquals(ferme, offre.getFerme());
     }
 
     // ---------- transaction ----------
@@ -152,11 +181,12 @@ class TestMarcheService {
     void transactionQuantiteTropGrandeLeveException() {
         Marche offre = newOffre(2, 3, "oeuf");
         when(marcheRepository.findById(10)).thenReturn(Optional.of(offre));
-        // L'acheteur est forcement une autre ferme
+        
         Ferme acheteur = new Ferme();
         acheteur.setIdFerme(2);
         acheteur.setSoldeEcus(1000);
         when(fermeRepository.findById(2)).thenReturn(Optional.of(acheteur));
+        
         assertThrows(IllegalArgumentException.class, () -> marcheService.transaction(2, 10, 5));
     }
 
@@ -171,10 +201,12 @@ class TestMarcheService {
     void transactionSoldeInsuffisantLeveException() {
         Marche offre = newOffre(5, 100, "oeuf");
         when(marcheRepository.findById(10)).thenReturn(Optional.of(offre));
+        
         Ferme acheteur = new Ferme();
         acheteur.setIdFerme(2);
         acheteur.setSoldeEcus(10);
         when(fermeRepository.findById(2)).thenReturn(Optional.of(acheteur));
+        
         assertThrows(IllegalArgumentException.class, () -> marcheService.transaction(2, 10, 1));
     }
 
@@ -182,11 +214,13 @@ class TestMarcheService {
     void transactionReussitMetAJourSoldesEtStock() {
         Marche offre = newOffre(5, 10, "oeuf");
         when(marcheRepository.findById(10)).thenReturn(Optional.of(offre));
+        
         Ferme acheteur = new Ferme();
         acheteur.setIdFerme(2);
         acheteur.setSoldeEcus(1000);
         acheteur.setBElev(0.0);
         when(fermeRepository.findById(2)).thenReturn(Optional.of(acheteur));
+        when(fermeRepository.save(any(Ferme.class))).thenAnswer(inv -> inv.getArgument(0));
 
         marcheService.transaction(2, 10, 3);
 
@@ -199,6 +233,7 @@ class TestMarcheService {
     void transactionTotaleSupprimeLOffre() {
         Marche offre = newOffre(3, 10, "oeuf");
         when(marcheRepository.findById(10)).thenReturn(Optional.of(offre));
+        
         Ferme acheteur = new Ferme();
         acheteur.setIdFerme(2);
         acheteur.setSoldeEcus(1000);

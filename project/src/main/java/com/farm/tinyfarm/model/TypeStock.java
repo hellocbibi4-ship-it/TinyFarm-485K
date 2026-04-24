@@ -8,5 +8,6 @@ public enum TypeStock {
     EAU,
     SAVON,
     SERINGUE,
-    PAILLE
-}
+    PAILLE,
+};
+  

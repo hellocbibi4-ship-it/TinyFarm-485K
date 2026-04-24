@@ -204,7 +204,6 @@
         }
       })
     }
-    //dom.loginBtn.addEventListener("click", ui.openLoginModal)}
 
     if (dom.clsBtn && dom.classementScreen) {
       let classementInterval
@@ -304,8 +303,6 @@
         event.stopPropagation()
 
         try {
-          // On invalide la session Spring avant de revenir a l'ecran login,
-          // sinon un nouveau clic GitHub reutiliserait la meme session.
           await api.logoutSession()
         } catch (error) {
           console.error("Erreur lors de la deconnexion :", error)
@@ -420,32 +417,29 @@
         }
       })
     }
+
     let lastRunDay = localStorage.getItem("lastRunDay");
+    setInterval(async () => {
+      const now = new Date();
+      const today = now.toDateString();
 
-setInterval(async () => {
-  const now = new Date();
-  const today = now.toDateString();
+      if (lastRunDay !== today) {
+        lastRunDay = today;
+        localStorage.setItem("lastRunDay", today);
 
-  if (lastRunDay !== today) {
-    lastRunDay = today;
-    localStorage.setItem("lastRunDay", today);
-
-    try {
-      console.log("Nouveau jour détecté");
-
-      const farmData = await api.passerJourFerme();
-
-      ui.applyFarmData(farmData);
-      ui.renderStockTable(ui.buildStockRows(farmData));
-      ui.setStockFeedback();
-      ui.setCollectiviteFeedback("Le jour suivant a ete applique.");
-      ui.afficherMessage("Jour suivant applique.", "succes");
-
-    } catch (error) {
-      console.error("Erreur :", error);
-    }
-  }
-}, 60000);
+        try {
+          console.log("Nouveau jour détecté");
+          const farmData = await api.passerJourFerme();
+          ui.applyFarmData(farmData);
+          ui.renderStockTable(ui.buildStockRows(farmData));
+          ui.setStockFeedback();
+          ui.setCollectiviteFeedback("Le jour suivant a ete applique.");
+          ui.afficherMessage("Jour suivant applique.", "succes");
+        } catch (error) {
+          console.error("Erreur :", error);
+        }
+      }
+    }, 60000);
     
     if (dom.elementsInterface.boutonFermer) {
       dom.elementsInterface.boutonFermer.addEventListener("click", () => ui.fermerPopup())
@@ -487,13 +481,10 @@ setInterval(async () => {
             console.error("Erreur lors de la vente au marche noir :", error)
             ui.setMarcheFeedback(dom.marcheCollectiviteFeedback, error.message || "Vente impossible.", "is-error")
           }
-
           return
         }
 
-        if (!buyButton) {
-          return
-        }
+        if (!buyButton) return;
 
         const offerId = buyButton.dataset.marketBuy
         const input = dom.popupMarche.querySelector(`[data-market-buy-qty="${offerId}"]`)
@@ -537,9 +528,7 @@ setInterval(async () => {
 
     if (dom.marcheVenteSubmit) {
       dom.marcheVenteSubmit.addEventListener("click", async () => {
-        if (dom.marcheVenteSubmit.disabled) {
-          return
-        }
+        if (dom.marcheVenteSubmit.disabled) return;
 
         const product = dom.marcheVenteProduit?.value || ""
         const quantity = Math.max(1, Number.parseInt(dom.marcheVenteQuantite?.value, 10) || 1)
@@ -583,9 +572,7 @@ setInterval(async () => {
 
     if (dom.marcheCollectiviteSubmit) {
       dom.marcheCollectiviteSubmit.addEventListener("click", async () => {
-        if (dom.marcheCollectiviteSubmit.disabled) {
-          return
-        }
+        if (dom.marcheCollectiviteSubmit.disabled) return;
 
         const product = dom.marcheCollectiviteProduit?.value || ""
         const quantity = Math.max(1, Number.parseInt(dom.marcheCollectiviteQuantite?.value, 10) || 1)
@@ -596,7 +583,6 @@ setInterval(async () => {
         try {
           dom.marcheCollectiviteSubmit.disabled = true
           ui.setMarcheFeedback(dom.marcheCollectiviteFeedback)
-          // Le marche noir ne cree pas d'offre : la vente est immediate.
           const farmData = await api.vendreACollectivite(product, quantity)
           ui.applyFarmData(farmData)
           ui.renderStockTable(ui.buildStockRows(farmData))
@@ -681,7 +667,6 @@ setInterval(async () => {
         console.error("Impossible de joindre le serveur :", e);
         ui.showLoginScreen()
     }
-    ui.classement;
   });
   document.addEventListener("DOMContentLoaded", bindDomContentLoadedEvents)
 })(window)

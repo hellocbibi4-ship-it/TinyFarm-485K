@@ -13,6 +13,10 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.farm.tinyfarm.model.Ferme;
 import com.farm.tinyfarm.model.Remise;
@@ -22,34 +26,38 @@ import com.farm.tinyfarm.repository.RemiseRepository;
 import com.farm.tinyfarm.service.FermeService;
 import com.farm.tinyfarm.service.RemiseService;
 
+@ExtendWith(MockitoExtension.class)
 class TestRemiseService {
 
+    @Mock
     private RemiseRepository remiseRepository;
+
+    @Mock
     private FermeRepository fermeRepository;
+
+    @Mock
     private FermeService fermeService;
+
+    @InjectMocks
     private RemiseService remiseService;
+
     private Ferme ferme;
     private Remise remise;
 
     @BeforeEach
     void setUp() {
-        remiseRepository = mock(RemiseRepository.class);
-        fermeRepository = mock(FermeRepository.class);
-        fermeService = mock(FermeService.class);
-        remiseService = new RemiseService(remiseRepository, fermeRepository, fermeService);
-
         ferme = new Ferme();
         ferme.setIdFerme(1);
         ferme.setSoldeEcus(100);
 
         remise = new Remise();
+        remise.setRemiseId(1);
         remise.setFerme(ferme);
 
+        // Configuration standard des comportements des mocks pour les tests
         when(remiseRepository.save(any(Remise.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(fermeRepository.save(any(Ferme.class))).thenAnswer(inv -> inv.getArgument(0));
         when(fermeRepository.findById(1)).thenReturn(Optional.of(ferme));
         when(remiseRepository.findById(1)).thenReturn(Optional.of(remise));
-        doNothing().when(fermeService).consommerAchatCollectivite(anyInt());
     }
 
     // ---------- ajouterStock ----------
@@ -82,6 +90,12 @@ class TestRemiseService {
     void ajouterStockPailleIncremente() {
         remiseService.ajouterStock(1, TypeStock.PAILLE, 2);
         assertEquals(2, remise.getStockPaille());
+    }
+
+    @Test
+    void ajouterStock_augmente_le_stock_cible() {
+        remiseService.ajouterStock(1, TypeStock.PAILLE, 3);
+        assertEquals(3, remise.getStockPaille());
     }
 
     @Test
@@ -134,6 +148,11 @@ class TestRemiseService {
     void retirerStockMontantNulLeveException() {
         assertThrows(IllegalArgumentException.class,
             () -> remiseService.retirerStock(1, TypeStock.OEUF, 0));
+    }
+
+    @Test
+    void retirerStock_montant_invalide_leve_une_exception() {
+        assertThrows(IllegalArgumentException.class, () -> remiseService.retirerStock(1, TypeStock.EAU, 0));
     }
 
     @Test
@@ -234,7 +253,10 @@ class TestRemiseService {
 
     @Test
     void acheterObjetEntretienRetireLeSoldeEtAjouteAuStock() {
+        doNothing().when(fermeService).consommerAchatCollectivite(anyInt());
+        
         remiseService.acheterObjetEntretien(1, TypeStock.EAU);
+        
         assertEquals(98, ferme.getSoldeEcus());
         assertEquals(1, remise.getStockEau());
         verify(fermeService).consommerAchatCollectivite(1);
@@ -250,10 +272,24 @@ class TestRemiseService {
     // ---------- createRemise / getOrCreate ----------
 
     @Test
+    void createRemise_initialise_les_stocks_a_zero() {
+        when(fermeRepository.findById(2)).thenReturn(Optional.of(ferme));
+        when(remiseRepository.findById(2)).thenReturn(Optional.empty());
+
+        Remise created = remiseService.createRemise(2);
+
+        assertEquals(0, created.getStockSavon());
+        assertEquals(0, created.getStockPaille());
+        assertEquals(0, created.getStockNourriture());
+    }
+
+    @Test
     void createRemiseInitialiseTousLesStocksAZero() {
         when(remiseRepository.findById(2)).thenReturn(Optional.empty());
         when(fermeRepository.findById(2)).thenReturn(Optional.of(ferme));
+        
         Remise nouvelle = remiseService.createRemise(2);
+        
         assertEquals(0, nouvelle.getStockOeuf());
         assertEquals(0, nouvelle.getStockLait());
         assertEquals(0, nouvelle.getStockNourriture());

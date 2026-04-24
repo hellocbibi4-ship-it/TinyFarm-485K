@@ -7,9 +7,13 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doNothing;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -30,7 +34,7 @@ import com.farm.tinyfarm.repository.MarcheRepository;
 import com.farm.tinyfarm.repository.RemiseRepository;
 import com.farm.tinyfarm.service.FermeService;
 
-class TestFermeService {
+class FermeServiceTests {
 
     private FermeRepository fermeRepository;
     private RemiseRepository remiseRepository;
@@ -49,12 +53,39 @@ class TestFermeService {
 
         ferme = new Ferme();
         ferme.setIdFerme(1);
-        ferme.setSoldeEcus(1000);
-        ferme.setScore(10);
+        ferme.setNom("FermeTest");
+        ferme.setSoldeEcus(1500);
+        ferme.setScore(0);
         ferme.setHibernation(false);
 
         when(fermeRepository.findById(1)).thenReturn(Optional.of(ferme));
         when(fermeRepository.save(any(Ferme.class))).thenAnswer(inv -> inv.getArgument(0));
+    }
+
+    @Test
+    void create_initialise_les_valeurs_par_defaut() {
+        when(fermeRepository.save(ferme)).thenReturn(ferme);
+        Ferme result = fermeService.create(ferme);
+
+        assertEquals(1500, result.getSoldeEcus());
+        assertEquals(0, result.getScore());
+        assertFalse(result.getHibernation());
+        assertEquals(0, result.getAchatsJour());
+        verify(remiseRepository).save(any(Remise.class));
+        verify(fermeRepository).save(ferme);
+    }
+
+    @Test
+    void getAchatsJourActuels_reset_si_jour_différent() {
+        ferme.setAchatsJour(9);
+        ferme.setDateDernierAchat(LocalDate.now().minusDays(1));
+        when(fermeRepository.findById(1)).thenReturn(Optional.of(ferme));
+
+        int achats = fermeService.getAchatsJourActuels(1);
+
+        assertEquals(0, achats);
+        assertEquals(0, ferme.getAchatsJour());
+        assertEquals(LocalDate.now(), ferme.getDateDernierAchat());
     }
 
     // ---------- ajouterEcus ----------
@@ -62,7 +93,7 @@ class TestFermeService {
     @Test
     void ajouterEcusMetAJourLeSolde() {
         fermeService.ajouterEcus(1, 250);
-        assertEquals(1250, ferme.getSoldeEcus());
+        assertEquals(1750, ferme.getSoldeEcus());
     }
 
     @Test
@@ -81,7 +112,7 @@ class TestFermeService {
     @Test
     void retirerEcusMetAJourLeSolde() {
         fermeService.retirerEcus(1, 300);
-        assertEquals(700, ferme.getSoldeEcus());
+        assertEquals(1200, ferme.getSoldeEcus());
     }
 
     @Test
@@ -100,7 +131,7 @@ class TestFermeService {
     @Test
     void ajouterScoreIncrementeLeScore() {
         fermeService.ajouterScore(1, 5);
-        assertEquals(15, ferme.getScore());
+        assertEquals(5, ferme.getScore());
     }
 
     @Test
@@ -157,7 +188,7 @@ class TestFermeService {
     @Test
     void payerActionAnimaleRetireLeCout() {
         fermeService.payerActionAnimale(1, "poule", "feed");
-        assertEquals(997, ferme.getSoldeEcus());
+        assertEquals(1497, ferme.getSoldeEcus());
     }
 
     @Test
@@ -227,12 +258,11 @@ class TestFermeService {
         assertThrows(IllegalArgumentException.class, () -> fermeService.getAnimalDeFerme(1, 5));
     }
 
-    // ---------- deleteFarmWithDependencies (ne rien faire si id inconnu) ----------
+    // ---------- deleteFarmWithDependencies ----------
 
     @Test
     void deleteFarmWithDependenciesIdNullNeFaitRien() {
         fermeService.deleteFarmWithDependencies(null);
-        // rien ne doit lever
     }
 
     @Test
@@ -251,7 +281,7 @@ class TestFermeService {
         a.setFerme(ferme);
         return a;
     }
-    // Crée un lapin adulte dans un état optimal (sain, propre, nourri, abreuvé).
+
     private Animal newLapinAdulteOptimal(TypeSexe sexe) {
         Animal a = new Animal();
         a.setTypeAnimal(TypeAnimal.LAPIN);
@@ -302,8 +332,6 @@ class TestFermeService {
         return remise;
     }
 
-    // Sexe et rôle de la poule (mettreAJourSexeEtRolePoule)
-    // via appliquerEffetsNourrirAnimal / appliquerEffetsAbreuverAnimal
     @Test
     void sexeRolePouleEnfantGardeRoleElevage() {
         Animal poule = newPoule(TypeStade.ENFANT, TypeSexe.INCONNU, 1.0f);
@@ -313,7 +341,6 @@ class TestFermeService {
 
     @Test
     void sexeRolePouleAdultePoidsInsuffisantGardeRoleElevage() {
-        // poids 1.0 + 0.5 = 1.5 < 2.5 => hors plage reproductive
         Animal poule = newPoule(TypeStade.ADULTE, TypeSexe.MALE, 1.0f);
         fermeService.appliquerEffetsNourrirAnimal(poule);
         assertEquals(TypeRole.ELEVAGE, poule.getRole());
@@ -321,7 +348,6 @@ class TestFermeService {
 
     @Test
     void sexeRolePouleAdulteMalePoidsOkDevientReproducteur() {
-        // poids 2.5 + 0.5 = 3.0, en plage [2.5, 3.5]
         Animal poule = newPoule(TypeStade.ADULTE, TypeSexe.MALE, 2.5f);
         fermeService.appliquerEffetsNourrirAnimal(poule);
         assertEquals(TypeRole.REPRODUCTEUR, poule.getRole());
@@ -365,7 +391,6 @@ class TestFermeService {
         assertNotEquals(TypeSexe.INCONNU, poule.getSexe());
     }
 
-    // Évolution de stade du lapin (faireEvoluerLapin) via passerJour
     @Test
     void lapinEnfantNourriEtAbreuvePasseGrosLapereau() {
         Animal lapin = newLapin(TypeStade.ENFANT, TypeRole.ELEVAGE);
@@ -376,7 +401,6 @@ class TestFermeService {
         setUpPasserJour(List.of(lapin));
 
         fermeService.passerJour(1);
-
         assertEquals(TypeStade.GROS_LAPEREAU, lapin.getStade());
     }
 
@@ -390,25 +414,21 @@ class TestFermeService {
         setUpPasserJour(List.of(lapin));
 
         fermeService.passerJour(1);
-
         assertEquals(TypeStade.ADULTE, lapin.getStade());
     }
 
     @Test
     void lapinEnfantNonNourriResteEnfant() {
         Animal lapin = newLapin(TypeStade.ENFANT, TypeRole.ELEVAGE);
-        lapin.setJaugeFaim(50);  // affamé => etaitNourriEtAbreuve = false
+        lapin.setJaugeFaim(50);
         lapin.setJaugeHydratation(100);
         lapin.setJaugeProprete(100);
         lapin.setSexe(TypeSexe.INCONNU);
         setUpPasserJour(List.of(lapin));
 
         fermeService.passerJour(1);
-
         assertEquals(TypeStade.ENFANT, lapin.getStade());
     }
-
-    // Sexe du lapin (mettreAJourSexeLapin) via passerJour
 
     @Test
     void lapinAdulteInconnuAssigneSexeApresPasser() {
@@ -416,7 +436,6 @@ class TestFermeService {
         setUpPasserJour(List.of(lapin));
 
         fermeService.passerJour(1);
-
         assertNotNull(lapin.getSexe());
         assertNotEquals(TypeSexe.INCONNU, lapin.getSexe());
     }
@@ -431,12 +450,8 @@ class TestFermeService {
         setUpPasserJour(List.of(lapin));
 
         fermeService.passerJour(1);
-
-        // Le lapin passe à GROS_LAPEREAU, pas encore ADULTE => sexe non assigné
         assertEquals(TypeSexe.INCONNU, lapin.getSexe());
     }
-
-    // Rôle du lapin (mettreAJourRoleLapin) via passerJour
 
     @Test
     void lapinAdulteARoleNullApresPasser() {
@@ -445,8 +460,6 @@ class TestFermeService {
         setUpPasserJour(List.of(lapin));
 
         fermeService.passerJour(1);
-
-        // Les lapins adultes n'ont pas de rôle prédéfini (null)
         assertEquals(null, lapin.getRole());
     }
 
@@ -460,24 +473,17 @@ class TestFermeService {
         setUpPasserJour(List.of(lapin));
 
         fermeService.passerJour(1);
-
-        // Après passage à GROS_LAPEREAU (toujours non adulte) => ELEVAGE
         assertEquals(TypeRole.ELEVAGE, lapin.getRole());
     }
 
-    // Reproduction des lapins (peutSeReproduireLapin + ajouterNnaissancesLapins)
-    // via passerJour
     @Test
     void reproductionLapinsCoupleParfaitProduisDesNaissances() {
-        Animal male   = newLapinAdulteOptimal(TypeSexe.MALE);
+        Animal male = newLapinAdulteOptimal(TypeSexe.MALE);
         Animal femelle = newLapinAdulteOptimal(TypeSexe.FEMELLE);
         setUpPasserJour(List.of(male, femelle));
 
         Ferme result = fermeService.passerJour(1);
-
-        // Au moins 1 naissance (portée de 1 à 4)
-        assertTrue(result.getNbLapins() > 2,
-            "Un couple reproducteur doit produire des naissances");
+        assertTrue(result.getNbLapins() > 2, "Un couple reproducteur doit produire des naissances");
     }
 
     @Test
@@ -487,7 +493,6 @@ class TestFermeService {
         setUpPasserJour(List.of(f1, f2));
 
         Ferme result = fermeService.passerJour(1);
-
         assertEquals(2, result.getNbLapins(), "Sans mâle il ne doit pas y avoir de naissances");
     }
 
@@ -498,64 +503,54 @@ class TestFermeService {
         setUpPasserJour(List.of(m1, m2));
 
         Ferme result = fermeService.passerJour(1);
-
         assertEquals(2, result.getNbLapins(), "Sans femelle il ne doit pas y avoir de naissances");
     }
 
     @Test
     void reproductionLapinsMaladePasDeNaissance() {
-        Animal male   = newLapinAdulteOptimal(TypeSexe.MALE);
+        Animal male = newLapinAdulteOptimal(TypeSexe.MALE);
         Animal femelle = newLapinAdulteOptimal(TypeSexe.FEMELLE);
         male.setEstMalade(true);
         femelle.setEstMalade(true);
         setUpPasserJour(List.of(male, femelle));
 
         Ferme result = fermeService.passerJour(1);
-
-        // Des lapins malades ne peuvent pas se reproduire (la mortalité peut aussi réduire le total)
-        assertFalse(result.getNbLapins() > 2,
-            "Des lapins malades ne doivent pas produire de naissances");
+        assertFalse(result.getNbLapins() > 2, "Des lapins malades ne doivent pas produire de naissances");
     }
 
     @Test
     void reproductionLapinsSaleAucuneNaissance() {
-        Animal male   = newLapinAdulteOptimal(TypeSexe.MALE);
+        Animal male = newLapinAdulteOptimal(TypeSexe.MALE);
         Animal femelle = newLapinAdulteOptimal(TypeSexe.FEMELLE);
         male.setJaugeProprete(50);
         femelle.setJaugeProprete(50);
-        setUpPasserJour(List.of(male,femelle));
+        setUpPasserJour(List.of(male, femelle));
 
         Ferme result = fermeService.passerJour(1);
-
-        // Sales => aucune naissance possible (jaugeProprete < 100).
-        // gererMortaliteClapier tue ceil(2 * 0.25) = 1 lapin sale, il en reste 1.
-        assertEquals(1, result.getNbLapins(),
-            "Des lapins sales ne peuvent pas se reproduire");
+        assertEquals(1, result.getNbLapins(), "Des lapins sales ne peuvent pas se reproduire");
     }
 
     @Test
     void reproductionLapinsAffamesAucuneNaissance() {
-        Animal male   = newLapinAdulteOptimal(TypeSexe.MALE);
+        Animal male = newLapinAdulteOptimal(TypeSexe.MALE);
         Animal femelle = newLapinAdulteOptimal(TypeSexe.FEMELLE);
         male.setJaugeFaim(50);
         femelle.setJaugeFaim(50);
         setUpPasserJour(List.of(male, femelle));
 
         Ferme result = fermeService.passerJour(1);
-
         assertEquals(2, result.getNbLapins(), "Des lapins affamés ne peuvent pas se reproduire");
     }
 
     @Test
     void reproductionLapinsAssoiffesAucuneNaissance() {
-        Animal male   = newLapinAdulteOptimal(TypeSexe.MALE);
+        Animal male = newLapinAdulteOptimal(TypeSexe.MALE);
         Animal femelle = newLapinAdulteOptimal(TypeSexe.FEMELLE);
         male.setJaugeHydratation(50);
         femelle.setJaugeHydratation(50);
         setUpPasserJour(List.of(male, femelle));
 
         Ferme result = fermeService.passerJour(1);
-
         assertEquals(2, result.getNbLapins(), "Des lapins assoiffés ne peuvent pas se reproduire");
     }
 
@@ -568,14 +563,11 @@ class TestFermeService {
         setUpPasserJour(animaux);
 
         Ferme result = fermeService.passerJour(1);
-
-        assertEquals(FermeService.MAX_RABBIT_POPULATION, result.getNbLapins(),
-            "La population maximale ne doit pas être dépassée");
+        assertEquals(FermeService.MAX_RABBIT_POPULATION, result.getNbLapins(), "La population maximale ne doit pas être dépassée");
     }
 
     @Test
     void reproductionLapinsPlacesLimiteesNaissancesBorneesAMax() {
-        // 49 lapins : 1 place libre implique au maximum 1 naissance possible
         List<Animal> animaux = new ArrayList<>();
         for (int i = 0; i < FermeService.MAX_RABBIT_POPULATION - 1; i++) {
             animaux.add(newLapinAdulteOptimal(i % 2 == 0 ? TypeSexe.MALE : TypeSexe.FEMELLE));
@@ -583,9 +575,7 @@ class TestFermeService {
         setUpPasserJour(animaux);
 
         Ferme result = fermeService.passerJour(1);
-
-        assertTrue(result.getNbLapins() <= FermeService.MAX_RABBIT_POPULATION,
-            "Le nombre de lapins ne doit pas dépasser le maximum autorisé");
+        assertTrue(result.getNbLapins() <= FermeService.MAX_RABBIT_POPULATION, "Le nombre de lapins ne doit pas dépasser le maximum autorisé");
     }
 
     @Test
@@ -596,7 +586,6 @@ class TestFermeService {
         setUpPasserJour(List.of(poule));
 
         fermeService.passerJour(1);
-
         assertEquals(2.8f, poule.getPoids(), 0.001f);
         assertEquals(1, poule.getJoursJeuneConsecutifs());
     }
@@ -610,7 +599,6 @@ class TestFermeService {
         setUpPasserJour(List.of(poule));
 
         Ferme result = fermeService.passerJour(1);
-
         assertEquals(0, result.getNbPoules());
     }
 
@@ -625,7 +613,6 @@ class TestFermeService {
         setUpPasserJour(List.of(lapin));
 
         fermeService.passerJour(1);
-
         assertEquals(1.8f, lapin.getPoids(), 0.001f);
         assertEquals(1, lapin.getJoursJeuneConsecutifs());
     }
@@ -642,8 +629,6 @@ class TestFermeService {
         setUpPasserJour(List.of(lapin));
 
         Ferme result = fermeService.passerJour(1);
-
         assertEquals(0, result.getNbLapins());
     }
-
 }

@@ -7,10 +7,15 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
+import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
+import org.springframework.security.oauth2.core.endpoint.PkceParameterNames;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.config.Customizer;
 
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
 
 @Configuration
 @EnableWebSecurity
@@ -24,7 +29,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,
+            ClientRegistrationRepository clientRegistrationRepository) throws Exception {
 
         http
                 //.cors(Customizer.withDefaults()) // Active CORS 
@@ -46,6 +52,9 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
+                        .authorizationEndpoint(authorization -> authorization
+                                .authorizationRequestResolver(
+                                        githubAuthorizationRequestResolver(clientRegistrationRepository)))
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
                         .defaultSuccessUrl("/", true) 
                 )
@@ -74,4 +83,44 @@ public class SecurityConfig {
 
         return http.build();
     }
+
+    private OAuth2AuthorizationRequestResolver githubAuthorizationRequestResolver(
+            ClientRegistrationRepository clientRegistrationRepository) {
+        DefaultOAuth2AuthorizationRequestResolver delegate =
+                new DefaultOAuth2AuthorizationRequestResolver(clientRegistrationRepository);
+
+        return new OAuth2AuthorizationRequestResolver() {
+            @Override
+            public OAuth2AuthorizationRequest resolve(HttpServletRequest request) {
+                return stripPkceForGitHub(request, delegate.resolve(request));
+            }
+
+            @Override
+            public OAuth2AuthorizationRequest resolve(HttpServletRequest request, String clientRegistrationId) {
+                OAuth2AuthorizationRequest authorizationRequest = delegate.resolve(request, clientRegistrationId);
+                if (!"github".equals(clientRegistrationId)) {
+                    return authorizationRequest;
+                }
+                return stripPkce(authorizationRequest);
+            }
+        };
+    }
+
+    private OAuth2AuthorizationRequest stripPkceForGitHub(HttpServletRequest request,
+            OAuth2AuthorizationRequest authorizationRequest) {
+        if (authorizationRequest == null || !request.getRequestURI().endsWith("/github")) {
+            return authorizationRequest;
+        }
+        return stripPkce(authorizationRequest);
+    }
+
+    private OAuth2AuthorizationRequest stripPkce(OAuth2AuthorizationRequest authorizationRequest) {
+        return OAuth2AuthorizationRequest.from(authorizationRequest)
+                .additionalParameters(parameters -> {
+                    parameters.remove(PkceParameterNames.CODE_CHALLENGE);
+                    parameters.remove(PkceParameterNames.CODE_CHALLENGE_METHOD);
+                })
+                .attributes(attributes -> attributes.remove(PkceParameterNames.CODE_VERIFIER))
+                .build();
+    };
 }

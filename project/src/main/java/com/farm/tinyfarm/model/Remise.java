@@ -22,8 +22,8 @@ public class Remise {
     private int stockEau = 0;
     private int stockSavon = 0;
     private int stockSeringue = 0;
-    private int stockPaille = 0;
-
+    private int stockPaille =0;
+    
     @OneToOne
     @MapsId
     private Ferme ferme;

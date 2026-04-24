@@ -2,13 +2,14 @@ package com.farm.tinyfarm.controller;
 
 import com.farm.tinyfarm.model.Animal;
 import com.farm.tinyfarm.model.Ferme;
+import com.farm.tinyfarm.repository.FermeRepository;
+import com.farm.tinyfarm.repository.AnimalRepository;
 import com.farm.tinyfarm.model.Remise;
 import com.farm.tinyfarm.model.TypeAnimal;
 import com.farm.tinyfarm.model.TypeRole;
 import com.farm.tinyfarm.model.TypeSexe;
 import com.farm.tinyfarm.model.TypeStade;
 import com.farm.tinyfarm.model.TypeStock;
-import com.farm.tinyfarm.repository.FermeRepository;
 import com.farm.tinyfarm.service.FermeService;
 import com.farm.tinyfarm.service.MarcheService;
 import com.farm.tinyfarm.service.RemiseService;
@@ -34,21 +35,24 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/fermes")
 public class FermeController {
-    private final FermeService fermeService;
+ private final FermeService fermeService;
     private final RemiseService remiseService;
     private final MarcheService marcheService;
     private final FermeRepository fermeRepository;
+    private final AnimalRepository animalRepository;
 
     public FermeController(
         FermeService fermeService,
         RemiseService remiseService,
         MarcheService marcheService,
-        FermeRepository fermeRepository
+        FermeRepository fermeRepository,
+        AnimalRepository animalRepository
     ) {
         this.fermeService = fermeService;
         this.remiseService = remiseService;
         this.marcheService = marcheService;
         this.fermeRepository = fermeRepository;
+        this.animalRepository = animalRepository;
     }
 
     @PostMapping
@@ -57,12 +61,6 @@ public class FermeController {
         return new ResponseEntity<>(nouvelleFerme, HttpStatus.CREATED);
     }
 
-    @GetMapping("/classement")
-    public ResponseEntity<Map<String, Object>> getClassement() {
-        Map<String, Object> response = new HashMap<>();
-        response.put("ranking", fermeService.getClassementData());
-        return ResponseEntity.ok(response);
-    }
     @GetMapping("/classement/update")
     public ResponseEntity<Map<String, Object>> updateClassement() {
         Map<String, Object> response = new HashMap<>();
@@ -316,6 +314,22 @@ public class FermeController {
         return ResponseEntity.ok(buildFrontData(fermeService.sauvegarderApresActionsAnimaux(id, List.of(animal))));
     }
 
+    //Classement des fermes par score
+    @GetMapping("/classement")
+    public ResponseEntity<List<Map<String, Object>>> getClassement() {
+        List<Ferme> fermes = fermeRepository.findAllByOrderByScoreDesc();
+        List<Map<String, Object>> classement = fermes.stream().map(f -> {
+            Map<String, Object> entry = new HashMap<>();
+            entry.put("name", f.getNom());
+            entry.put("score", f.getScore());
+            entry.put("money", f.getSoldeEcus());
+            entry.put("capacity", animalRepository.findByFerme_IdFerme(f.getIdFerme()).size());
+            return entry;
+        }).toList();
+        return ResponseEntity.ok(classement);
+    }
+
+    //Gestion des erreurs
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<String> handleRuntime(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
@@ -390,6 +404,8 @@ public class FermeController {
 
         return switch (stade) {
             case ENFANT -> "Jeune";
+            case BEBE -> "Bebe";
+            case PETIT -> "Petit";
             case GROS_LAPEREAU -> "Gros lapereau";
             case ADULTE -> "Adulte";
         };
