@@ -1001,18 +1001,18 @@
 
   function deriveHungerState(animalDetails, animalStats) {
     if (animalStats && Number.isFinite(animalStats.total) && animalStats.total > 0) {
-      return animalStats.hungry > 0 ? "Affame" : "Rassasie"
+      return animalStats.hungry > 0 ? "Affamé" : "Rassasié"
     }
 
-    return Number(animalDetails.hunger) < 60 ? "Affame" : "Rassasie"
+    return Number(animalDetails.hunger) < 60 ? "Affamé" : "Rassasié"
   }
 
   function deriveHydrationState(animalDetails, animalStats) {
     if (animalStats && Number.isFinite(animalStats.total) && animalStats.total > 0) {
-      return animalStats.thirsty > 0 ? "Assoiffe" : "Hydrate"
+      return animalStats.thirsty > 0 ? "Assoiffé" : "Hydraté"
     }
 
-    return Number(animalDetails.hydration) < 60 ? "Assoiffe" : "Hydrate"
+    return Number(animalDetails.hydration) < 60 ? "Assoiffé" : "Hydraté"
   }
 
   function getCareTargetLabel(type, animalName = "") {
@@ -1055,13 +1055,13 @@
     const hungerValue = isCattleOrChicken(animal.type)
       ? deriveHungerState(animalDetails, null)
       : animalStats
-      ? `${animalStats.hungry}/${animalStats.total} affames`
+      ? `${animalStats.hungry}/${animalStats.total} affamés`
       : `${animalDetails.hunger ?? 100}%`
 
     const thirstValue = isCattleOrChicken(animal.type)
       ? deriveHydrationState(animalDetails, null)
       : animalStats
-      ? `${animalStats.thirsty}/${animalStats.total} assoiffes`
+      ? `${animalStats.thirsty}/${animalStats.total} assoiffés`
       : `${animalDetails.hydration ?? 100}%`
 
     openActionModal({

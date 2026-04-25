@@ -381,6 +381,8 @@
           try {
             const farmData = await api.acheterObjetEntretien(constants.CARE_ITEM_TO_API_TYPE[selectedItem.id])
             ui.applyFarmData(farmData)
+            ui.renderStockTable(ui.buildStockRows(farmData))
+            ui.setStockFeedback()
             ui.setCollectiviteFeedback(`${selectedItem.label} ajoute au stock.`)
             return
           } catch (error) {
