@@ -14,8 +14,8 @@ import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequ
 import org.springframework.security.oauth2.core.endpoint.PkceParameterNames;
 import org.springframework.security.web.SecurityFilterChain;
 
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Configuration
 @EnableWebSecurity
@@ -121,6 +121,7 @@ public class SecurityConfig {
                     parameters.remove(PkceParameterNames.CODE_CHALLENGE_METHOD);
                 })
                 .attributes(attributes -> attributes.remove(PkceParameterNames.CODE_VERIFIER))
+                .authorizationRequestUri((String) null)
                 .build();
     };
 }

@@ -39,6 +39,7 @@ application-local.properties
 *.log
 *.trace.db
 *.lock.db
+*.bak
 .DS_Store
 
 ### Pycache ###
