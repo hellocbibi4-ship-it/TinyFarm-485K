@@ -512,12 +512,13 @@
       return
     }
 
+    const visibleItems = Array.isArray(items) ? items : []
     if (!isCollectiviteOpen()) {
-      dom.collectiviteList.innerHTML = ""
-      return
+      state.collectiviteState.items = visibleItems.filter((item) => item.id === "farmers-market")
+    } else {
+      state.collectiviteState.items = visibleItems
     }
 
-    state.collectiviteState.items = Array.isArray(items) ? items : []
     dom.collectiviteList.innerHTML = ""
 
     state.collectiviteState.items.forEach((item) => {
@@ -1297,10 +1298,12 @@
 
   async function initializeCollectivitePanel() {
     if (dom.collectivitePanel) {
-      dom.collectivitePanel.style.display = isCollectiviteOpen() ? 'block' : 'none'
+      dom.collectivitePanel.style.display = 'block'
     }
 
     if (!isCollectiviteOpen()) {
+      renderCollectivitePanel(constants.fallbackCommunityItems.filter((item) => item.id === "farmers-market"))
+      renderCommunityPurchaseCounter()
       return
     }
 
