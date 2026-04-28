@@ -1,3 +1,9 @@
+/*
+ * Entité de domaine JPA représentant ferme dans TinyFarm.
+ */
+
+
+
 package com.farm.tinyfarm.model;
 import java.time.LocalDateTime;
 import java.time.LocalDate;

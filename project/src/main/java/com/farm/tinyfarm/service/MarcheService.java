@@ -1,3 +1,9 @@
+/*
+ * Couche métier gérant la logique de marché pour TinyFarm.
+ */
+
+
+
 package com.farm.tinyfarm.service;
 
 import java.util.List;

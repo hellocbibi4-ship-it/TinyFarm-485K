@@ -1,8 +1,8 @@
 /*
- * Couche d'acces API du front TinyFarm.
- * Toutes les requetes HTTP sortantes passent par ici pour garder
- * les handlers d'interface plus lisibles.
+ * Client JavaScript pour les appels HTTP vers les API du backend TinyFarm.
  */
+
+
 (function attachTinyFarmApi(global) {
   const shell = global.TinyFarmShell
 

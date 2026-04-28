@@ -1,3 +1,9 @@
+/*
+ * Configuration Spring Security définissant la sécurité HTTP, la connexion OAuth2 et les règles d'accès pour TinyFarm.
+ */
+
+
+
 package com.farm.tinyfarm.security;
 
 import org.springframework.context.annotation.Bean;

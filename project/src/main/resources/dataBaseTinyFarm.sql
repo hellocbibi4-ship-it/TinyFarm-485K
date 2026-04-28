@@ -1,3 +1,5 @@
+# Script SQL d'initialisation et schéma pour la base de données embarquée H2 de TinyFarm.
+
 CREATE TABLE Utilisateur(
     idUtilisateur SERIAL PRIMARY KEY,
     pseudo VARCHAR(16) NOT NULL,

@@ -1,3 +1,9 @@
+/*
+ * Entité de domaine JPA représentant habitat dans TinyFarm.
+ */
+
+
+
 package com.farm.tinyfarm.model;
 
 import java.sql.Date;

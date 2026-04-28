@@ -1,3 +1,9 @@
+/*
+ * Contrôleur REST gérant les opérations animal de TinyFarm et exposant les points d'API correspondants.
+ */
+
+
+
 package com.farm.tinyfarm.controller;
 
 import com.farm.tinyfarm.model.Animal;

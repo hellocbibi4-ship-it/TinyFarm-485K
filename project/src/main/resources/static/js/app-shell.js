@@ -1,8 +1,8 @@
 /*
- * Noyau front TinyFarm.
- * Ce fichier centralise les constantes de l'interface, les references DOM
- * et l'etat partage entre les autres modules du front.
+ * Module côté client exposant les sélecteurs DOM, l'état de l'application et les constantes partagées.
  */
+
+
 (function attachTinyFarmShell(global) {
   const fallbackCommunityItems = [
     { id: "feed-bag", label: "Nourriture", price: 5 },

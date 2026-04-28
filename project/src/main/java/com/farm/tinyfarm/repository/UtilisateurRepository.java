@@ -1,3 +1,9 @@
+/*
+ * Interface Spring Data JPA pour la persistance des entités utilisateur de TinyFarm.
+ */
+
+
+
 package com.farm.tinyfarm.repository;
 
 import com.farm.tinyfarm.model.Utilisateur;

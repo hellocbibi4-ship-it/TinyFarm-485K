@@ -1,3 +1,9 @@
+/*
+ * Entité de domaine JPA représentant animal dans TinyFarm.
+ */
+
+
+
 package com.farm.tinyfarm.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;

@@ -1,3 +1,9 @@
+/*
+ * Contrôleur REST gérant les opérations remise de TinyFarm et exposant les points d'API correspondants.
+ */
+
+
+
 package com.farm.tinyfarm.controller;
 
 import org.springframework.http.ResponseEntity;

@@ -1,3 +1,9 @@
+/*
+ * Couche métier gérant la logique de animal pour TinyFarm.
+ */
+
+
+
 package com.farm.tinyfarm.service;
 
 import com.farm.tinyfarm.repository.AnimalRepository;

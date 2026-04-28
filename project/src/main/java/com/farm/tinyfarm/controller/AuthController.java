@@ -1,3 +1,9 @@
+/*
+ * Contrôleur REST gérant les opérations authentification de TinyFarm et exposant les points d'API correspondants.
+ */
+
+
+
 package com.farm.tinyfarm.controller;
 
 import java.util.HashMap;

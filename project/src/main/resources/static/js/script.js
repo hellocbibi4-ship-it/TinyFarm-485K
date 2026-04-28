@@ -1,8 +1,8 @@
 /*
- * Point d'entree du front TinyFarm.
- * Ce fichier ne garde que la coordination generale : actions utilisateur,
- * branchement des evenements et initialisation de l'application.
+ * Point d'entrée côté client orchestrant l'initialisation, la connexion et les événements utilisateur.
  */
+
+
 (function bootstrapTinyFarm(global) {
   const shell = global.TinyFarmShell
   const api = global.TinyFarmApi

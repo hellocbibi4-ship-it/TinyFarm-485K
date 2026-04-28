@@ -1,3 +1,9 @@
+/*
+ * Entité de domaine JPA représentant typestade dans TinyFarm.
+ */
+
+
+
 package com.farm.tinyfarm.model;
 
 public enum TypeStade {

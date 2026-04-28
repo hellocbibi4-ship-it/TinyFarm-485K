@@ -1,3 +1,9 @@
+/*
+ * Couche métier gérant la logique de habitat pour TinyFarm.
+ */
+
+
+
 package com.farm.tinyfarm.service;
 
 import java.sql.Date;

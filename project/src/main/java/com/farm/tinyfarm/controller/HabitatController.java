@@ -1,3 +1,9 @@
+/*
+ * Contrôleur REST gérant les opérations habitat de TinyFarm et exposant les points d'API correspondants.
+ */
+
+
+
 package com.farm.tinyfarm.controller;
 
 import org.springframework.web.bind.annotation.RequestMapping;

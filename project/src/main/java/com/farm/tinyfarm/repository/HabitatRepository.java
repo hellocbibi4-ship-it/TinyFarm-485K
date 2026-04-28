@@ -1,3 +1,9 @@
+/*
+ * Interface Spring Data JPA pour la persistance des entités habitat de TinyFarm.
+ */
+
+
+
 package com.farm.tinyfarm.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;

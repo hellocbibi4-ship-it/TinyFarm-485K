@@ -1,3 +1,9 @@
+/*
+ * Support de démarrage pour nettoyer ou migrer les données utilisateurs héritées lors du chargement.
+ */
+
+
+
 package com.farm.tinyfarm.config;
 
 import org.springframework.boot.CommandLineRunner;

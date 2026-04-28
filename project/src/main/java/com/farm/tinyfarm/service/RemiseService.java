@@ -1,3 +1,9 @@
+/*
+ * Couche métier gérant la logique de remise pour TinyFarm.
+ */
+
+
+
 package com.farm.tinyfarm.service;
 
 import org.springframework.stereotype.Service;

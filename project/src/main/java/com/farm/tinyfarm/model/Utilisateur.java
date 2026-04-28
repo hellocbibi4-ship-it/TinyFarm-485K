@@ -1,3 +1,9 @@
+/*
+ * Entité de domaine JPA représentant utilisateur dans TinyFarm.
+ */
+
+
+
 package com.farm.tinyfarm.model;
 
 import jakarta.persistence.*;

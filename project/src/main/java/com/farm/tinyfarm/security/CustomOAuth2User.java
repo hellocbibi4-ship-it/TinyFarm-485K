@@ -1,3 +1,9 @@
+/*
+ * Représentation de l'utilisateur authentifié GitHub dans le contexte de sécurité TinyFarm.
+ */
+
+
+
 package com.farm.tinyfarm.security;
 
 

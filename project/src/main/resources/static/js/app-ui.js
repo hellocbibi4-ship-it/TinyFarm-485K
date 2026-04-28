@@ -1,8 +1,8 @@
 /*
- * Couche de rendu du front TinyFarm.
- * Ce fichier regroupe le rendu de l'interface, les popups et les helpers
- * visuels afin que le point d'entree reste centre sur les interactions.
+ * Module côté client responsable du rendu de l'interface et de la mise à jour des panneaux de jeu.
  */
+
+
 (function attachTinyFarmUi(global) {
   const shell = global.TinyFarmShell
   const api = global.TinyFarmApi

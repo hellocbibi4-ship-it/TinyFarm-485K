@@ -1,3 +1,9 @@
+/*
+ * Fonctions utilitaires et helpers partagés utilisés par le backend TinyFarm.
+ */
+
+
+
 package com.farm.tinyfarm.outils;
 
 import com.farm.tinyfarm.model.*;

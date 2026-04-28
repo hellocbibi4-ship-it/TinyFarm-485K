@@ -1,3 +1,5 @@
+# Module de tests Pytest couvrant la sécurité et l'authentification de TinyFarm.
+
 import requests
 import pytest
 

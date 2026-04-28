@@ -1,3 +1,9 @@
+/*
+ * Service OAuth2 qui mappe les données de profil GitHub vers l'utilisateur local TinyFarm.
+ */
+
+
+
 package com.farm.tinyfarm.security;
 
 import java.util.ArrayList;

@@ -1,8 +1,8 @@
 /*
- * Construction du modele front TinyFarm.
- * Ce module transforme la reponse backend en donnees simples a rendre
- * et garde un petit etat UI persiste en localStorage.
+ * Définitions et helpers d'état de ferme pour le client TinyFarm.
  */
+
+
 (function attachTinyFarmState(global) {
   const STORAGE_KEY = "tinyfarm-front-ui-state-v2"
   const DEFAULT_LEVEL = 1

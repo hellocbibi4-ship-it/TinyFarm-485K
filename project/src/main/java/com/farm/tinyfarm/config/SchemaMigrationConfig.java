@@ -1,3 +1,9 @@
+/*
+ * Configuration de démarrage pour la migration du schéma de base de données et l'initialisation H2.
+ */
+
+
+
 package com.farm.tinyfarm.config;
 
 import java.util.List;

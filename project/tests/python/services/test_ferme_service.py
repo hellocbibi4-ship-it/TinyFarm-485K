@@ -1,3 +1,5 @@
+# Module de tests Pytest pour le service ferme de TinyFarm.
+
 import requests
 import pytest
 
