@@ -1,4 +1,4 @@
-# Script SQL d'initialisation et schéma pour la base de données embarquée H2 de TinyFarm.
+-- Script SQL d'initialisation et schéma pour la base de données embarquée H2 de TinyFarm.
 
 ALTER TABLE IF EXISTS remise ADD COLUMN IF NOT EXISTS stock_oeuf INTEGER DEFAULT 0 NOT NULL;
 ALTER TABLE IF EXISTS remise ADD COLUMN IF NOT EXISTS stock_lait INTEGER DEFAULT 0 NOT NULL;
