@@ -141,7 +141,7 @@ Sous Codespaces :
 
 ```bash
 cd project
-mvnw spring-boot:run
+mvn spring-boot:run
 ```
 
 Sous Linux / macOS :
