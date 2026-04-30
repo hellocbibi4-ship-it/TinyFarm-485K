@@ -207,22 +207,57 @@
 
     if (dom.clsBtn && dom.classementScreen) {
       let classementInterval
-      dom.clsBtn.addEventListener("click", () => {
-        dom.classementScreen.classList.toggle("show")
-        dom.clsBtn.classList.toggle("trophy2")
 
-        if (dom.classementScreen.classList.contains("show")) {
-          ui.classement()
+      const isClassementOpen = () => dom.classementScreen.classList.contains("show")
+
+      const closeClassement = () => {
+        dom.classementScreen.classList.remove("show")
+        dom.clsBtn.classList.remove("trophy2")
+
+        if (classementInterval) {
+          clearInterval(classementInterval)
+          classementInterval = null
+        }
+      }
+
+      const openClassement = () => {
+        dom.classementScreen.classList.add("show")
+        dom.clsBtn.classList.add("trophy2")
+        ui.classement()
+
+        if (!classementInterval) {
           classementInterval = setInterval(() => {
-            if (dom.classementScreen.classList.contains("show")) {
+            if (isClassementOpen()) {
               ui.classement(true)
             }
           }, 1000) // Update every 1 second
+        }
+      }
+
+      const clickInsideClassementContent = (target) => {
+        if (!(target instanceof Element)) {
+          return false
+        }
+
+        return Boolean(target.closest("#Classement .classement, #Classement .title-classement, #Classement .info"))
+      }
+
+      dom.clsBtn.addEventListener("click", () => {
+        if (isClassementOpen()) {
+          closeClassement()
         } else {
-          if (classementInterval) {
-            clearInterval(classementInterval)
-            classementInterval = null
-          }
+          openClassement()
+        }
+      })
+
+      document.addEventListener("click", (event) => {
+        if (!isClassementOpen()) {
+          return
+        }
+
+        const clickedTrophy = dom.clsBtn.contains(event.target)
+        if (!clickedTrophy && !clickInsideClassementContent(event.target)) {
+          closeClassement()
         }
       })
     }

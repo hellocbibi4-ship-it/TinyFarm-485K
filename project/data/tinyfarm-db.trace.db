@@ -1,3 +1,0 @@
-2026-04-27 15:25:24.104622+02:00 jdbc[3]: exception
-org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "FERME" not found (this database is empty); SQL statement:
-UPDATE ferme SET jour_actuel = 1 WHERE jour_actuel IS NULL [42104-240]
