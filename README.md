@@ -74,6 +74,12 @@ Ce qu'il faut retenir pour la suite :
 - `.devcontainer/` : environnement partage pour Codespaces / VS Code
 - `requirements-test.txt` : dependances Python pour les tests `pytest`
 - `pytest.ini` : configuration de detection des tests Python
+- 
+## 🌐 Accès au site
+
+Le projet est accessible en ligne via le site suivant :
+
+https://tinyfarm485k.foo
 
 ## Configuration GitHub OAuth
 
